@@ -13,20 +13,23 @@
 
 # LayOpt
 
-LayOpt is a Python package for topology optimisation of fail-safe trusses developed by the [Integrated Civil and
-Infrastructure Research Centre][icair] at [The University of Sheffield][tuos].
+LayOpt is a Python package for topology optimisation of fail-safe trusses
+developed by the [Integrated Civil and Infrastructure Research Centre][icair] at
+[The University of Sheffield][tuos].
 
 ## Installation
 
 ### PyPI
 
-**LayOpt** is not yet published to PyPI, for now you will have to install from GitHub.
+**LayOpt** is not yet published to PyPI, for now you will have to install from
+GitHub.
 
 ### GitHub
 
-You can use [`pip`][pip] to install the package directly from GitHub. In your Virtual Environment run...
+You can use [`pip`][pip] to install the package directly from GitHub. In your
+Virtual Environment run...
 
-``` shell
+```shell
 # Install from HEAD of main branch
 pip install git@https://github.com/ICAIR-Sheffield/LayOpt
 # Install a specific <branch>
@@ -35,13 +38,14 @@ pip install git@https://github.com/ICAIR-Sheffield/LayOpt.git@<branch>
 
 ### Development
 
-Contributions are welcome. If you are considering contributing to the development of LayOpt and are not a collaborator
-of the repository then you should fork to your account first and then clone from there.
+Contributions are welcome. If you are considering contributing to the
+development of LayOpt and are not a collaborator of the repository then you
+should fork to your account first and then clone from there.
 
-We use [uv][uv] package manager to develop LayOpt. To install this software clone the repository and make sure you have
-[uv installed][uv_install].
+We use [uv][uv] package manager to develop LayOpt. To install this software
+clone the repository and make sure you have [uv installed][uv_install].
 
-``` shell
+```shell
 # Clone using SSH
 git clone git@github.com:ICAIR-Sheffield/LayOpt.git
 # Clone using https
@@ -60,15 +64,16 @@ uv pip install --group dev
 
 ## Documentation
 
-We use the [mkdocs][mkdocs] static site generator to build a website. This is deployed on both ReadTheDocs and GitHub
-Pages.
+We use the [mkdocs][mkdocs] static site generator to build a website. This is
+deployed on both ReadTheDocs and GitHub Pages.
 
 - [ReadTheDocs][rtd-link]
 - [GitHub Pages][gh-pages-link]
 
 ## Citing
 
-To cite this software please refer to the `CITATION.cff` included in this repository.
+To cite this software please refer to the `CITATION.cff` included in this
+repository.
 
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/ICAIR-Sheffield/LayOpt/workflows/CI/badge.svg
