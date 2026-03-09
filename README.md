@@ -1,11 +1,12 @@
 # LayOpt
 
+[![pre-commit.ci status][pre-commit-badge]][pre-commit-link]
 [![Actions Status][actions-badge]][actions-link]
 [![Documentation Status][rtd-badge]][rtd-link]
 
-[![PyPI version][pypi-version]][pypi-link]
-[![Conda-Forge][conda-badge]][conda-link]
-[![PyPI platforms][pypi-platforms]][pypi-link]
+<!-- [![PyPI version][pypi-version]][pypi-link] -->
+<!-- [![Conda-Forge][conda-badge]][conda-link] -->
+<!-- [![PyPI platforms][pypi-platforms]][pypi-link] -->
 
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
 
@@ -76,16 +77,19 @@ repository.
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/ICAIR-Sheffield/LayOpt/workflows/CI/badge.svg
 [actions-link]:             https://github.com/ICAIR-Sheffield/LayOpt/actions
-[conda-badge]:              https://img.shields.io/conda/vn/conda-forge/LayOpt
-[conda-link]:               https://github.com/conda-forge/LayOpt-feedstock
+<!-- [conda-badge]:              https://img.shields.io/conda/vn/conda-forge/LayOpt -->
+<!-- [conda-link]:               https://github.com/conda-forge/LayOpt-feedstock -->
 [gh-pages-link]:            https://ICAIR-Sheffield.github.io/LayOpt
 [github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
 [github-discussions-link]:  https://github.com/ICAIR-Sheffield/LayOpt/discussions
 [icair]:                    https://icair.ac.uk/
 [mkdocs]:                   https://www.mkdocs.org/
-[pypi-link]:                https://pypi.org/project/LayOpt/
-[pypi-platforms]:           https://img.shields.io/pypi/pyversions/LayOpt
-[pypi-version]:             https://img.shields.io/pypi/v/LayOpt
+[pip]:                      https://pip.pypa.io/en/stable/installation/
+[pre-commit-badge]:         https://results.pre-commit.ci/badge/github/ICAIR-Sheffield/LayOpt/main.svg
+[pre-commit-link]:          https://results.pre-commit.ci/latest/github/ICAIR-Sheffield/LayOpt/main
+<!-- [pypi-link]:                https://pypi.org/project/LayOpt/ -->
+<!-- [pypi-platforms]:           https://img.shields.io/pypi/pyversions/LayOpt -->
+<!-- [pypi-version]:             https://img.shields.io/pypi/v/LayOpt -->
 [rtd-badge]:                https://readthedocs.org/projects/LayOpt/badge/?version=latest
 [rtd-link]:                 https://LayOpt.readthedocs.io/en/latest/?badge=latest
 [tuos]:                     https://www.sheffield.ac.uk/
