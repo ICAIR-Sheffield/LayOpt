@@ -1,0 +1,40 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: LayOpt
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Neil
+    family-names: Shephard
+    email: n.shephard@sheffield.ac.uk
+    affiliation: University of Sheffield
+    orcid: 'https://orcid.org/0000-0001-8301-6857'
+identifiers:
+  - type: doi
+    value: 10.1007/s00158-023-03585-x
+    description: >-
+      Adaptive topology optimization of fail-safe truss
+      structures
+  - type: doi
+    value: 10.1007/s00158-019-02226-6
+    description: >-
+      A Python script for adaptive layout optimization of
+      trusses
+repository-code: 'https://github.com/ICAIR-Sheffield/LayOpt'
+url: 'https://LayOpt.readthedocs.io/en/latest/'
+abstract: >-
+  LayOpt is a Python package for topology optimisation of
+  fail-safe trusses developed by the Integrated Civil and
+  Infrastructure Research Centre at The University of
+  Sheffield.
+keywords:
+  - engineering
+  - structural engineering
+  - truss
+  - modelling
+  - python
+license: GPL-3.0-or-later

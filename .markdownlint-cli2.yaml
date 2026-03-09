@@ -1,0 +1,21 @@
+# Configuration
+config:
+  line-length:
+    line_length: 120
+    code_blocks: false
+    tables: false
+  html:
+    allowed_elements:
+      - div
+      - br
+
+globs:
+  - "**/*.md"
+
+ignores:
+  - "tmp/"
+  - "paper.md"
+  - ".venv/"
+  - ".github/CONTRIBUTING.md"
+
+fix: true

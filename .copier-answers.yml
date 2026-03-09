@@ -1,0 +1,13 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: 2026.03.02
+_src_path: gh:scientific-python/cookie
+backend: uv
+docs: mkdocs
+email: n.shephard@sheffield.ac.uk
+full_name: Neil Shephard
+license: MIT
+org: ICAIR-Sheffield
+project_name: LayOpt
+project_short_description: Adaptive topology optimization of fail-safe trusses
+url: https://github.com/ICAIR-Sheffield/LayOpt
+vcs: true

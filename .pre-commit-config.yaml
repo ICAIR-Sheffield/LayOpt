@@ -1,7 +1,9 @@
 ci:
+  autofix_pres: true
   autoupdate_commit_msg: "chore(deps): update pre-commit hooks"
   autofix_commit_msg: "style: pre-commit fixes"
   autoupdate_schedule: "monthly"
+  skip: [pylint, pytest]
 
 exclude: ^.cruft.json|.copier-answers.yml$
 
@@ -16,17 +18,26 @@ repos:
     rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
+        args: ["--maxkb=18384"]
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-symlinks
       - id: check-yaml
+        args: ["--unsafe"] # Required because of line 57 in mkdocs.yml which enables mermaid diagrams
       - id: debug-statements
       - id: end-of-file-fixer
+        types: [python, yaml, markdown]
+        exclude: ^(tests/resources|tests/__snapshots__)/.*$
       - id: mixed-line-ending
+        types: [python, yaml, markdown]
+        exclude: ^(tests/resources|tests/__snapshots__)/.*$
       - id: name-tests-test
         args: ["--pytest-test-first"]
+      - id: no-commit-to-branch
       - id: requirements-txt-fixer
       - id: trailing-whitespace
+        types: [python, yaml, markdown]
+        exclude: ^(tests/resources|tests/__snapshots__)/.*$
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: "v1.10.0"
@@ -91,3 +102,31 @@ repos:
       - id: check-dependabot
       - id: check-github-workflows
       - id: check-readthedocs
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.18.1
+    hooks:
+      - id: markdownlint-cli2
+        args: []
+
+  - repo: https://github.com/numpy/numpydoc
+    rev: v1.9.0
+    hooks:
+      - id: numpydoc-validation
+
+  - repo: local
+    hooks:
+      - id: pylint
+        args: ["--rcfile=.pylintrc"]
+        name: Pylint
+        entry: python -m pylint
+        language: system
+        files: \.py$
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Pytest (testmon)
+        entry: pytest --testmon
+        language: system
+        files: \.py$
