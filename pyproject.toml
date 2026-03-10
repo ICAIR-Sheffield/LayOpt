@@ -47,6 +47,7 @@ test = [
   "pytest >=9",
   "pytest-cov >=7",
   "pytest-testmon",
+  "pytest-xdist",
   "syrupy"
 ]
 dev = [
