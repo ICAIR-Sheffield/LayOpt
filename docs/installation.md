@@ -34,10 +34,10 @@ cd LayOpt
 uv venv
 # Synchronise the virtual environment (installs dependencies)
 uv sync
-# Install the package...
-uv sync
 # Install development dependencies
 uv pip install --group dev
+# Install pre-commit hooks
+pre-commit install
 ```
 
 [pip]: https://pip.pypa.io/en/stable/installation/
