@@ -7,6 +7,8 @@ build-backend = "uv_build"
 name = "LayOpt"
 version = "0.1.0"
 authors = [
+  { name = "Helen Fairclough", email = "helen.fairclough@sheffield.ac.uk" },
+  { name = "Andrew Fisher", email = "andrew.fisher@sheffield.ac.uk" },
   { name = "Neil Shephard", email = "n.shephard@sheffield.ac.uk" },
 ]
 description = "Adaptive topology optimization of fail-safe trusses"
