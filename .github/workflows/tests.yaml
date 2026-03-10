@@ -1,0 +1,57 @@
+name: Tests (pytest)
+
+on:
+  pull_request:
+    types:
+      - opened
+      - ready_for_review
+      - reopened
+      - synchronize
+    paths:
+      - "**.csv"
+      - "**.npy"
+      - "**.out"
+      - "**.pkl"
+      - "**.png"
+      - "**.py"
+      - "**.toml"
+      - "**.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Ex1 (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        python-version: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@v7
+      - name: Upgrade pip and install test dependencies
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install --group dev
+      - name: Test with pytest
+        run: |
+          source .venv/bin/activate
+          pytest --cov=src --numprocesses=logical
+      - name: Determine coverage
+        run: |
+          coverage xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 5
