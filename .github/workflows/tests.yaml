@@ -41,6 +41,7 @@ jobs:
           uv venv
           source .venv/bin/activate
           uv pip install --group dev
+          uv pip install -e .
       - name: Test with pytest
         run: |
           source .venv/bin/activate

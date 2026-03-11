@@ -633,7 +633,7 @@ def trussopt(
         }
         save_results_to_csv(results, csv_filename)
 
-    return a, Nd[Cn[:, 0].astype(int), 1], vol
+    return vol, a
 
 
 def save_results_to_csv(results, filename="pattern_loading_results.csv"):
@@ -776,56 +776,56 @@ suppPoints = [[x * spanL, 0] for x in range(numSpans + 1)]
 
 # NB supports for arch examples hard-coded in trussopt to be fixed rather than rollers
 # consider change to some sort of parameter
-trussopt(
-    width=totalW,
-    height=height,
-    loadedPoints=loadPoints,
-    loadLarge=3.75,
-    loadSmall=0.204,
-    loadVal=[0, -1],
-    supportPoints=suppPoints,
-    maxLength=2 * totalW,
-    doFilter=True,
-    primal_method="load_factor",
-    problem_name="arch_full_opt",
-    save_to_csv=True,
-    csv_filename="pattern_loading_results.csv",
-    notes="testing",
-)
+# trussopt(
+#     width=totalW,
+#     height=height,
+#     loadedPoints=loadPoints,
+#     loadLarge=3.75,
+#     loadSmall=0.204,
+#     loadVal=[0, -1],
+#     supportPoints=suppPoints,
+#     maxLength=2 * totalW,
+#     doFilter=True,
+#     primal_method="load_factor",
+#     problem_name="arch_full_opt",
+#     save_to_csv=True,
+#     csv_filename="pattern_loading_results.csv",
+#     notes="testing",
+# )
 
-trussopt(
-    width=totalW,
-    height=height,
-    loadedPoints=loadPoints,
-    loadLarge=3.75,
-    loadSmall=0.204,
-    loadVal=[0, -1],
-    supportPoints=suppPoints,
-    maxLength=2 * totalW,
-    doFilter=True,
-    primal_method="residual",
-    problem_name="arch_residual_primal",
-    save_to_csv=True,
-    csv_filename="pattern_loading_results.csv",
-    notes="testing",
-)
+# trussopt(
+#     width=totalW,
+#     height=height,
+#     loadedPoints=loadPoints,
+#     loadLarge=3.75,
+#     loadSmall=0.204,
+#     loadVal=[0, -1],
+#     supportPoints=suppPoints,
+#     maxLength=2 * totalW,
+#     doFilter=True,
+#     primal_method="residual",
+#     problem_name="arch_residual_primal",
+#     save_to_csv=True,
+#     csv_filename="pattern_loading_results.csv",
+#     notes="testing",
+# )
 
-trussopt(
-    width=totalW,
-    height=height,
-    loadedPoints=loadPoints,
-    loadLarge=3.75,
-    loadSmall=0.204,
-    loadVal=[0, -1],
-    supportPoints=suppPoints,
-    maxLength=2 * totalW,
-    doFilter=True,
-    primal_method="none",
-    problem_name="arch_span_dual_only",
-    save_to_csv=True,
-    csv_filename="pattern_loading_results.csv",
-    notes="testing",
-)
+# trussopt(
+#     width=totalW,
+#     height=height,
+#     loadedPoints=loadPoints,
+#     loadLarge=3.75,
+#     loadSmall=0.204,
+#     loadVal=[0, -1],
+#     supportPoints=suppPoints,
+#     maxLength=2 * totalW,
+#     doFilter=True,
+#     primal_method="none",
+#     problem_name="arch_span_dual_only",
+#     save_to_csv=True,
+#     csv_filename="pattern_loading_results.csv",
+#     notes="testing",
+# )
 
 # trussopt(width=totalW, height=height,
 #           loadedPoints=loadPoints,

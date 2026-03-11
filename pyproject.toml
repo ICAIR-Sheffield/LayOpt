@@ -32,8 +32,13 @@ classifiers = [
 ]
 dependencies = [
   "loguru",
+  "matplotlib",
+  "mosek",
+  "numpy",
   "pydantic",
   "schema",
+  "scipy",
+  "shapely",
   "tqdm",
 ]
 
