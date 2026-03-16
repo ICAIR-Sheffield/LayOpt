@@ -1,4 +1,5 @@
 """Layopt module."""
+
 # below line for use in Colab
 # @title { vertical-output: true}
 
@@ -18,9 +19,9 @@
 import csv
 import datetime
 import itertools
-import os
 import time
 from math import ceil, gcd, isinf
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import mosek.fusion as mosek
@@ -33,15 +34,15 @@ from shapely.geometry import LineString, Point, Polygon
 plt.rcParams["figure.max_open_warning"] = 0
 
 
-def calcB(Nd, Cn, dof):
+def calc_eq_matrix_b(n_d, c_n, dof):
     """
     Calculate equilibrium matrix B.
 
     Parameters
     ----------
-    Nd : ndarray
+    n_d : ndarray
         Nodal coordinates.
-    Cn : ndarray
+    c_n : ndarray
         Active members.
     dof : ndarray
         Degrees of freedom.
@@ -51,24 +52,24 @@ def calcB(Nd, Cn, dof):
     coo_matrix
         Equilibrium matrix B.
     """
-    m, n1, n2 = len(Cn), Cn[:, 0].astype(int), Cn[:, 1].astype(int)
-    l, X, Y = Cn[:, 2], Nd[n2, 0] - Nd[n1, 0], Nd[n2, 1] - Nd[n1, 1]
+    m, n1, n2 = len(c_n), c_n[:, 0].astype(int), c_n[:, 1].astype(int)
+    l, x, y = c_n[:, 2], n_d[n2, 0] - n_d[n1, 0], n_d[n2, 1] - n_d[n1, 1]
     d0, d1, d2, d3 = dof[n1 * 2], dof[n1 * 2 + 1], dof[n2 * 2], dof[n2 * 2 + 1]
-    s = np.concatenate((-X / l * d0, -Y / l * d1, X / l * d2, Y / l * d3))
+    s = np.concatenate((-x / l * d0, -y / l * d1, x / l * d2, y / l * d3))
     r = np.concatenate((n1 * 2, n1 * 2 + 1, n2 * 2, n2 * 2 + 1))
     c = np.concatenate((np.arange(m), np.arange(m), np.arange(m), np.arange(m)))
-    return sparse.coo_matrix((s, (r, c)), shape=(len(Nd) * 2, m))
+    return sparse.coo_matrix((s, (r, c)), shape=(len(n_d) * 2, m))
 
 
-def solveLP(Nd, Cn, f, dof, st, sc, jc):
+def solve(n_d, c_n, f, dof, st, sc, jc):
     """
     Solve linear programming problem with given connections and pattern load cases.
 
     Parameters
     ----------
-    Nd : ndarray
+    n_d : ndarray
         Nodal coordinates.
-    Cn : ndarray
+    c_n : ndarray
         Active members.
     f : list
         Load cases.
@@ -88,35 +89,41 @@ def solveLP(Nd, Cn, f, dof, st, sc, jc):
         ``area`` (member areas), ``forces`` (member forces) and ``deflections``
         (virtual deflections at degrees of freedom).
     """
-    l = [col[2] + jc for col in Cn]
-    B = calcB(Nd, Cn, dof)
+    l = [col[2] + jc for col in c_n]
+    eq_matrix_b = calc_eq_matrix_b(n_d, c_n, dof)
     q, eqn = [], []
     k = 0  # (damage+load) case number
-    with mosek.Model() as M:
-        a = M.variable("a", len(Cn), mosek.Domain.greaterThan(0.0))
-        B = mosek.Matrix.sparse(B.shape[0], B.shape[1], B.row, B.col, B.data)
-        M.objective(mosek.ObjectiveSense.Minimize, mosek.Expr.dot(l, a))
+    with mosek.Model() as model:
+        a = model.variable("a", len(c_n), mosek.Domain.greaterThan(0.0))
+        eq_matrix_b = mosek.Matrix.sparse(
+            eq_matrix_b.shape[0],
+            eq_matrix_b.shape[1],
+            eq_matrix_b.row,
+            eq_matrix_b.col,
+            eq_matrix_b.data,
+        )
+        model.objective(mosek.ObjectiveSense.Minimize, mosek.Expr.dot(l, a))
         for fk in f:
-            qi = M.variable(len(Cn))
+            qi = model.variable(len(c_n))
             q.append(qi)
-            eqni = M.constraint(
-                mosek.Expr.sub(mosek.Expr.mul(B, q[k]), fk * dof),
+            eqni = model.constraint(
+                mosek.Expr.sub(mosek.Expr.mul(eq_matrix_b, q[k]), fk * dof),
                 mosek.Domain.equalsTo(0),
             )
             eqn.append(eqni)
-            M.constraint(
+            model.constraint(
                 mosek.Expr.sub(mosek.Expr.mul(sc, a), q[k]), mosek.Domain.greaterThan(0)
             )
-            M.constraint(
+            model.constraint(
                 mosek.Expr.sub(mosek.Expr.mul(-st, a), q[k]), mosek.Domain.lessThan(0)
             )
             k += 1
-        M.setSolverParam("optimizer", "intpnt")
-        M.setSolverParam("intpntBasis", "never")
-        M.acceptedSolutionStatus(mosek.AccSolutionStatus.Anything)
+        model.setSolverParam("optimizer", "intpnt")
+        model.setSolverParam("intpntBasis", "never")
+        model.acceptedSolutionStatus(mosek.AccSolutionStatus.Anything)
         # M.setLogHandler(stdout)
-        M.solve()
-        vol = M.primalObjValue()
+        model.solve()
+        vol = model.primalObjValue()
         q = [np.array(qi.level()) for qi in q]
         a = a.level()
         u = [-np.array(eqnk.dual()) for eqnk in eqn]
@@ -126,15 +133,15 @@ def solveLP(Nd, Cn, f, dof, st, sc, jc):
     return vol, a, q, u
 
 
-def stopViolation(Nd, PML, dof, st, sc, u, jc):
+def stop_violation(n_d, pml, dof, st, sc, u, jc):
     """
     Check for dual violation and add new members.
 
     Parameters
     ----------
-    Nd : ndarray
+    n_d : ndarray
         Nodal coordinates.
-    PML : ndarray
+    pml : ndarray
         Potential member list.
     dof : ndarray
         Degrees of freedom.
@@ -152,31 +159,34 @@ def stopViolation(Nd, PML, dof, st, sc, u, jc):
     int
         Number of members added.
     """
-    lst = np.where(PML[:, 3] == False)[0]
-    Cn = PML[lst]
-    l = Cn[:, 2] + jc
-    B = calcB(Nd, Cn, dof).tocsc()
-    y = np.zeros(len(Cn))
-    for k, uk in enumerate(u):
-        yk = np.multiply(B.transpose().dot(uk) / l, np.array([[st], [-sc]]))
+    lst = np.where(pml[:, 3] == False)[0]  # pylint: disable=singleton-comparison
+    c_n = pml[lst]
+    # ns-rse 2026-03-17 : What is l?
+    l = c_n[:, 2] + jc
+    eq_matrix_b = calc_eq_matrix_b(n_d, c_n, dof).tocsc()
+    y = np.zeros(len(c_n))
+    for uk in u:
+        yk = np.multiply(eq_matrix_b.transpose().dot(uk) / l, np.array([[st], [-sc]]))
         y += np.amax(yk, axis=0)
-    vioCn = np.where(y > 1.000)[0]
-    vioSort = np.flipud(np.argsort(y[vioCn]))
-    num = ceil(0.1 * (len(PML) - len(Cn)))  # size of existing problem
-    for i in range(min(num, len(vioSort))):
-        PML[lst[vioCn[vioSort[i]]]][3] = True  # set member as active
-    return min(num, len(vioSort))
+    vio_c_n = np.where(y > 1.000)[0]
+    vio_sort = np.flipud(np.argsort(y[vio_c_n]))
+    num = ceil(0.1 * (len(pml) - len(c_n)))  # size of existing problem
+    for i in range(min(num, len(vio_sort))):
+        pml[lst[vio_c_n[vio_sort[i]]]][3] = True  # set member as active
+    return min(num, len(vio_sort))
 
 
-def plotTruss(Nd, Cn, a, q, threshold, st, update=True, allCases=False):
+def plot_truss(
+    n_d, c_n, a, q, threshold, st, update: bool = True, all_cases: bool = False
+):
     """
     Visualise truss.
 
     Parameters
     ----------
-    Nd : ndarray
+    n_d : ndarray
         Nodal coordinates.
-    Cn : ndarray
+    c_n : ndarray
         Active members.
     a : ndarray
         Member areas.
@@ -188,30 +198,33 @@ def plotTruss(Nd, Cn, a, q, threshold, st, update=True, allCases=False):
         Tensile stress limit.
     update : bool
         Enable interactive mode (default=``True``).
-    allCases : bool
+    all_cases : bool
         Plot all load cases individually (default=``False``).
     """
-    if allCases == True:
-        plotAllCases(Nd, Cn, a, q, threshold, st)
+    if all_cases:
+        plot_all_cases(n_d, c_n, a, q, threshold, st)
     else:
         fig = plt.figure()
         ax = fig.subplots()
-        plt.ion() if update else plt.ioff()
+        if update:
+            plt.ion()
+        else:
+            plt.ioff()
         ax.axis("off")
         ax.axis("equal")
         ax.set_title(st)
         tk = 0.4  # bar thickness scale
         for i in [i for i in range(len(a)) if a[i] >= threshold]:
             if len(q) > 1:  # multiple LC coloring
-                if all([q[lc][i] >= -0.001 for lc in range(len(q))]):
+                if all(q[lc][i] >= -0.001 for lc in range(len(q))):
                     c = "r"
-                elif all([q[lc][i] <= 0.001 for lc in range(len(q))]):
+                elif all(q[lc][i] <= 0.001 for lc in range(len(q))):
                     c = "b"
                 else:
                     c = "tab:gray"
             else:  # single LC coloring (black = no load, dark = less load)
                 c = (min(max(q[0][i] / a[i], 0), 1), 0, min(max(-q[0][i] / a[i], 0), 1))
-            pos = Nd[Cn[i, [0, 1]].astype(int), :]
+            pos = n_d[c_n[i, [0, 1]].astype(int), :]
             ax.plot(
                 pos[:, 0],
                 pos[:, 1],
@@ -219,19 +232,22 @@ def plotTruss(Nd, Cn, a, q, threshold, st, update=True, allCases=False):
                 linewidth=a[i] * tk,
                 solid_capstyle="round",
             )
-        plt.pause(0.01) if update else plt.show()
+        if update:
+            plt.pause(0.01)
+        else:
+            plt.show()
         # fig.savefig(st+'.pdf', dpi=1200)
 
 
-def plotAllCases(Nd, Cn, a, q, threshold, st):
+def plot_all_cases(n_d, c_n, a, q, threshold, st) -> None:
     """
     Visualise truss, loop through all load cases and plot individually.
 
     Parameters
     ----------
-    Nd : ndarray
+    n_d : ndarray
         Nodal coordinates.
-    Cn : ndarray
+    c_n : ndarray
         Active members.
     a : ndarray
         Member areas.
@@ -242,36 +258,38 @@ def plotAllCases(Nd, Cn, a, q, threshold, st):
     st : float
         Tensile stress limit.
     """
-    numCases = len(q)
-    for k in range(numCases):
-        plotTruss(
-            Nd,
-            Cn,
-            a,
-            [q[k]],
-            threshold,
-            st + " case " + str(k),
+    n_cases = len(q)
+    for k in range(n_cases):
+        plot_truss(
+            n_d=n_d,
+            c_n=c_n,
+            a=a,
+            q=[q[k]],
+            threshold=threshold,
+            st=st + " case " + str(k),
             update=True,
-            allCases=False,
+            all_cases=False,
         )
 
 
-def makePatternLoads(Nd, loadedPoints, loadLarge=50, loadSmall=5, loadDir=[0, -1]):
+def make_pattern_loads(
+    n_d, loaded_points, load_large=50, load_small=5, load_direction=(0, -1)
+):
     """
     Generate all 2^n combinations of large/small loads at each load point.
 
     Parameters
     ----------
-    Nd : ndarray
+    n_d : ndarray
         Nodal coordinates.
-    loadedPoints : ndarray
+    loaded_points : ndarray
         Load points.
-    loadLarge : float
-        Large load to apply at each load point (default=50).
-    loadSmall : float
-        Small load to apply at each load point (default=5).
-    loadDir : list
-        Load direction (default=[0,-1]).
+    load_large : float
+        Large load to apply at each load point (default=``50``).
+    load_small : float
+        Small load to apply at each load point (default=``5``).
+    load_direction : list
+        Load direction (default=``(0,-1)``).
 
     Returns
     -------
@@ -280,55 +298,65 @@ def makePatternLoads(Nd, loadedPoints, loadLarge=50, loadSmall=5, loadDir=[0, -1
         (base load case) and ``patternDescriptions`` (description of each load
         case using ``L`` for large or ``S`` for small at each load point).
     """
-    n = len(loadedPoints)
+    n = len(loaded_points)
 
     # Find node indices for each load point
-    loadNodeIndices = []
-    for ldPt in loadedPoints:
-        dists = np.linalg.norm(Nd - np.array(ldPt), axis=1)
-        loadNodeIndices.append(np.argmin(dists))
+    load_node_indices = []
+    for loaded_point in loaded_points:
+        dists = np.linalg.norm(n_d - np.array(loaded_point), axis=1)
+        load_node_indices.append(np.argmin(dists))
 
-    allPatterns = []
-    patternDescriptions = []
+    # ns-rse 2026-03-17 : Could maybe use a dictionary here to link patterns and descriptions?
+    all_patterns = []
+    pattern_descriptions = []
 
     # Generate all 2^n combinations
     # First combo (all loadLarge) is base case
-    for combo in itertools.product([loadLarge, loadSmall], repeat=n):
-        fk = np.zeros(len(Nd) * 2)
+    for combo in itertools.product([load_large, load_small], repeat=n):
+        fk = np.zeros(len(n_d) * 2)
         desc = []
         for pt_idx, magnitude in enumerate(combo):
-            node = loadNodeIndices[pt_idx]
-            fk[node * 2] += magnitude * loadDir[0]
-            fk[node * 2 + 1] += magnitude * loadDir[1]
-            desc.append(f"pt{pt_idx}={'L' if magnitude == loadLarge else 'S'}")
+            node = load_node_indices[pt_idx]
+            fk[node * 2] += magnitude * load_direction[0]
+            fk[node * 2 + 1] += magnitude * load_direction[1]
+            desc.append(f"pt{pt_idx}={'L' if magnitude == load_large else 'S'}")
 
-        allPatterns.append(fk)
-        patternDescriptions.append(", ".join(desc))
+        all_patterns.append(fk)
+        pattern_descriptions.append(", ".join(desc))
 
-    baseLoad = allPatterns[0]  # First pattern = all large loads
+    # ns-rse 2026-03-17 : Return directly as part of tuple
+    base_load = all_patterns[0]  # First pattern = all large loads
 
-    print(f"\nPattern loading: {n} load points -> {len(allPatterns)} total patterns")
-    print(f"Base case (all large): {patternDescriptions[0]}")
+    print(f"\nPattern loading: {n} load points -> {len(all_patterns)} total patterns")
+    print(f"Base case (all large): {pattern_descriptions[0]}")
 
-    return allPatterns, baseLoad, patternDescriptions
+    return all_patterns, base_load, pattern_descriptions
 
 
-def stopPrimalViolationResidual(Nd, Cn, q, allPatterns, activeLoadCases, dof):
+# add new pattern load cases primal violation
+# violation criterion: check if min over active j of ||B*q[j] - f[k]*dof|| > tol
+# (essentially checking if Bq-f=0)
+# for each inactive load pattern, check whether any existing active solution
+# q[j] already satisfies equilibrium for that load pattern. if not, pattern
+# is violated and is added
+def stop_primal_violation_residual(
+    n_d, c_n, q, all_patterns, active_load_cases, dof
+) -> bool:
     """
     Check for primal violation (equilibrium constraint violation) and add new load cases.
 
     Parameters
     ----------
-    Nd : ndarray
+    n_d : ndarray
         Nodal coordinates.
-    Cn : ndarray
+    c_n : ndarray
         Active members.
     q : list
         Member forces.
-    allPatterns : list
+    all_patterns : list
         All load cases.
-    activeLoadCases : list
-        For each load case, bool set to True if active, False otherwise.
+    active_load_cases : list
+        For each load case, bool set to ``True`` if active, ``False`` otherwise.
     dof : ndarray
         Degrees of freedom.
 
@@ -338,90 +366,105 @@ def stopPrimalViolationResidual(Nd, Cn, q, allPatterns, activeLoadCases, dof):
         True if converged and no load cases added.
     """
     tol = 1e-5
-    B = calcB(Nd, Cn, dof).tocsc()
+    eq_matrix_b = calc_eq_matrix_b(n_d, c_n, dof).tocsc()
 
-    totalViolation = np.zeros(len(allPatterns))
+    total_violation = np.zeros(len(all_patterns))
 
     # loop through all (active and inactive) pattern load cases
-    for k in range(len(allPatterns)):
-        if activeLoadCases[k] == 1:
+    for k, _ in enumerate(all_patterns):
+        if active_load_cases[k] == 1:
             continue  # skip active cases
 
-        fk_dof = allPatterns[k] * dof
+        fk_dof = all_patterns[k] * dof
         residuals = []
         for qj in q:
             # store ||B*q[j] - f[k]*dof||
-            residual = np.linalg.norm(B.dot(qj) - fk_dof)
+            residual = np.linalg.norm(eq_matrix_b.dot(qj) - fk_dof)
             residuals.append(residual)
 
         # find min of residuals over active pattern load cases
-        totalViolation[k] = min(residuals)
+        total_violation[k] = min(residuals)
 
-    violated = totalViolation > tol  # true if there are violated cases need to be added
-    numToAdd = max(1, ceil(len(allPatterns) / 10))  # limit on num to add
+    violated = (
+        total_violation > tol
+    )  # true if there are violated cases need to be added
+    n_to_add = max(1, ceil(len(all_patterns) / 10))  # limit on num to add
 
     if any(violated):
+        # ns-rse 2026-03-17 : extract sorting violations to its own function
         # Sort by violation severity
-        byViolation = sorted(
-            [i for i in range(len(totalViolation)) if totalViolation[i] > tol],
-            key=lambda k: totalViolation[k],
+        by_violation = sorted(
+            [i for i in range(len(total_violation)) if total_violation[i] > tol],
+            key=lambda k: total_violation[k],
             reverse=True,
         )
 
-        if len(byViolation) == 0:
+        if len(by_violation) == 0:
             return True
 
         # Active most violated load pattern
-        activeLoadCases[byViolation[0]] = 1
-        addedThisIter = [byViolation[0]]
-        byViolation.pop(0)
+        active_load_cases[by_violation[0]] = 1
+        # ns-rse 2026-03-17 : violations are added on this iteration, can we be more descriptive?
+        added_this_iter = [by_violation[0]]
+        by_violation.pop(0)
 
         # Add distinct cases
         # distinct if violated load pattern vector (after normalisation)
         # is not parallel to added load pattern vector (after normalisation)
         # (with current loading everything should be distinct?)
-        for _ in range(numToAdd - 1):
-            if len(byViolation) == 0:
+        for _ in range(n_to_add - 1):
+            if len(by_violation) == 0:
                 break
-            addedACase = False
-            for k in byViolation:
-                fk = allPatterns[k]
+            added_case = False
+            for k in by_violation:
+                fk = all_patterns[k]
                 fk_norm = fk / (np.linalg.norm(fk) + 1e-12)
-                isDistinct = True
-                for j in addedThisIter:
-                    fj = allPatterns[j]
+                distinct = True
+                for j in added_this_iter:
+                    fj = all_patterns[j]
                     fj_norm = fj / (np.linalg.norm(fj) + 1e-12)
                     if np.dot(fk_norm, fj_norm) > 0.99:
-                        isDistinct = False
+                        distinct = False
                         break
-                if isDistinct:
-                    activeLoadCases[k] = 1
-                    addedThisIter.append(k)
-                    byViolation.remove(k)
-                    addedACase = True
+                if distinct:
+                    active_load_cases[k] = 1
+                    added_this_iter.append(k)
+                    by_violation.remove(k)
+                    added_case = True
                     break
-            if not addedACase:
+            if not added_case:
                 break
 
         return False  # cases added, keep going
     return True  # converged, terminate
 
 
-def stopPrimalViolationPattern(Nd, Cn, a, allPatterns, activeLoadCases, dof, st, sc):
+# for each inactive load pattern f[k], solve an LP to find the maximum
+# load factor lambda that the current design (with fixed member areas a) can carry:
+#    maximize lambda
+#    subject to:
+#        B*q = lambda*f[k]        (equilibrium with scaled load)
+#        -sigma_c*a <= q <= sigma_t*a  (stress limits with fixed areas)
+# violation criterion: check if lambda >= 1
+# if so, structure can carry full load so no violation
+# else structure can only carry some of the load, violation, so add load case
+def stop_primal_violation_pattern(
+    n_d, c_n, a, all_patterns, active_load_cases, dof, st, sc
+) -> bool:
     """
     Check for primal violation (load factor structural analysis) and add new load cases.
 
     Parameters
     ----------
-    Nd : ndarray
+    n_d : ndarray
         Nodal coordinates.
-    Cn : ndarray
+    c_n : ndarray
         Active members.
     a : list
         Member areas.
-    allPatterns : list
+    all_patterns : list
         All load cases.
-    activeLoadCases : list
+    active_load_cases : list
         For each load case, bool set to True if active, False otherwise.
     dof : ndarray
         Degrees of freedom.
@@ -433,121 +476,131 @@ def stopPrimalViolationPattern(Nd, Cn, a, allPatterns, activeLoadCases, dof, st,
     Returns
     -------
     bool
-        True if converged and no load cases added.
+        ``True`` if converged and no load cases added.
     """
     tol = 0.99  # lambda must be >= 1 to be considered feasible
 
-    B = calcB(Nd, Cn, dof)
-    loadFactors = np.ones(len(allPatterns))  # lambda=1 for active cases
+    eq_matrix_b = calc_eq_matrix_b(n_d, c_n, dof)
+    load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
 
     # loop through all (active and inactive) pattern load cases
-    for k in range(len(allPatterns)):
-        if activeLoadCases[k] == 1:
+    for k, _ in enumerate(all_patterns):
+        if active_load_cases[k] == 1:
             continue  # skip active cases
 
-        fk_dof = allPatterns[k] * dof
+        fk_dof = all_patterns[k] * dof
 
         # Solve LP: maximize lambda subject to B*q = lambda*f, -sigma*a <= q <= sigma*a
-        with mosek.Model() as M:
+        with mosek.Model() as model:
             # Variables
-            q_var = M.variable("q", len(Cn))
-            lambda_var = M.variable("lambda", 1, mosek.Domain.greaterThan(0.0))
+            q_var = model.variable("q", len(c_n))
+            lambda_var = model.variable("lambda", 1, mosek.Domain.greaterThan(0.0))
 
             # Objective: maximize lambda
-            M.objective(mosek.ObjectiveSense.Maximize, lambda_var)
+            model.objective(mosek.ObjectiveSense.Maximize, lambda_var)
 
             # Constraint 1: B*q = lambda*f
-            B_mosek = mosek.Matrix.sparse(B.shape[0], B.shape[1], B.row, B.col, B.data)
-            M.constraint(
+            b_mosek = mosek.Matrix.sparse(
+                eq_matrix_b.shape[0],
+                eq_matrix_b.shape[1],
+                eq_matrix_b.row,
+                eq_matrix_b.col,
+                eq_matrix_b.data,
+            )
+            model.constraint(
                 mosek.Expr.sub(
-                    mosek.Expr.mul(B_mosek, q_var),
+                    mosek.Expr.mul(b_mosek, q_var),
                     mosek.Expr.mul(fk_dof, lambda_var.index(0)),
                 ),
                 mosek.Domain.equalsTo(0),
             )
 
             # Constraint 2: q <= sigma_t * a (tension limit)
-            M.constraint(mosek.Expr.sub(q_var, st * a), mosek.Domain.lessThan(0))
+            model.constraint(mosek.Expr.sub(q_var, st * a), mosek.Domain.lessThan(0))
 
             # Constraint 3: q >= -sigma_c * a (compression limit)
-            M.constraint(mosek.Expr.sub(q_var, -sc * a), mosek.Domain.greaterThan(0))
+            model.constraint(
+                mosek.Expr.sub(q_var, -sc * a), mosek.Domain.greaterThan(0)
+            )
 
             # Solve
-            M.setSolverParam("optimizer", "intpnt")
-            M.acceptedSolutionStatus(mosek.AccSolutionStatus.Anything)
-            M.solve()
-            loadFactors[k] = lambda_var.level()[0]
+            model.setSolverParam("optimizer", "intpnt")
+            model.acceptedSolutionStatus(mosek.AccSolutionStatus.Anything)
+            model.solve()
+            load_factors[k] = lambda_var.level()[0]
 
     # Violation: load factor < 1 (with tolerance)
-    violated = loadFactors < tol
-    numToAdd = max(1, ceil(len(allPatterns) / 10))
+    violated = load_factors < tol
+    n_to_add = max(1, ceil(len(all_patterns) / 10))
 
-    if any(violated):
+    if any(violated):  # pylint: disable=too-many-nested-blocks
+        # ns-rse 2026-03-17 : extract sorting violations to its own function
         # Sort by severity: lowest load factor = most violated
-        byViolation = sorted(
-            [i for i in range(len(loadFactors)) if violated[i]],
-            key=lambda k: loadFactors[k],
+        by_violation = sorted(
+            [i for i in range(len(load_factors)) if violated[i]],
+            key=lambda k: load_factors[k],
         )
 
-        if len(byViolation) == 0:
+        if len(by_violation) == 0:
             return True
 
         # Add most violated (lowest lambda)
-        most_violated_id = byViolation[0]
-        activeLoadCases[most_violated_id] = 1
+        most_violated_id = by_violation[0]
+        active_load_cases[most_violated_id] = 1
         print(
-            f"  Adding most violated pattern {byViolation[0]}: lambda={loadFactors[most_violated_id]:.3f}"
+            f"  Adding most violated pattern {by_violation[0]}: lambda={load_factors[most_violated_id]:.3f}"
         )
-        addedThisIter = [byViolation[0]]
-        byViolation.pop(0)
+        # ns-rse 2026-03-17 : violations are added on this iteration, can we be more descriptive?
+        added_this_iter = [by_violation[0]]
+        by_violation.pop(0)
 
         # Add distinct cases
         # distinct if load factor is +/-10% of added load factor
         # and if violated load pattern vector (after normalisation)
         # is not parallel to added load pattern vector (after normalisation)
         # (with current loading no load pattern vectors should be parallel?)
-        for _ in range(numToAdd - 1):
-            if len(byViolation) == 0:
+        for _ in range(n_to_add - 1):
+            if len(by_violation) == 0:
                 break
-            addedACase = False
-            for k in byViolation:
+            added_case = False
+            for k in by_violation:
                 # check if load case k has a significantly different load factor
                 # from all load cases added this iteration
-                isDistinct = True
-                for j in addedThisIter:
+                distinct = True
+                for j in added_this_iter:
                     # check if both load factors are approx 0, only add one if so
-                    if loadFactors[k] < 0.01 and loadFactors[j] < 0.01:
-                        isDistinct = False
+                    if load_factors[k] < 0.01 and load_factors[j] < 0.01:
+                        distinct = False
                         break
                     # if added load factor is 0 but other violated ones aren't,
                     # other violated cases are distinct
-                    if loadFactors[j] < 0.01:
+                    if load_factors[j] < 0.01:
                         continue
                     # check ratio of load factors if neither approx 0
-                    lambda_ratio = loadFactors[k] / (loadFactors[j] + 1e-12)
+                    lambda_ratio = load_factors[k] / (load_factors[j] + 1e-12)
                     if 0.9 < lambda_ratio < 1.1:  # Within 10% of each other
-                        isDistinct = False
+                        distinct = False
                         break
-                if isDistinct:
-                    fk = allPatterns[k]
+                if distinct:
+                    fk = all_patterns[k]
                     fk_norm = fk / (np.linalg.norm(fk) + 1e-12)
-                    isDistinct = True
-                    for j in addedThisIter:
-                        fj = allPatterns[j]
+                    distinct = True
+                    for j in added_this_iter:
+                        fj = all_patterns[j]
                         fj_norm = fj / (np.linalg.norm(fj) + 1e-12)
                         if np.dot(fk_norm, fj_norm) > 0.99:
-                            isDistinct = False
+                            distinct = False
                             break
-                if isDistinct:
-                    activeLoadCases[k] = 1
+                if distinct:
+                    active_load_cases[k] = 1
                     print(
-                        f"  Adding {len(addedThisIter) + 1} distinct pattern {k}: lambda={loadFactors[k]:.3f}"
+                        f"  Adding {len(added_this_iter) + 1} distinct pattern {k}: lambda={load_factors[k]:.3f}"
                     )
-                    addedThisIter.append(k)
-                    byViolation.remove(k)
-                    addedACase = True
+                    added_this_iter.append(k)
+                    by_violation.remove(k)
+                    added_case = True
                     break
-            if not addedACase:
+            if not added_case:
                 break
 
         return False  # cases added, keep going
@@ -561,13 +614,16 @@ def trussopt(
     st=1,
     sc=1,
     jc=0,
-    loadedPoints=[],
-    loadVal=[0, -1],
-    loadLarge=50,
-    loadSmall=5,
-    maxLength=1000,
-    supportPoints=[],
-    doFilter=False,
+    # ns-rse 2026-03-17 : Set type hint and default to None
+    loaded_points: list | None = None,
+    # ns-rse 2026-03-17 : val implies single value but its a list, perhaps load_range? dict perhaps
+    load_val=(0, -1),
+    load_large=50,  # ns-rse 2026-03-17 : load_max ?
+    load_small=5,  # ns-rse 2026-03-17 : load_min ?
+    max_length=1000,
+    support_points: list
+    | None = None,  # ns-rse 2026-03-17 : Set type hint and default to None
+    filtering=False,  # as boolean makes it "pythonic" to remove 'do' but what is being filered?
     primal_method="load_factor",
     problem_name="None",
     save_to_csv=True,
@@ -589,19 +645,19 @@ def trussopt(
         Compressive stress limit.
     jc : float
         Joint cost.
-    loadedPoints : list
+    loaded_points : list
         Load points (default=[]).
-    loadVal : list
+    load_val : list
         Load direction (default=[0,-1]).
-    loadLarge : float
+    load_large : float
         Large load to apply at each load point (default=50).
-    loadSmall : float
+    load_small : float
         Small load to apply at each load point (default=5).
-    maxLength : float
+    max_length : float
         Maximum member length.
-    supportPoints : list
+    support_points : list
         Support points (default=[]).
-    doFilter : bool
+    filtering : bool
         Enable post-processing filtering on member areas (default=``False``).
     primal_method : {'load_factor', 'residual' 'none'}
         Primal violation method (default='load_factor').
@@ -621,155 +677,162 @@ def trussopt(
         and ``area`` (final member areas of the solved problem).
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    setupStart = time.process_time()
+    setup_start = time.process_time()
 
     # Make domain
     poly = Polygon([(0, 0), (width, 0), (width, height), (0, height)])
-    convex = True if poly.convex_hull.area == poly.area else False
+    convex = poly.convex_hull.area == poly.area
 
     # Make nodes
     xv, yv = np.meshgrid(range(width + 1), range(height + 1))
     pts = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
-    Nd = np.array([[pt.x, pt.y] for pt in pts if poly.intersects(pt)])
-    dof = np.ones((len(Nd), 2))
+    n_d = np.array([[pt.x, pt.y] for pt in pts if poly.intersects(pt)])
+    dof = np.ones((len(n_d), 2))
 
     # Default load point
-    if loadedPoints == []:
-        loadedPoints = [[width, height // 2]]
+    if loaded_points is None:
+        loaded_points = [[width, height // 2]]
     # support conditions
-    for i, nd in enumerate(Nd):
-        if supportPoints == []:
+    for i, nd in enumerate(n_d):
+        if support_points == []:
             if nd[0] == 0:
                 dof[i, :] = [0, 0]  # Support nodes with x=0
         else:
             dof[i, :] = (
                 [0, 0]
-                if any([(nd == supPt).all() for supPt in supportPoints])
+                if any((nd == supPt).all() for supPt in support_points)
                 else [1, 1]
             )
     dof = np.array(dof).flatten()
 
     # Generate all pattern loads
-    allPatterns, baseLoad, patternDescriptions = makePatternLoads(
-        Nd, loadedPoints, loadLarge, loadSmall, loadVal
+    # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and pattern_descriptions to dict
+    # all_patterns, base_load, pattern_descriptions = mqake_pattern_loads(
+    all_patterns, _, _ = make_pattern_loads(
+        n_d, loaded_points, load_large, load_small, load_val
     )
 
     # Create the 'ground structure'
     # PML = 'potential member list'
-    PML = []
-    for i, j in itertools.combinations(range(len(Nd)), 2):
-        dx, dy = abs(Nd[i][0] - Nd[j][0]), abs(Nd[i][1] - Nd[j][1])
+    potential_members = []
+    for i, j in itertools.combinations(range(len(n_d)), 2):
+        dx, dy = abs(n_d[i][0] - n_d[j][0]), abs(n_d[i][1] - n_d[j][1])
         l = np.sqrt(dx**2 + dy**2)
         # Remove overlapping members, or members longer than maxLength
-        if (l < maxLength and gcd(int(dx), int(dy)) == 1) or jc != 0:
-            seg = [] if convex else LineString([Nd[i], Nd[j]])
+        if (l < max_length and gcd(int(dx), int(dy)) == 1) or jc != 0:
+            seg = [] if convex else LineString([n_d[i], n_d[j]])
             if convex or poly.contains(seg) or poly.boundary.contains(seg):
-                PML.append([i, j, l, False])
-    PML = np.array(PML)
+                potential_members.append([i, j, l, False])
+    potential_members = np.array(potential_members)
 
     # Create the active members
-    DualAdaptivity = True
-    startLen = 1.5 if DualAdaptivity else 10000
-    for pm in [p for p in PML if p[2] <= startLen]:  # Activate short members (adaptive)
+    # DualAdaptivity = True
+    # start_len = 1.5 if DualAdaptivity else 10000
+    # for pm in [p for p in PML if p[2] <= start_len]:  # Activate short members (adaptive)
+    # ns-rse 2026-03-16 : DualAdaptivity is always 'True'
+    for pm in [
+        p for p in potential_members if p[2] <= 1.5
+    ]:  # Activate short members (adaptive)
         pm[3] = True
 
     #### Primal adaptivity: start with base load case only ####
-    PrimalAdaptivity = True
+    primal_adaptivity = True
     # if PrimalAdaptivity:
     #     activeLoadCases = np.zeros(len(allPatterns), dtype=int)
     #     activeLoadCases[0] = 1  # Base case = all large loads
     # # does below make sense here?
     # else:
     #     activeLoadCases = np.ones(len(allPatterns), dtype=int)
-    if primal_method == "residual" or primal_method == "load_factor":
-        PrimalAdaptivity = True
-        activeLoadCases = np.zeros(len(allPatterns), dtype=int)
-        activeLoadCases[0] = 1  # Base case = all large loads
+    if primal_method in {"residual", "load_factor"}:
+        primal_adaptivity = True
+        active_load_cases = np.zeros(len(all_patterns), dtype=int)
+        active_load_cases[0] = 1  # Base case = all large loads
     else:
-        PrimalAdaptivity = False
-        activeLoadCases = np.ones(len(allPatterns), dtype=int)
+        primal_adaptivity = False
+        active_load_cases = np.ones(len(all_patterns), dtype=int)
 
-    setupEnd = time.process_time()
-    print("Setup took " + str(setupEnd - setupStart))
+    setup_end = time.process_time()
+    print(f"Setup took {setup_end - setup_start!s}")
     print(
-        "Nodes: %d Members: %d Total load patterns: %d"
-        % (len(Nd), len(PML), len(allPatterns))
+        f"Nodes: {len(n_d)} Members: {len(potential_members)} Total load patterns: {len(all_patterns)}"
     )
 
     vol = 1e9  # arbitrary large number to initialise
     # Start the 'member adding' loop
     for itr in range(1, 100):
-        lastVol = vol
+        last_volume = vol
         # Get active members/parts of matrices
-        Cn = PML[PML[:, 3] == True]
+        c_n = potential_members[potential_members[:, 3] == True]  # pylint: disable=singleton-comparison
 
         # Get active pattern loads
         f_active = [
-            allPatterns[k] for k in range(len(allPatterns)) if activeLoadCases[k] == 1
+            all_patterns[k]
+            for k in range(len(all_patterns))
+            if active_load_cases[k] == 1
         ]
 
         # solve current reduced problem
-        vol, a, q, u = solveLP(Nd, Cn, f_active, dof, st, sc, jc)
+        vol, a, q, u = solve(n_d, c_n, f_active, dof, st, sc, jc)
 
         # output
         if isinf(vol):
             print("Error: infeasible problem detected")
             return [], [], []
-        nActive = int(np.sum(activeLoadCases))
+        n_active = int(np.sum(active_load_cases))
         print(
-            "Itr: %d, vol: %f, mems: %d active load cases:%d/%d"
-            % (itr, vol, len(Cn), nActive, len(allPatterns))
+            f"Itr: {itr}, vol: {vol}, mems: {len(c_n)} active load cases:{n_active}/{len(all_patterns)}"
         )
         # plot interim solutions (slow)
-        # plotTruss(Nd, Cn, a, q, max(a) * 1e-2, "Itr:" + str(itr), extraPlot = activeDamageDef)
+        # plotTruss(n_d, c_n, a, q, max(a) * 1e-2, "Itr:" + str(itr), extraPlot = activeDamageDef)
 
         # inner loop - adding of members based on dual violation
         # still need PMLcache? currently unused
         # PMLcache = np.copy(PML[:,3])
-        numAdded = stopViolation(Nd, PML, dof, st, sc, u, jc)
-        if not (vol > 0.99 * lastVol and vol < 1.0001 * lastVol):
+        n_added = stop_violation(n_d, potential_members, dof, st, sc, u, jc)
+        if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
             continue  # small vol decrease = member adding close to convergence
 
         # outer loop - adding of pattern load cases based on primal violation
-        # if stopPrimalViolationPattern(Nd, Cn, a, allPatterns, activeLoadCases, dof, st, sc):
+        # if stopPrimalViolationPattern(n_d, c_n, a, all_patterns, active_load_cases, dof, st, sc):
         #     if numAdded > 0: # only fully terminate when no members violate
         #         continue
         #     else:
         #         break
 
-        if PrimalAdaptivity:
+        if primal_adaptivity:
             if primal_method == "residual":
                 # Use equilibrium residual check
-                converged = stopPrimalViolationResidual(
-                    Nd, Cn, q, allPatterns, activeLoadCases, dof
+                converged = stop_primal_violation_residual(
+                    n_d, c_n, q, all_patterns, active_load_cases, dof
                 )
             elif primal_method == "load_factor":
                 # Use load factor LP
-                converged = stopPrimalViolationPattern(
-                    Nd, Cn, a, allPatterns, activeLoadCases, dof, st, sc
+                converged = stop_primal_violation_pattern(
+                    n_d, c_n, a, all_patterns, active_load_cases, dof, st, sc
                 )
+            # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
 
-            if not converged:
+            if not converged:  # pylint: disable=possibly-used-before-assignment
                 continue  # Cases added, keep iterating
-            if numAdded > 0:
+            if n_added > 0:
                 continue  # No cases added but members added
             break  # Both converged
         # No primal adaptivity - just check member convergence
-        if numAdded == 0:
+        if n_added == 0:
             break  # Converged
 
     final_vol = vol
-    print("Volume: %f" % (final_vol))
-    solveEnd = time.process_time()
-    print("Solve took " + str(solveEnd - setupEnd))
-    print(f"Active patterns: {int(np.sum(activeLoadCases))}/{len(allPatterns)}")
+    print(f"Volume: {final_vol}")
+    solve_end = time.process_time()
+    print("Solve took " + str(solve_end - setup_end))
+    print(f"Active patterns: {int(np.sum(active_load_cases))}/{len(all_patterns)}")
 
     # Plot results
-    # plotTruss(Nd, Cn, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
+    # plotTruss(n_d, c_n, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
 
     ## Filter
-    if doFilter:
-        FilterLevels = [
+    if filtering:
+        filter_levels = [
             0.001,
             0.01,
             0.02,
@@ -783,66 +846,64 @@ def trussopt(
             0.1,
         ]
     else:
-        FilterLevels = []
-    for multiplier in FilterLevels:
-        maxA = max(a)
-        filterVal = multiplier * maxA
-        keep = [True if aVal > filterVal else False for aVal in a]
-        kept = Cn[keep]
-        vol, FiltA, FiltQ, u = solveLP(Nd, kept, f_active, dof, st, sc, jc)
+        filter_levels = []
+    for multiplier in filter_levels:
+        max_a = max(a)
+        filter_val = multiplier * max_a
+        keep = [a_value > filter_val for a_value in a]
+        kept = c_n[keep]
+        vol, filer_a, filter_q, u = solve(n_d, kept, f_active, dof, st, sc, jc)
         if vol > 0:
             print(
-                "filtered volume ",
-                vol,
-                "with filter at",
-                100 * multiplier,
-                "% gives",
-                str(len(FiltA)),
-                "members",
+                f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
             )
-            plotTruss(
-                Nd,
+            plot_truss(
+                n_d,
                 kept,
-                FiltA,
-                FiltQ,
+                filer_a,
+                filter_q,
                 max(a) * 1e-3,
                 "Filtered " + str(100 * multiplier) + "%",
                 False,
-                allCases=False,
+                all_cases=False,
             )
 
-    print("Plotting took " + str(time.process_time() - solveEnd))
+    print(f"Plotting took {time.process_time() - solve_end!s}")
 
     # Save results to CSV
     if save_to_csv:
         results = {
             "timestamp": timestamp,
-            "problem_name": problem_name or f"w{width}_h{height}_n{len(loadedPoints)}",
+            "problem_name": problem_name or f"w{width}_h{height}_n{len(loaded_points)}",
             "width": width,
             "height": height,
-            "n_load_points": len(loadedPoints),
-            "n_patterns_total": len(allPatterns),
-            "n_patterns_active": int(np.sum(activeLoadCases)),
-            "load_large": loadLarge,
-            "load_small": loadSmall,
+            "n_load_points": len(loaded_points),
+            "n_patterns_total": len(all_patterns),
+            "n_patterns_active": int(np.sum(active_load_cases)),
+            "load_large": load_large,
+            "load_small": load_small,
             "iterations": itr,
             "final_volume": final_vol,
-            "n_members_final": len(Cn),
-            "n_nodes": len(Nd),
-            "n_ground_structure": len(PML),
-            "cpu_time_setup": setupEnd - setupStart,
-            "cpu_time_solve": solveEnd - setupEnd,
+            "n_members_final": len(c_n),
+            "n_nodes": len(n_d),
+            "n_ground_structure": len(potential_members),
+            "cpu_time_setup": setup_end - setup_start,
+            "cpu_time_solve": solve_end - setup_end,
             # 'cpu_time_total': total_cpu_time,
             # 'wall_time_total': total_wall_time,
             "primal_method": primal_method,
             "notes": notes,
         }
+        # ns-rse 2026-03-16 - inefficient to write to CSV, build dictionary/dataframe in memory and write to disk on
+        #                     completion (as we may end up paralllelising processing)
         save_results_to_csv(results, csv_filename)
 
     return vol, a
 
 
-def save_results_to_csv(results, filename="pattern_loading_results.csv"):
+def save_results_to_csv(
+    results: dict[str, str | int | float], filename="pattern_loading_results.csv"
+):
     """
     Save optimization results to CSV file.
 
@@ -868,7 +929,7 @@ def save_results_to_csv(results, filename="pattern_loading_results.csv"):
     filename : str
         CSV filename (default=``pattern_loading_results.csv``).
     """
-    file_exists = os.path.isfile(filename)
+    file_exists = Path(filename).is_file()
 
     # Define column order
     fieldnames = [
@@ -894,7 +955,7 @@ def save_results_to_csv(results, filename="pattern_loading_results.csv"):
         "notes",
     ]
 
-    with open(filename, "a", newline="") as csvfile:
+    with Path(filename).open("a", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
         # Write header if new file
@@ -968,16 +1029,16 @@ def save_results_to_csv(results, filename="pattern_loading_results.csv"):
 # =============================================================================
 # ==== Spanning Example (Fig 16 etc.) =========================================
 # =============================================================================
-height = 4
-spanL = 18
-numSpans = 1
-totalW = spanL * numSpans
-numPerSpan = 9  # Nodes per span
+# height = 4
+# spanL = 18
+# numSpans = 1
+# totalW = spanL * numSpans
+# numPerSpan = 9  # Nodes per span
 
-loadPoints = [
-    [x * spanL / numPerSpan, height] for x in range(numPerSpan * numSpans + 1)
-]
-suppPoints = [[x * spanL, 0] for x in range(numSpans + 1)]
+# loadPoints = [
+#     [x * spanL / numPerSpan, height] for x in range(numPerSpan * numSpans + 1)
+# ]
+# suppPoints = [[x * spanL, 0] for x in range(numSpans + 1)]
 
 
 # NB supports for arch examples hard-coded in trussopt to be fixed rather than rollers
