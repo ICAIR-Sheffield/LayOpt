@@ -116,6 +116,7 @@ module = [
   "loguru.*",
   "pydantic.*",
   "schema.*",
+  "syrupy.*",
   "tqdm.*",
 ]
 disallow_untyped_defs = true

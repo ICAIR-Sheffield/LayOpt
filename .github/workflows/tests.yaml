@@ -48,6 +48,7 @@ jobs:
           pytest --cov=src --numprocesses=logical
       - name: Determine coverage
         run: |
+          source .venv/bin/activate
           coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5

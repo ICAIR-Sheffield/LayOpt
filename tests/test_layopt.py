@@ -1,13 +1,51 @@
 """Tests for the layopt module."""
 
+import os
 from pathlib import Path
+from typing import Any
 
+import numpy as np
 import pytest
+from syrupy.matchers import path_type
 
-import layopt
 from layopt import layopt
 
+GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+PRECISION = 8
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-positional-arguments
+
+np.set_printoptions(precision=PRECISION)
+
+
+def round_values(to_be_rounded: Any, precision: int) -> Any:
+    """
+    Round values conditional on type (``float`` or ``np.ndarray``).
+
+    Parameters
+    ----------
+    to_be_rounded : Any
+        Parameter to be rounded.
+    precision : int
+        Significant digits to round to.
+
+    Returns
+    -------
+        Rounded value if either ``float`` or ``np.ndarray`` is provided.
+    """
+    if isinstance(to_be_rounded, float):
+        return round(to_be_rounded, precision)
+    if isinstance(to_be_rounded, np.ndarray):
+        return np.round(to_be_rounded, precision)
+    return to_be_rounded
+
+
+@pytest.mark.skipif(
+    GITHUB_ACTIONS,
+    reason="mosek library requires license so test will always fail in continuous integration",
+)
 @pytest.mark.parametrize(
     (
         "width",
@@ -163,7 +201,10 @@ def test_testname(
         notes=notes,
     )
     assert Path(csv_filename).is_file()
+    # Round values
     assert results == snapshot(
-        matcher,
-        path_type(types=(float, np.ndarray), replacer=lambda data, _: round(data, 8)),
+        matcher=path_type(
+            types=(float, np.ndarray),
+            replacer=lambda data, _: round_values(data, PRECISION),
+        ),
     )
