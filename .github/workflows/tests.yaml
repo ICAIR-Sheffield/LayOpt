@@ -31,24 +31,19 @@ jobs:
         python-version: ["3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@v7
         with:
+          activate-environment: true
           python-version: ${{ matrix.python-version }}
-      - uses: astral-sh/setup-uv@v7
-      - name: Upgrade pip and install test dependencies
+      - name: Install the package
         run: |
-          uv venv
-          source .venv/bin/activate
-          uv pip install --group dev
-          uv pip install -e .
+          uv sync --locked --all-extras --dev
       - name: Test with pytest
         run: |
-          source .venv/bin/activate
-          pytest --cov=src --numprocesses=logical
+          uv run pytest --cov=src --numprocesses=logical tests
       - name: Determine coverage
         run: |
-          source .venv/bin/activate
           coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
