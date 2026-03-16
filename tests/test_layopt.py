@@ -46,6 +46,7 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
     GITHUB_ACTIONS,
     reason="mosek library requires license so test will always fail in continuous integration",
 )
+
 @pytest.mark.parametrize(
     (
         "width",
