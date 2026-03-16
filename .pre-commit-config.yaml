@@ -118,7 +118,7 @@ repos:
   - repo: local
     hooks:
       - id: pylint
-        args: ["--rcfile=.pylintrc"]
+        args: ["--rcfile=.pylintrc.toml"]
         name: Pylint
         entry: python -m pylint
         language: system

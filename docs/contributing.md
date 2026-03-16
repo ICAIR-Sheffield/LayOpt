@@ -5,6 +5,21 @@ the repository, make your changes on the fork and then create a Pull Request. Co
 contributions directly, although the `main` branch is protected so all changes should be made on dedicated branches and
 a Pull Request used to merge the changes to the `main` branch.
 
+## Git
+
+### Branches
+
+Please use structured branch names which impart metadata about who the branch belongs to and what issue is being
+addressed. The suggested structure is `<github_username>/<issue_number>-<short_text_description>`, e.g.
+`ns-rse/10-integration-test` is a branch created by `ns-rse` addressing issue `10` which introduces `integration-test`
+to the code base.
+
+### Commits
+
+We advocate the use of [Conventional Commits][conventional_commit] which provides a structured nomenclature for writing
+your commit messages. We would also encourage the use of multi-line commit messages rather than a single header so that
+more detailed information on _why_ something has been done in a certain way is recorded against commits.
+
 ## Style
 
 We employ [pre-commit][pre-commit] hooks to apply a number of linting, type-hints and style rules using the following
@@ -56,6 +71,7 @@ accepted [PEP8][pep8] style guide is used by the LayOpt code base and [numpydoc]
 
 [black]: https://black.readthedocs.io/en/stable/
 [codespell]: https://github.com/codespell-project/codespell
+[conventional_commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [numpydoc]: https://numpydoc.readthedocs.io/en/latest/
 [numpydoc_validation]: https://numpydoc.readthedocs.io/en/latest/validation.html
 [mypy]: https://www.mypy-lang.org/

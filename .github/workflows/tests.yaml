@@ -41,12 +41,14 @@ jobs:
           uv venv
           source .venv/bin/activate
           uv pip install --group dev
+          uv pip install -e .
       - name: Test with pytest
         run: |
           source .venv/bin/activate
           pytest --cov=src --numprocesses=logical
       - name: Determine coverage
         run: |
+          source .venv/bin/activate
           coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
