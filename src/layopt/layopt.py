@@ -1,3 +1,4 @@
+"""Layopt module."""
 # below line for use in Colab
 # @title { vertical-output: true}
 
@@ -13,7 +14,6 @@
 ## optimization of trusses. Struct Multidisc Optim 60, 835â€“847 (2019).
 ## https://doi.org/10.1007/s00158-019-02226-6
 # !pip install mosek
-
 
 import csv
 import datetime
@@ -78,17 +78,15 @@ def solveLP(Nd, Cn, f, dof, st, sc, jc):
         Tensile stress limit.
     sc : float
         Compressive stress limit.
+    jc : float
+        Joint cost.
 
     Returns
     -------
-    vol : float
-        Volume of solved problem.
-    a : ndarray
-        Member areas.
-    q : list
-        Member forces.
-    u : list
-        Virtual deflections at (unsupported) degrees of freedom.
+    tuple[float, npt.NDArray, list, list]
+        A tuple consisting of ``volume`` (the volume of the solved problem),
+        ``area`` (member areas), ``forces`` (member forces) and ``deflections``
+        (virtual deflections at degrees of freedom).
     """
     l = [col[2] + jc for col in Cn]
     B = calcB(Nd, Cn, dof)
@@ -145,7 +143,9 @@ def stopViolation(Nd, PML, dof, st, sc, u, jc):
     sc : float
         Compressive stress limit.
     u : list
-        Virtual deflections at (unsupported) degrees of freedom.
+        Virtual deflections at degrees of freedom.
+    jc : float
+        Joint cost.
 
     Returns
     -------
@@ -187,9 +187,9 @@ def plotTruss(Nd, Cn, a, q, threshold, st, update=True, allCases=False):
     st : float
         Tensile stress limit.
     update : bool
-        Enable interactive mode (default=True).
+        Enable interactive mode (default=``True``).
     allCases : bool
-        Plot all load cases individually (default=False).
+        Plot all load cases individually (default=``False``).
     """
     if allCases == True:
         plotAllCases(Nd, Cn, a, q, threshold, st)
@@ -275,13 +275,10 @@ def makePatternLoads(Nd, loadedPoints, loadLarge=50, loadSmall=5, loadDir=[0, -1
 
     Returns
     -------
-    allPatterns : list
-        All load cases.
-    baseLoad : list
-        Base load case.
-    patternDescriptions : list
-        Description of each load case using 'L' for large or 'S' for small
-        at each load point.
+    tuple[list, list, list]
+        A tuple consisting of ``allPatterns`` (all load cases), ``baseLoad``
+        (base load case) and ``patternDescriptions`` (description of each load
+        case using ``L`` for large or ``S`` for small at each load point).
     """
     n = len(loadedPoints)
 
@@ -572,7 +569,7 @@ def trussopt(
     supportPoints=[],
     doFilter=False,
     primal_method="load_factor",
-    problem_name="",
+    problem_name="None",
     save_to_csv=True,
     csv_filename="pattern_loading_results.csv",
     notes="",
@@ -590,6 +587,8 @@ def trussopt(
         Tensile stress limit.
     sc : float
         Compressive stress limit.
+    jc : float
+        Joint cost.
     loadedPoints : list
         Load points (default=[]).
     loadVal : list
@@ -603,11 +602,11 @@ def trussopt(
     supportPoints : list
         Support points (default=[]).
     doFilter : bool
-        Enable post-processing filtering on member areas (default=False).
+        Enable post-processing filtering on member areas (default=``False``).
     primal_method : {'load_factor', 'residual' 'none'}
         Primal violation method (default='load_factor').
     problem_name : str
-        Name of problem to solve (default='').
+        Name of problem to solve (default=``None``).
     save_to_csv : bool
         Enable saving results to CSV file (default=True).
     csv_filename : str
@@ -617,10 +616,9 @@ def trussopt(
 
     Returns
     -------
-    vol : float
-        Final volume of solved problem.
-    a : ndarray
-        Final member areas of solved problem.
+    tuple[float, npt.NDArray]
+        A tuple consisting of ``volume`` (the final volume of the solved problem)
+        and ``area`` (final member areas of the solved problem).
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     setupStart = time.process_time()
@@ -851,7 +849,7 @@ def save_results_to_csv(results, filename="pattern_loading_results.csv"):
     Creates file with header if it doesn't exist, otherwise appends.
 
     Parameters
-    -----------
+    ----------
     results : dict
         Dictionary containing results to save. Should include keys:
         - timestamp
@@ -868,7 +866,7 @@ def save_results_to_csv(results, filename="pattern_loading_results.csv"):
         - primal_method
         - notes
     filename : str
-        CSV filename (default: 'pattern_loading_results.csv').
+        CSV filename (default=``pattern_loading_results.csv``).
     """
     file_exists = os.path.isfile(filename)
 
