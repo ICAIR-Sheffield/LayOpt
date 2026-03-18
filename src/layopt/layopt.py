@@ -1,3 +1,4 @@
+"""Layopt module."""
 # below line for use in Colab
 # @title { vertical-output: true}
 
@@ -13,7 +14,6 @@
 ## optimization of trusses. Struct Multidisc Optim 60, 835â€“847 (2019).
 ## https://doi.org/10.1007/s00158-019-02226-6
 # !pip install mosek
-
 
 import csv
 import datetime
@@ -33,8 +33,24 @@ from shapely.geometry import LineString, Point, Polygon
 plt.rcParams["figure.max_open_warning"] = 0
 
 
-# Calculate equilibrium matrix B
 def calcB(Nd, Cn, dof):
+    """
+    Calculate equilibrium matrix B.
+
+    Parameters
+    ----------
+    Nd : ndarray
+        Nodal coordinates.
+    Cn : ndarray
+        Active members.
+    dof : ndarray
+        Degrees of freedom.
+
+    Returns
+    -------
+    coo_matrix
+        Equilibrium matrix B.
+    """
     m, n1, n2 = len(Cn), Cn[:, 0].astype(int), Cn[:, 1].astype(int)
     l, X, Y = Cn[:, 2], Nd[n2, 0] - Nd[n1, 0], Nd[n2, 1] - Nd[n1, 1]
     d0, d1, d2, d3 = dof[n1 * 2], dof[n1 * 2 + 1], dof[n2 * 2], dof[n2 * 2 + 1]
@@ -44,8 +60,34 @@ def calcB(Nd, Cn, dof):
     return sparse.coo_matrix((s, (r, c)), shape=(len(Nd) * 2, m))
 
 
-# Solve linear programming problem with given connections and pattern load cases
 def solveLP(Nd, Cn, f, dof, st, sc, jc):
+    """
+    Solve linear programming problem with given connections and pattern load cases.
+
+    Parameters
+    ----------
+    Nd : ndarray
+        Nodal coordinates.
+    Cn : ndarray
+        Active members.
+    f : list
+        Load cases.
+    dof : ndarray
+        Degrees of freedom.
+    st : float
+        Tensile stress limit.
+    sc : float
+        Compressive stress limit.
+    jc : float
+        Joint cost.
+
+    Returns
+    -------
+    tuple[float, npt.NDArray, list, list]
+        A tuple consisting of ``volume`` (the volume of the solved problem),
+        ``area`` (member areas), ``forces`` (member forces) and ``deflections``
+        (virtual deflections at degrees of freedom).
+    """
     l = [col[2] + jc for col in Cn]
     B = calcB(Nd, Cn, dof)
     q, eqn = [], []
@@ -84,8 +126,32 @@ def solveLP(Nd, Cn, f, dof, st, sc, jc):
     return vol, a, q, u
 
 
-# Add new members dual violation
 def stopViolation(Nd, PML, dof, st, sc, u, jc):
+    """
+    Check for dual violation and add new members.
+
+    Parameters
+    ----------
+    Nd : ndarray
+        Nodal coordinates.
+    PML : ndarray
+        Potential member list.
+    dof : ndarray
+        Degrees of freedom.
+    st : float
+        Tensile stress limit.
+    sc : float
+        Compressive stress limit.
+    u : list
+        Virtual deflections at degrees of freedom.
+    jc : float
+        Joint cost.
+
+    Returns
+    -------
+    int
+        Number of members added.
+    """
     lst = np.where(PML[:, 3] == False)[0]
     Cn = PML[lst]
     l = Cn[:, 2] + jc
@@ -102,8 +168,29 @@ def stopViolation(Nd, PML, dof, st, sc, u, jc):
     return min(num, len(vioSort))
 
 
-# Visualize truss
 def plotTruss(Nd, Cn, a, q, threshold, st, update=True, allCases=False):
+    """
+    Visualise truss.
+
+    Parameters
+    ----------
+    Nd : ndarray
+        Nodal coordinates.
+    Cn : ndarray
+        Active members.
+    a : ndarray
+        Member areas.
+    q : list
+        Member forces.
+    threshold : float
+        Minimum allowable member area.
+    st : float
+        Tensile stress limit.
+    update : bool
+        Enable interactive mode (default=``True``).
+    allCases : bool
+        Plot all load cases individually (default=``False``).
+    """
     if allCases == True:
         plotAllCases(Nd, Cn, a, q, threshold, st)
     else:
@@ -136,8 +223,25 @@ def plotTruss(Nd, Cn, a, q, threshold, st, update=True, allCases=False):
         # fig.savefig(st+'.pdf', dpi=1200)
 
 
-# loop through all cases and plot individually
 def plotAllCases(Nd, Cn, a, q, threshold, st):
+    """
+    Visualise truss, loop through all load cases and plot individually.
+
+    Parameters
+    ----------
+    Nd : ndarray
+        Nodal coordinates.
+    Cn : ndarray
+        Active members.
+    a : ndarray
+        Member areas.
+    q : list
+        Member forces.
+    threshold : float
+        Minimum allowable member area.
+    st : float
+        Tensile stress limit.
+    """
     numCases = len(q)
     for k in range(numCases):
         plotTruss(
@@ -152,8 +256,30 @@ def plotAllCases(Nd, Cn, a, q, threshold, st):
         )
 
 
-# generate all 2^n combinations of large/small loads at each load point
 def makePatternLoads(Nd, loadedPoints, loadLarge=50, loadSmall=5, loadDir=[0, -1]):
+    """
+    Generate all 2^n combinations of large/small loads at each load point.
+
+    Parameters
+    ----------
+    Nd : ndarray
+        Nodal coordinates.
+    loadedPoints : ndarray
+        Load points.
+    loadLarge : float
+        Large load to apply at each load point (default=50).
+    loadSmall : float
+        Small load to apply at each load point (default=5).
+    loadDir : list
+        Load direction (default=[0,-1]).
+
+    Returns
+    -------
+    tuple[list, list, list]
+        A tuple consisting of ``allPatterns`` (all load cases), ``baseLoad``
+        (base load case) and ``patternDescriptions`` (description of each load
+        case using ``L`` for large or ``S`` for small at each load point).
+    """
     n = len(loadedPoints)
 
     # Find node indices for each load point
@@ -187,13 +313,30 @@ def makePatternLoads(Nd, loadedPoints, loadLarge=50, loadSmall=5, loadDir=[0, -1
     return allPatterns, baseLoad, patternDescriptions
 
 
-# add new pattern load cases primal violation
-# violation criterion: check if min over active j of ||B*q[j] - f[k]*dof|| > tol
-# (essentially checking if Bq-f=0)
-# for each inactive load pattern, check whether any existing active solution
-# q[j] already satisfies equilibrium for that load pattern. if not, pattern
-# is violated and is added
 def stopPrimalViolationResidual(Nd, Cn, q, allPatterns, activeLoadCases, dof):
+    """
+    Check for primal violation (equilibrium constraint violation) and add new load cases.
+
+    Parameters
+    ----------
+    Nd : ndarray
+        Nodal coordinates.
+    Cn : ndarray
+        Active members.
+    q : list
+        Member forces.
+    allPatterns : list
+        All load cases.
+    activeLoadCases : list
+        For each load case, bool set to True if active, False otherwise.
+    dof : ndarray
+        Degrees of freedom.
+
+    Returns
+    -------
+    bool
+        True if converged and no load cases added.
+    """
     tol = 1e-5
     B = calcB(Nd, Cn, dof).tocsc()
 
@@ -264,17 +407,34 @@ def stopPrimalViolationResidual(Nd, Cn, q, allPatterns, activeLoadCases, dof):
     return True  # converged, terminate
 
 
-# add new pattern load cases primal violation using load factor structural analysis
-# for each inactive load pattern f[k], solve an LP to find the maximum
-# load factor lambda that the current design (with fixed member areas a) can carry:
-#    maximize lambda
-#    subject to:
-#        B*q = lambda*f[k]        (equilibrium with scaled load)
-#        -sigma_c*a <= q <= sigma_t*a  (stress limits with fixed areas)
-# violation criterion: check if lambda >= 1
-# if so, structure can carry full load so no violation
-# else structure can only carry some of the load, violation, so add load case
 def stopPrimalViolationPattern(Nd, Cn, a, allPatterns, activeLoadCases, dof, st, sc):
+    """
+    Check for primal violation (load factor structural analysis) and add new load cases.
+
+    Parameters
+    ----------
+    Nd : ndarray
+        Nodal coordinates.
+    Cn : ndarray
+        Active members.
+    a : list
+        Member areas.
+    allPatterns : list
+        All load cases.
+    activeLoadCases : list
+        For each load case, bool set to True if active, False otherwise.
+    dof : ndarray
+        Degrees of freedom.
+    st : float
+        Tensile stress limit.
+    sc : float
+        Compressive stress limit.
+
+    Returns
+    -------
+    bool
+        True if converged and no load cases added.
+    """
     tol = 0.99  # lambda must be >= 1 to be considered feasible
 
     B = calcB(Nd, Cn, dof)
@@ -409,11 +569,57 @@ def trussopt(
     supportPoints=[],
     doFilter=False,
     primal_method="load_factor",
-    problem_name="",
+    problem_name="None",
     save_to_csv=True,
     csv_filename="pattern_loading_results.csv",
     notes="",
 ):
+    """
+    Main function, perform adaptive member adding procedure with multiple load cases.
+
+    Parameters
+    ----------
+    width : float
+        Width of structure.
+    height : float
+        Height of structure.
+    st : float
+        Tensile stress limit.
+    sc : float
+        Compressive stress limit.
+    jc : float
+        Joint cost.
+    loadedPoints : list
+        Load points (default=[]).
+    loadVal : list
+        Load direction (default=[0,-1]).
+    loadLarge : float
+        Large load to apply at each load point (default=50).
+    loadSmall : float
+        Small load to apply at each load point (default=5).
+    maxLength : float
+        Maximum member length.
+    supportPoints : list
+        Support points (default=[]).
+    doFilter : bool
+        Enable post-processing filtering on member areas (default=``False``).
+    primal_method : {'load_factor', 'residual' 'none'}
+        Primal violation method (default='load_factor').
+    problem_name : str
+        Name of problem to solve (default=``None``).
+    save_to_csv : bool
+        Enable saving results to CSV file (default=True).
+    csv_filename : str
+        CSV filename for saved results (default='pattern_loading_results.csv').
+    notes : str
+        Notes (default='').
+
+    Returns
+    -------
+    tuple[float, npt.NDArray]
+        A tuple consisting of ``volume`` (the final volume of the solved problem)
+        and ``area`` (final member areas of the solved problem).
+    """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     setupStart = time.process_time()
 
@@ -642,8 +848,8 @@ def save_results_to_csv(results, filename="pattern_loading_results.csv"):
 
     Creates file with header if it doesn't exist, otherwise appends.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     results : dict
         Dictionary containing results to save. Should include keys:
         - timestamp
@@ -660,7 +866,7 @@ def save_results_to_csv(results, filename="pattern_loading_results.csv"):
         - primal_method
         - notes
     filename : str
-        CSV filename (default: 'pattern_loading_results.csv')
+        CSV filename (default=``pattern_loading_results.csv``).
     """
     file_exists = os.path.isfile(filename)
 
