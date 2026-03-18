@@ -26,6 +26,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import mosek.fusion as mosek
 import numpy as np
+import numpy.typing as npt
 from scipy import sparse
 
 # from numpy.matlib import repmat
@@ -33,18 +34,20 @@ from shapely.geometry import LineString, Point, Polygon
 
 plt.rcParams["figure.max_open_warning"] = 0
 
+# pylint: disable=too-many-lines
 
-def calc_eq_matrix_b(n_d, c_n, dof):
+
+def calc_eq_matrix_b(nodal_coords: npt.NDArray, c_n: npt.NDArray, dof: npt.NDArray):
     """
     Calculate equilibrium matrix B.
 
     Parameters
     ----------
-    n_d : ndarray
+    nodal_coords : npt.NDArray
         Nodal coordinates.
-    c_n : ndarray
+    c_n : npt.NDArray
         Active members.
-    dof : ndarray
+    dof : npt.NDArray
         Degrees of freedom.
 
     Returns
@@ -53,33 +56,38 @@ def calc_eq_matrix_b(n_d, c_n, dof):
         Equilibrium matrix B.
     """
     m, n1, n2 = len(c_n), c_n[:, 0].astype(int), c_n[:, 1].astype(int)
-    l, x, y = c_n[:, 2], n_d[n2, 0] - n_d[n1, 0], n_d[n2, 1] - n_d[n1, 1]
+    l, x, y = (
+        c_n[:, 2],
+        nodal_coords[n2, 0] - nodal_coords[n1, 0],
+        nodal_coords[n2, 1] - nodal_coords[n1, 1],
+    )
     d0, d1, d2, d3 = dof[n1 * 2], dof[n1 * 2 + 1], dof[n2 * 2], dof[n2 * 2 + 1]
+    # ns-rse 2026-03-18 : What are s, r and c? They are arrays but what do the elements represent?
     s = np.concatenate((-x / l * d0, -y / l * d1, x / l * d2, y / l * d3))
     r = np.concatenate((n1 * 2, n1 * 2 + 1, n2 * 2, n2 * 2 + 1))
     c = np.concatenate((np.arange(m), np.arange(m), np.arange(m), np.arange(m)))
-    return sparse.coo_matrix((s, (r, c)), shape=(len(n_d) * 2, m))
+    return sparse.coo_matrix((s, (r, c)), shape=(len(nodal_coords) * 2, m))
 
 
-def solve(n_d, c_n, f, dof, st, sc, jc):
+def solve(nodal_coords, c_n, f, dof, stress_tensile, stress_compressive, joint_cost):
     """
     Solve linear programming problem with given connections and pattern load cases.
 
     Parameters
     ----------
-    n_d : ndarray
+    nodal_coords : npt.NDArray
         Nodal coordinates.
-    c_n : ndarray
+    c_n : npt.NDArray
         Active members.
     f : list
         Load cases.
-    dof : ndarray
+    dof : npt.NDArray
         Degrees of freedom.
-    st : float
+    stress_tensile : float
         Tensile stress limit.
-    sc : float
+    stress_compressive : float
         Compressive stress limit.
-    jc : float
+    joint_cost : float
         Joint cost.
 
     Returns
@@ -89,8 +97,10 @@ def solve(n_d, c_n, f, dof, st, sc, jc):
         ``area`` (member areas), ``forces`` (member forces) and ``deflections``
         (virtual deflections at degrees of freedom).
     """
-    l = [col[2] + jc for col in c_n]
-    eq_matrix_b = calc_eq_matrix_b(n_d, c_n, dof)
+    # ns-rse 2026-03-16 : What does l represent here? Is it perhaps a list of length + joint_cost so scaled length, or
+    # length_cost?
+    l = [col[2] + joint_cost for col in c_n]
+    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)
     q, eqn = [], []
     k = 0  # (damage+load) case number
     with mosek.Model() as model:
@@ -112,10 +122,12 @@ def solve(n_d, c_n, f, dof, st, sc, jc):
             )
             eqn.append(eqni)
             model.constraint(
-                mosek.Expr.sub(mosek.Expr.mul(sc, a), q[k]), mosek.Domain.greaterThan(0)
+                mosek.Expr.sub(mosek.Expr.mul(stress_compressive, a), q[k]),
+                mosek.Domain.greaterThan(0),
             )
             model.constraint(
-                mosek.Expr.sub(mosek.Expr.mul(-st, a), q[k]), mosek.Domain.lessThan(0)
+                mosek.Expr.sub(mosek.Expr.mul(-stress_tensile, a), q[k]),
+                mosek.Domain.lessThan(0),
             )
             k += 1
         model.setSolverParam("optimizer", "intpnt")
@@ -133,25 +145,33 @@ def solve(n_d, c_n, f, dof, st, sc, jc):
     return vol, a, q, u
 
 
-def stop_violation(n_d, pml, dof, st, sc, u, jc):
+def stop_violation(
+    nodal_coords: npt.NDArray,
+    potential_members: npt.NDArray,
+    dof: npt.NDArray,
+    stress_tensile: float,
+    stress_compressive: float,
+    deflections: list,
+    joint_cost: float,
+):
     """
     Check for dual violation and add new members.
 
     Parameters
     ----------
-    n_d : ndarray
+    nodal_coords : npt.NDArray
         Nodal coordinates.
-    pml : ndarray
-        Potential member list.
-    dof : ndarray
+    potential_members : npt.NDArray
+        A list of all possible members.
+    dof : npt.NDArray
         Degrees of freedom.
-    st : float
+    stress_tensile : float
         Tensile stress limit.
-    sc : float
+    stress_compressive : float
         Compressive stress limit.
-    u : list
+    deflections : list
         Virtual deflections at degrees of freedom.
-    jc : float
+    joint_cost : float
         Joint cost.
 
     Returns
@@ -159,50 +179,67 @@ def stop_violation(n_d, pml, dof, st, sc, u, jc):
     int
         Number of members added.
     """
-    lst = np.where(pml[:, 3] == False)[0]  # pylint: disable=singleton-comparison
-    c_n = pml[lst]
+    lst = np.where(potential_members[:, 3] == False)[0]  # pylint: disable=singleton-comparison
+    c_n = potential_members[lst]
     # ns-rse 2026-03-17 : What is l?
-    l = c_n[:, 2] + jc
-    eq_matrix_b = calc_eq_matrix_b(n_d, c_n, dof).tocsc()
+    l = c_n[:, 2] + joint_cost
+    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
     y = np.zeros(len(c_n))
-    for uk in u:
-        yk = np.multiply(eq_matrix_b.transpose().dot(uk) / l, np.array([[st], [-sc]]))
+    for uk in deflections:
+        yk = np.multiply(
+            eq_matrix_b.transpose().dot(uk) / l,
+            np.array([[stress_tensile], [-stress_compressive]]),
+        )
         y += np.amax(yk, axis=0)
     vio_c_n = np.where(y > 1.000)[0]
     vio_sort = np.flipud(np.argsort(y[vio_c_n]))
-    num = ceil(0.1 * (len(pml) - len(c_n)))  # size of existing problem
+    num = ceil(0.1 * (len(potential_members) - len(c_n)))  # size of existing problem
     for i in range(min(num, len(vio_sort))):
-        pml[lst[vio_c_n[vio_sort[i]]]][3] = True  # set member as active
+        potential_members[lst[vio_c_n[vio_sort[i]]]][3] = True  # set member as active
     return min(num, len(vio_sort))
 
 
 def plot_truss(
-    n_d, c_n, a, q, threshold, st, update: bool = True, all_cases: bool = False
+    nodal_coords: npt.NDArray,
+    c_n: npt.NDArray,
+    areas: list,
+    forces: list,
+    threshold: float,
+    title: str,
+    update: bool = True,
+    all_cases: bool = False,
 ):
     """
     Visualise truss.
 
     Parameters
     ----------
-    n_d : ndarray
+    nodal_coords : npt.NDArray
         Nodal coordinates.
-    c_n : ndarray
+    c_n : npt.NDArray
         Active members.
-    a : ndarray
+    areas : npt.NDArray
         Member areas.
-    q : list
+    forces : list
         Member forces.
     threshold : float
         Minimum allowable member area.
-    st : float
-        Tensile stress limit.
+    title : str
+        Title for plot, typically includes the filter level expressed as a percentage.
     update : bool
         Enable interactive mode (default=``True``).
     all_cases : bool
         Plot all load cases individually (default=``False``).
     """
     if all_cases:
-        plot_all_cases(n_d, c_n, a, q, threshold, st)
+        plot_all_cases(
+            nodal_coords=nodal_coords,
+            c_n=c_n,
+            areas=areas,
+            forces=forces,
+            threshold=threshold,
+            stress_tensile=title,
+        )
     else:
         fig = plt.figure()
         ax = fig.subplots()
@@ -212,24 +249,28 @@ def plot_truss(
             plt.ioff()
         ax.axis("off")
         ax.axis("equal")
-        ax.set_title(st)
-        tk = 0.4  # bar thickness scale
-        for i in [i for i in range(len(a)) if a[i] >= threshold]:
-            if len(q) > 1:  # multiple LC coloring
-                if all(q[lc][i] >= -0.001 for lc in range(len(q))):
-                    c = "r"
-                elif all(q[lc][i] <= 0.001 for lc in range(len(q))):
-                    c = "b"
+        ax.set_title(title)
+        bar_thickness = 0.4  # bar thickness scale
+        for i in [i for i in range(len(areas)) if areas[i] >= threshold]:
+            if len(forces) > 1:  # multiple LC coloring
+                if all(forces[lc][i] >= -0.001 for lc in range(len(forces))):
+                    color = "r"
+                elif all(forces[lc][i] <= 0.001 for lc in range(len(forces))):
+                    color = "b"
                 else:
-                    c = "tab:gray"
+                    color = "tab:gray"
             else:  # single LC coloring (black = no load, dark = less load)
-                c = (min(max(q[0][i] / a[i], 0), 1), 0, min(max(-q[0][i] / a[i], 0), 1))
-            pos = n_d[c_n[i, [0, 1]].astype(int), :]
+                color = (
+                    min(max(forces[0][i] / areas[i], 0), 1),
+                    0,
+                    min(max(-forces[0][i] / areas[i], 0), 1),
+                )
+            pos = nodal_coords[c_n[i, [0, 1]].astype(int), :]
             ax.plot(
                 pos[:, 0],
                 pos[:, 1],
-                color=c,
-                linewidth=a[i] * tk,
+                color=color,
+                linewidth=areas[i] * bar_thickness,
                 solid_capstyle="round",
             )
         if update:
@@ -239,63 +280,74 @@ def plot_truss(
         # fig.savefig(st+'.pdf', dpi=1200)
 
 
-def plot_all_cases(n_d, c_n, a, q, threshold, st) -> None:
+def plot_all_cases(
+    nodal_coords: npt.NDArray,
+    c_n: npt.NDArray,
+    areas: npt.NDArray,
+    forces: list,
+    threshold: float,
+    stress_tensile: str,
+) -> None:
     """
     Visualise truss, loop through all load cases and plot individually.
 
     Parameters
     ----------
-    n_d : ndarray
+    nodal_coords : npt.NDArray
         Nodal coordinates.
-    c_n : ndarray
+    c_n : npt.NDArray
         Active members.
-    a : ndarray
+    areas : npt.NDArray
         Member areas.
-    q : list
+    forces : list
         Member forces.
     threshold : float
         Minimum allowable member area.
-    st : float
-        Tensile stress limit.
+    stress_tensile : str
+        Stress tensile in string format as a percentage.
     """
-    n_cases = len(q)
+    n_cases = len(forces)
     for k in range(n_cases):
         plot_truss(
-            n_d=n_d,
+            nodal_coords=nodal_coords,
             c_n=c_n,
-            a=a,
-            q=[q[k]],
+            areas=areas,
+            forces=[forces[k]],
             threshold=threshold,
-            st=st + " case " + str(k),
+            title=stress_tensile + " case " + str(k),
             update=True,
             all_cases=False,
         )
 
 
 def make_pattern_loads(
-    n_d, loaded_points, load_large=50, load_small=5, load_direction=(0, -1)
+    nodal_coords: npt.NDArray,
+    loaded_points: npt.NDArray,
+    load_large: float = 50.0,
+    load_small: float = 5.0,
+    load_direction: tuple[float, float] = (0.0, -1.0),
 ):
     """
     Generate all 2^n combinations of large/small loads at each load point.
 
     Parameters
     ----------
-    n_d : ndarray
+    nodal_coords : npt.NDArray
         Nodal coordinates.
-    loaded_points : ndarray
+    loaded_points : npt.NDArray
         Load points.
     load_large : float
         Large load to apply at each load point (default=``50``).
     load_small : float
         Small load to apply at each load point (default=``5``).
-    load_direction : list
+    load_direction : tuple[float, float]
         Load direction (default=``(0,-1)``).
 
     Returns
     -------
     tuple[list, list, list]
-        A tuple consisting of ``allPatterns`` (all load cases), ``baseLoad``
-        (base load case) and ``patternDescriptions`` (description of each load
+        A tuple consisting of ``all_patterns`` (all load cases), ``base_load``
+        (base load case) and ``pattern_descriptions`` (description of each load
         case using ``L`` for large or ``S`` for small at each load point).
     """
     n = len(loaded_points)
@@ -303,17 +355,17 @@ def make_pattern_loads(
     # Find node indices for each load point
     load_node_indices = []
     for loaded_point in loaded_points:
-        dists = np.linalg.norm(n_d - np.array(loaded_point), axis=1)
+        dists = np.linalg.norm(nodal_coords - np.array(loaded_point), axis=1)
         load_node_indices.append(np.argmin(dists))
 
     # ns-rse 2026-03-17 : Could maybe use a dictionary here to link patterns and descriptions?
     all_patterns = []
-    pattern_descriptions = []
+    patternodal_coordsescriptions = []
 
     # Generate all 2^n combinations
     # First combo (all loadLarge) is base case
     for combo in itertools.product([load_large, load_small], repeat=n):
-        fk = np.zeros(len(n_d) * 2)
+        fk = np.zeros(len(nodal_coords) * 2)
         desc = []
         for pt_idx, magnitude in enumerate(combo):
             node = load_node_indices[pt_idx]
@@ -322,15 +374,15 @@ def make_pattern_loads(
             desc.append(f"pt{pt_idx}={'L' if magnitude == load_large else 'S'}")
 
         all_patterns.append(fk)
-        pattern_descriptions.append(", ".join(desc))
+        patternodal_coordsescriptions.append(", ".join(desc))
 
     # ns-rse 2026-03-17 : Return directly as part of tuple
     base_load = all_patterns[0]  # First pattern = all large loads
 
     print(f"\nPattern loading: {n} load points -> {len(all_patterns)} total patterns")
-    print(f"Base case (all large): {pattern_descriptions[0]}")
+    print(f"Base case (all large): {patternodal_coordsescriptions[0]}")
 
-    return all_patterns, base_load, pattern_descriptions
+    return all_patterns, base_load, patternodal_coordsescriptions
 
 
 # add new pattern load cases primal violation
@@ -340,24 +392,29 @@ def make_pattern_loads(
 # q[j] already satisfies equilibrium for that load pattern. if not, pattern
 # is violated and is added
 def stop_primal_violation_residual(
-    n_d, c_n, q, all_patterns, active_load_cases, dof
+    nodal_coords: npt.NDArray,
+    c_n: npt.NDArray,
+    forces: npt.NDArray,
+    all_patterns: list,
+    active_load_cases: list,
+    dof: npt.NDArray,
 ) -> bool:
     """
     Check for primal violation (equilibrium constraint violation) and add new load cases.
 
     Parameters
     ----------
-    n_d : ndarray
+    nodal_coords : npt.NDArray
         Nodal coordinates.
-    c_n : ndarray
+    c_n : npt.NDArray
         Active members.
-    q : list
+    forces : list
         Member forces.
     all_patterns : list
         All load cases.
     active_load_cases : list
         For each load case, bool set to ``True`` if active, ``False`` otherwise.
-    dof : ndarray
+    dof : npt.NDArray
         Degrees of freedom.
 
     Returns
@@ -366,7 +423,7 @@ def stop_primal_violation_residual(
         True if converged and no load cases added.
     """
     tol = 1e-5
-    eq_matrix_b = calc_eq_matrix_b(n_d, c_n, dof).tocsc()
+    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
 
     total_violation = np.zeros(len(all_patterns))
 
@@ -376,8 +433,10 @@ def stop_primal_violation_residual(
             continue  # skip active cases
 
         fk_dof = all_patterns[k] * dof
+        # ns-rse 2026-03-18 : potential list compreshension
+        # residuals = [np.linalg.norm(eq_matrix_b.dot(force) - fk_dof) for force in forces]
         residuals = []
-        for qj in q:
+        for qj in forces:
             # store ||B*q[j] - f[k]*dof||
             residual = np.linalg.norm(eq_matrix_b.dot(qj) - fk_dof)
             residuals.append(residual)
@@ -449,28 +508,35 @@ def stop_primal_violation_residual(
 # if so, structure can carry full load so no violation
 # else structure can only carry some of the load, violation, so add load case
 def stop_primal_violation_pattern(
-    n_d, c_n, a, all_patterns, active_load_cases, dof, st, sc
+    nodal_coords: npt.NDArray,
+    c_n: npt.NDArray,
+    areas: list[float],
+    all_patterns: list,
+    active_load_cases: list,
+    dof: npt.NDArray,
+    stress_tensile: float,
+    stress_compressive: float,
 ) -> bool:
     """
     Check for primal violation (load factor structural analysis) and add new load cases.
 
     Parameters
     ----------
-    n_d : ndarray
+    nodal_coords : npt.NDArray
         Nodal coordinates.
-    c_n : ndarray
+    c_n : npt.NDArray
         Active members.
-    a : list
+    areas : list[float]
         Member areas.
     all_patterns : list
         All load cases.
     active_load_cases : list
         For each load case, bool set to True if active, False otherwise.
-    dof : ndarray
+    dof : npt.NDArray
         Degrees of freedom.
-    st : float
+    stress_tensile : float
         Tensile stress limit.
-    sc : float
+    stress_compressive : float
         Compressive stress limit.
 
     Returns
@@ -480,7 +546,7 @@ def stop_primal_violation_pattern(
     """
     tol = 0.99  # lambda must be >= 1 to be considered feasible
 
-    eq_matrix_b = calc_eq_matrix_b(n_d, c_n, dof)
+    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)
     load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
 
     # loop through all (active and inactive) pattern load cases
@@ -516,11 +582,14 @@ def stop_primal_violation_pattern(
             )
 
             # Constraint 2: q <= sigma_t * a (tension limit)
-            model.constraint(mosek.Expr.sub(q_var, st * a), mosek.Domain.lessThan(0))
+            model.constraint(
+                mosek.Expr.sub(q_var, stress_tensile * areas), mosek.Domain.lessThan(0)
+            )
 
             # Constraint 3: q >= -sigma_c * a (compression limit)
             model.constraint(
-                mosek.Expr.sub(q_var, -sc * a), mosek.Domain.greaterThan(0)
+                mosek.Expr.sub(q_var, -stress_compressive * areas),
+                mosek.Domain.greaterThan(0),
             )
 
             # Solve
@@ -609,26 +678,25 @@ def stop_primal_violation_pattern(
 
 # Main function - edited for pattern loading
 def trussopt(
-    width,
-    height,
-    st=1,
-    sc=1,
-    jc=0,
-    # ns-rse 2026-03-17 : Set type hint and default to None
+    width: float,
+    height: float,
+    stress_tensile: float = 1.0,
+    stress_compressive: float = 1.0,
+    joint_cost: float = 0.0,
     loaded_points: list | None = None,
     # ns-rse 2026-03-17 : val implies single value but its a list, perhaps load_range? dict perhaps
-    load_val=(0, -1),
-    load_large=50,  # ns-rse 2026-03-17 : load_max ?
-    load_small=5,  # ns-rse 2026-03-17 : load_min ?
+    load_val: tuple[float, float] = (0.0, -1.0),
+    load_large: float = 50.0,  # ns-rse 2026-03-17 : load_max ?
+    load_small: float = 5.0,  # ns-rse 2026-03-17 : load_min ?
     max_length=1000,
-    support_points: list
-    | None = None,  # ns-rse 2026-03-17 : Set type hint and default to None
-    filtering=False,  # as boolean makes it "pythonic" to remove 'do' but what is being filered?
-    primal_method="load_factor",
-    problem_name="None",
-    save_to_csv=True,
-    csv_filename="pattern_loading_results.csv",
-    notes="",
+    # ns-rse 2026-03-17 : Set type hint and default to None
+    support_points: list | None = None,
+    filtering: bool = False,  # as boolean makes it "pythonic" to remove 'do' but what is being filered?
+    primal_method: str = "load_factor",
+    problem_name: str = "None",
+    save_to_csv: bool = True,
+    csv_filename: str = "pattern_loading_results.csv",
+    notes: str = "",
 ):
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
@@ -639,16 +707,16 @@ def trussopt(
         Width of structure.
     height : float
         Height of structure.
-    st : float
+    stress_tensile : float
         Tensile stress limit.
-    sc : float
+    stress_compressive : float
         Compressive stress limit.
-    jc : float
+    joint_cost : float
         Joint cost.
     loaded_points : list
         Load points (default=[]).
     load_val : list
-        Load direction (default=[0,-1]).
+        Load direction (default=``(0,-1)``).
     load_large : float
         Large load to apply at each load point (default=50).
     load_small : float
@@ -659,7 +727,7 @@ def trussopt(
         Support points (default=[]).
     filtering : bool
         Enable post-processing filtering on member areas (default=``False``).
-    primal_method : {'load_factor', 'residual' 'none'}
+    primal_method : str
         Primal violation method (default='load_factor').
     problem_name : str
         Name of problem to solve (default=``None``).
@@ -685,42 +753,45 @@ def trussopt(
 
     # Make nodes
     xv, yv = np.meshgrid(range(width + 1), range(height + 1))
-    pts = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
-    n_d = np.array([[pt.x, pt.y] for pt in pts if poly.intersects(pt)])
-    dof = np.ones((len(n_d), 2))
+    points = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
+    nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
+    dof = np.ones((len(nodal_coords), 2))
 
     # Default load point
     if loaded_points is None:
         loaded_points = [[width, height // 2]]
     # support conditions
-    for i, nd in enumerate(n_d):
+    for i, node in enumerate(nodal_coords):
         if support_points == []:
-            if nd[0] == 0:
+            if node[0] == 0:
                 dof[i, :] = [0, 0]  # Support nodes with x=0
         else:
             dof[i, :] = (
                 [0, 0]
-                if any((nd == supPt).all() for supPt in support_points)
+                if any((node == point).all() for point in support_points)
                 else [1, 1]
             )
     dof = np.array(dof).flatten()
 
     # Generate all pattern loads
-    # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and pattern_descriptions to dict
-    # all_patterns, base_load, pattern_descriptions = mqake_pattern_loads(
+    # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and patternodal_coordsescriptions to dict
+    # all_patterns, base_load, patternodal_coordsescriptions = mqake_pattern_loads(
     all_patterns, _, _ = make_pattern_loads(
-        n_d, loaded_points, load_large, load_small, load_val
+        nodal_coords, loaded_points, load_large, load_small, load_val
     )
 
     # Create the 'ground structure'
     # PML = 'potential member list'
     potential_members = []
-    for i, j in itertools.combinations(range(len(n_d)), 2):
-        dx, dy = abs(n_d[i][0] - n_d[j][0]), abs(n_d[i][1] - n_d[j][1])
+    for i, j in itertools.combinations(range(len(nodal_coords)), 2):
+        dx, dy = (
+            abs(nodal_coords[i][0] - nodal_coords[j][0]),
+            abs(nodal_coords[i][1] - nodal_coords[j][1]),
+        )
         l = np.sqrt(dx**2 + dy**2)
         # Remove overlapping members, or members longer than maxLength
-        if (l < max_length and gcd(int(dx), int(dy)) == 1) or jc != 0:
-            seg = [] if convex else LineString([n_d[i], n_d[j]])
+        if (l < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
+            seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
             if convex or poly.contains(seg) or poly.boundary.contains(seg):
                 potential_members.append([i, j, l, False])
     potential_members = np.array(potential_members)
@@ -754,7 +825,7 @@ def trussopt(
     setup_end = time.process_time()
     print(f"Setup took {setup_end - setup_start!s}")
     print(
-        f"Nodes: {len(n_d)} Members: {len(potential_members)} Total load patterns: {len(all_patterns)}"
+        f"Nodes: {len(nodal_coords)} Members: {len(potential_members)} Total load patterns: {len(all_patterns)}"
     )
 
     vol = 1e9  # arbitrary large number to initialise
@@ -772,7 +843,15 @@ def trussopt(
         ]
 
         # solve current reduced problem
-        vol, a, q, u = solve(n_d, c_n, f_active, dof, st, sc, jc)
+        vol, a, q, u = solve(
+            nodal_coords,
+            c_n,
+            f_active,
+            dof,
+            stress_tensile,
+            stress_compressive,
+            joint_cost,
+        )
 
         # output
         if isinf(vol):
@@ -783,17 +862,25 @@ def trussopt(
             f"Itr: {itr}, vol: {vol}, mems: {len(c_n)} active load cases:{n_active}/{len(all_patterns)}"
         )
         # plot interim solutions (slow)
-        # plotTruss(n_d, c_n, a, q, max(a) * 1e-2, "Itr:" + str(itr), extraPlot = activeDamageDef)
+        # plotTruss(nodal_coords, c_n, a, q, max(a) * 1e-2, "Itr:" + str(itr), extraPlot = activeDamageDef)
 
         # inner loop - adding of members based on dual violation
         # still need PMLcache? currently unused
         # PMLcache = np.copy(PML[:,3])
-        n_added = stop_violation(n_d, potential_members, dof, st, sc, u, jc)
+        n_added = stop_violation(
+            nodal_coords,
+            potential_members,
+            dof,
+            stress_tensile,
+            stress_compressive,
+            u,
+            joint_cost,
+        )
         if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
             continue  # small vol decrease = member adding close to convergence
 
         # outer loop - adding of pattern load cases based on primal violation
-        # if stopPrimalViolationPattern(n_d, c_n, a, all_patterns, active_load_cases, dof, st, sc):
+        # if stopPrimalViolationPattern(nodal_coords, c_n, a, all_patterns, active_load_cases, dof, st, sc):
         #     if numAdded > 0: # only fully terminate when no members violate
         #         continue
         #     else:
@@ -803,12 +890,19 @@ def trussopt(
             if primal_method == "residual":
                 # Use equilibrium residual check
                 converged = stop_primal_violation_residual(
-                    n_d, c_n, q, all_patterns, active_load_cases, dof
+                    nodal_coords, c_n, q, all_patterns, active_load_cases, dof
                 )
             elif primal_method == "load_factor":
                 # Use load factor LP
                 converged = stop_primal_violation_pattern(
-                    n_d, c_n, a, all_patterns, active_load_cases, dof, st, sc
+                    nodal_coords,
+                    c_n,
+                    a,
+                    all_patterns,
+                    active_load_cases,
+                    dof,
+                    stress_tensile,
+                    stress_compressive,
                 )
             # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
 
@@ -828,7 +922,7 @@ def trussopt(
     print(f"Active patterns: {int(np.sum(active_load_cases))}/{len(all_patterns)}")
 
     # Plot results
-    # plotTruss(n_d, c_n, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
+    # plotTruss(nodal_coords, c_n, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
 
     ## Filter
     if filtering:
@@ -852,19 +946,27 @@ def trussopt(
         filter_val = multiplier * max_a
         keep = [a_value > filter_val for a_value in a]
         kept = c_n[keep]
-        vol, filer_a, filter_q, u = solve(n_d, kept, f_active, dof, st, sc, jc)
+        vol, filer_a, filter_q, u = solve(
+            nodal_coords,
+            kept,
+            f_active,
+            dof,
+            stress_tensile,
+            stress_compressive,
+            joint_cost,
+        )
         if vol > 0:
             print(
                 f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
             )
             plot_truss(
-                n_d,
-                kept,
-                filer_a,
-                filter_q,
-                max(a) * 1e-3,
-                "Filtered " + str(100 * multiplier) + "%",
-                False,
+                nodal_coords=nodal_coords,
+                c_n=kept,
+                areas=filer_a,
+                forces=filter_q,
+                threshold=max(a) * 1e-3,
+                title="Filtered " + str(100 * multiplier) + "%",
+                update=False,
                 all_cases=False,
             )
 
@@ -885,7 +987,7 @@ def trussopt(
             "iterations": itr,
             "final_volume": final_vol,
             "n_members_final": len(c_n),
-            "n_nodes": len(n_d),
+            "n_nodes": len(nodal_coords),
             "n_ground_structure": len(potential_members),
             "cpu_time_setup": setup_end - setup_start,
             "cpu_time_solve": solve_end - setup_end,
