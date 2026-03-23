@@ -56,17 +56,19 @@ def calc_eq_matrix_b(nodal_coords: npt.NDArray, c_n: npt.NDArray, dof: npt.NDArr
         Equilibrium matrix B.
     """
     m, n1, n2 = len(c_n), c_n[:, 0].astype(int), c_n[:, 1].astype(int)
-    l, x, y = (
+    length, x, y = (
         c_n[:, 2],
         nodal_coords[n2, 0] - nodal_coords[n1, 0],
         nodal_coords[n2, 1] - nodal_coords[n1, 1],
     )
     d0, d1, d2, d3 = dof[n1 * 2], dof[n1 * 2 + 1], dof[n2 * 2], dof[n2 * 2 + 1]
     # ns-rse 2026-03-18 : What are s, r and c? They are arrays but what do the elements represent?
-    s = np.concatenate((-x / l * d0, -y / l * d1, x / l * d2, y / l * d3))
-    r = np.concatenate((n1 * 2, n1 * 2 + 1, n2 * 2, n2 * 2 + 1))
-    c = np.concatenate((np.arange(m), np.arange(m), np.arange(m), np.arange(m)))
-    return sparse.coo_matrix((s, (r, c)), shape=(len(nodal_coords) * 2, m))
+    s = np.concatenate(
+        (-x / length * d0, -y / length * d1, x / length * d2, y / length * d3)
+    )
+    row_id = np.concatenate((n1 * 2, n1 * 2 + 1, n2 * 2, n2 * 2 + 1))
+    col_id = np.concatenate((np.arange(m), np.arange(m), np.arange(m), np.arange(m)))
+    return sparse.coo_matrix((s, (row_id, col_id)), shape=(len(nodal_coords) * 2, m))
 
 
 def solve(nodal_coords, c_n, f, dof, stress_tensile, stress_compressive, joint_cost):
@@ -97,9 +99,7 @@ def solve(nodal_coords, c_n, f, dof, stress_tensile, stress_compressive, joint_c
         ``area`` (member areas), ``forces`` (member forces) and ``deflections``
         (virtual deflections at degrees of freedom).
     """
-    # ns-rse 2026-03-16 : What does l represent here? Is it perhaps a list of length + joint_cost so scaled length, or
-    # length_cost?
-    l = [col[2] + joint_cost for col in c_n]
+    member_cost = [col[2] + joint_cost for col in c_n]
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)
     q, eqn = [], []
     k = 0  # (damage+load) case number
@@ -112,7 +112,7 @@ def solve(nodal_coords, c_n, f, dof, stress_tensile, stress_compressive, joint_c
             eq_matrix_b.col,
             eq_matrix_b.data,
         )
-        model.objective(mosek.ObjectiveSense.Minimize, mosek.Expr.dot(l, a))
+        model.objective(mosek.ObjectiveSense.Minimize, mosek.Expr.dot(member_cost, a))
         for fk in f:
             qi = model.variable(len(c_n))
             q.append(qi)
@@ -181,13 +181,12 @@ def stop_violation(
     """
     lst = np.where(potential_members[:, 3] == False)[0]  # pylint: disable=singleton-comparison
     c_n = potential_members[lst]
-    # ns-rse 2026-03-17 : What is l?
-    l = c_n[:, 2] + joint_cost
+    member_cost = c_n[:, 2] + joint_cost
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
     y = np.zeros(len(c_n))
     for uk in deflections:
         yk = np.multiply(
-            eq_matrix_b.transpose().dot(uk) / l,
+            eq_matrix_b.transpose().dot(uk) / member_cost,
             np.array([[stress_tensile], [-stress_compressive]]),
         )
         y += np.amax(yk, axis=0)
@@ -463,8 +462,7 @@ def stop_primal_violation_residual(
 
         # Active most violated load pattern
         active_load_cases[by_violation[0]] = 1
-        # ns-rse 2026-03-17 : violations are added on this iteration, can we be more descriptive?
-        added_this_iter = [by_violation[0]]
+        violations_added_this_iter = [by_violation[0]]
         by_violation.pop(0)
 
         # Add distinct cases
@@ -479,7 +477,7 @@ def stop_primal_violation_residual(
                 fk = all_patterns[k]
                 fk_norm = fk / (np.linalg.norm(fk) + 1e-12)
                 distinct = True
-                for j in added_this_iter:
+                for j in violations_added_this_iter:
                     fj = all_patterns[j]
                     fj_norm = fj / (np.linalg.norm(fj) + 1e-12)
                     if np.dot(fk_norm, fj_norm) > 0.99:
@@ -487,7 +485,7 @@ def stop_primal_violation_residual(
                         break
                 if distinct:
                     active_load_cases[k] = 1
-                    added_this_iter.append(k)
+                    violations_added_this_iter.append(k)
                     by_violation.remove(k)
                     added_case = True
                     break
@@ -619,8 +617,7 @@ def stop_primal_violation_pattern(
         print(
             f"  Adding most violated pattern {by_violation[0]}: lambda={load_factors[most_violated_id]:.3f}"
         )
-        # ns-rse 2026-03-17 : violations are added on this iteration, can we be more descriptive?
-        added_this_iter = [by_violation[0]]
+        violations_added_this_iter = [by_violation[0]]
         by_violation.pop(0)
 
         # Add distinct cases
@@ -636,7 +633,7 @@ def stop_primal_violation_pattern(
                 # check if load case k has a significantly different load factor
                 # from all load cases added this iteration
                 distinct = True
-                for j in added_this_iter:
+                for j in violations_added_this_iter:
                     # check if both load factors are approx 0, only add one if so
                     if load_factors[k] < 0.01 and load_factors[j] < 0.01:
                         distinct = False
@@ -654,7 +651,7 @@ def stop_primal_violation_pattern(
                     fk = all_patterns[k]
                     fk_norm = fk / (np.linalg.norm(fk) + 1e-12)
                     distinct = True
-                    for j in added_this_iter:
+                    for j in violations_added_this_iter:
                         fj = all_patterns[j]
                         fj_norm = fj / (np.linalg.norm(fj) + 1e-12)
                         if np.dot(fk_norm, fj_norm) > 0.99:
@@ -663,9 +660,9 @@ def stop_primal_violation_pattern(
                 if distinct:
                     active_load_cases[k] = 1
                     print(
-                        f"  Adding {len(added_this_iter) + 1} distinct pattern {k}: lambda={load_factors[k]:.3f}"
+                        f"  Adding {len(violations_added_this_iter) + 1} distinct pattern {k}: lambda={load_factors[k]:.3f}"
                     )
-                    added_this_iter.append(k)
+                    violations_added_this_iter.append(k)
                     by_violation.remove(k)
                     added_case = True
                     break
@@ -685,13 +682,13 @@ def trussopt(
     joint_cost: float = 0.0,
     loaded_points: list | None = None,
     # ns-rse 2026-03-17 : val implies single value but its a list, perhaps load_range? dict perhaps
-    load_val: tuple[float, float] = (0.0, -1.0),
-    load_large: float = 50.0,  # ns-rse 2026-03-17 : load_max ?
-    load_small: float = 5.0,  # ns-rse 2026-03-17 : load_min ?
-    max_length=1000,
+    load_direction: tuple[float, float] = (0.0, -1.0),
+    load_large: float = 50.0,
+    load_small: float = 5.0,
+    max_length: float = 1000.0,
     # ns-rse 2026-03-17 : Set type hint and default to None
     support_points: list | None = None,
-    filtering: bool = False,  # as boolean makes it "pythonic" to remove 'do' but what is being filered?
+    member_area_filtering: bool = False,  # as boolean makes it "pythonic" to remove 'do' but what is being filered?
     primal_method: str = "load_factor",
     problem_name: str = "None",
     save_to_csv: bool = True,
@@ -715,7 +712,7 @@ def trussopt(
         Joint cost.
     loaded_points : list
         Load points (default=[]).
-    load_val : list
+    load_direction : list
         Load direction (default=``(0,-1)``).
     load_large : float
         Large load to apply at each load point (default=50).
@@ -725,7 +722,7 @@ def trussopt(
         Maximum member length.
     support_points : list
         Support points (default=[]).
-    filtering : bool
+    member_area_filtering : bool
         Enable post-processing filtering on member areas (default=``False``).
     primal_method : str
         Primal violation method (default='load_factor').
@@ -777,23 +774,22 @@ def trussopt(
     # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and patternodal_coordsescriptions to dict
     # all_patterns, base_load, patternodal_coordsescriptions = mqake_pattern_loads(
     all_patterns, _, _ = make_pattern_loads(
-        nodal_coords, loaded_points, load_large, load_small, load_val
+        nodal_coords, loaded_points, load_large, load_small, load_direction
     )
 
     # Create the 'ground structure'
-    # PML = 'potential member list'
     potential_members = []
     for i, j in itertools.combinations(range(len(nodal_coords)), 2):
         dx, dy = (
             abs(nodal_coords[i][0] - nodal_coords[j][0]),
             abs(nodal_coords[i][1] - nodal_coords[j][1]),
         )
-        l = np.sqrt(dx**2 + dy**2)
+        length = np.sqrt(dx**2 + dy**2)
         # Remove overlapping members, or members longer than maxLength
-        if (l < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
+        if (length < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
             seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
             if convex or poly.contains(seg) or poly.boundary.contains(seg):
-                potential_members.append([i, j, l, False])
+                potential_members.append([i, j, length, False])
     potential_members = np.array(potential_members)
 
     # Create the active members
@@ -925,7 +921,7 @@ def trussopt(
     # plotTruss(nodal_coords, c_n, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
 
     ## Filter
-    if filtering:
+    if member_area_filtering:
         filter_levels = [
             0.001,
             0.01,
