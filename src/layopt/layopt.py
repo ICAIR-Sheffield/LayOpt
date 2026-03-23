@@ -360,7 +360,7 @@ def make_pattern_loads(
 
     # ns-rse 2026-03-17 : Could maybe use a dictionary here to link patterns and descriptions?
     all_patterns = []
-    patternodal_coordsescriptions = []
+    pattern_descriptions = []
 
     # Generate all 2^n combinations
     # First combo (all loadLarge) is base case
@@ -374,7 +374,7 @@ def make_pattern_loads(
             desc.append(f"pt{pt_idx}={'L' if magnitude == load_large else 'S'}")
 
         all_patterns.append(fk)
-        patternodal_coordsescriptions.append(", ".join(desc))
+        pattern_descriptions.append(", ".join(desc))
 
     # ns-rse 2026-03-17 : Return directly as part of tuple
     base_load = all_patterns[0]  # First pattern = all large loads
@@ -382,9 +382,9 @@ def make_pattern_loads(
     logger.info(
         f"\nPattern loading: {n} load points -> {len(all_patterns)} total patterns"
     )
-    logger.info(f"Base case (all large): {patternodal_coordsescriptions[0]}")
+    logger.info(f"Base case (all large): {pattern_descriptions[0]}")
 
-    return all_patterns, base_load, patternodal_coordsescriptions
+    return all_patterns, base_load, pattern_descriptions
 
 
 # ns-rse 2026-03-23 : Could this comment perhaps form the extended description for the function?
@@ -771,8 +771,8 @@ def trussopt(
     dof = np.array(dof).flatten()
 
     # Generate all pattern loads
-    # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and patternodal_coordsescriptions to dict
-    # all_patterns, base_load, patternodal_coordsescriptions = mqake_pattern_loads(
+    # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and pattern_descriptions to dict
+    # all_patterns, base_load, pattern_descriptions = make_pattern_loads(
     all_patterns, _, _ = make_pattern_loads(
         nodal_coords, loaded_points, load_large, load_small, load_direction
     )
