@@ -1,5 +1,5 @@
 """
-LayOpt: Adaptive topology optimization of fail-safe trusses
+LayOpt: Adaptive topology optimization of fail-safe trusses.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ if LAYOPT_VERSION.is_prerelease and LAYOPT_VERSION.is_devrelease:
 else:
     LAYOPT_BASE_VERSION = str(LAYOPT_VERSION)
     LAYOPT_COMMIT = ""
+# pylint: disable=invalid-name
 CONFIG_DOCUMENTATION_REFERENCE = """# For more information on configuration and how to use it:
 # https://afm-spm.github.io/Layopt/main/configuration.html\n"""
 CONFIG_DOCUMENTATION_REFERENCE += f"# Layopt version : {LAYOPT_BASE_VERSION}\n"

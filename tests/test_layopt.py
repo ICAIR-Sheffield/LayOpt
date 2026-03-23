@@ -54,12 +54,12 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
         "sc",
         "jc",
         "loaded_points",
-        "load_val",
+        "load_direction",
         "load_large",
         "load_small",
         "max_length",
         "support_points",
-        "filter",
+        "filtering",
         "primal_method",
         "problem_name",
         "save_to_csv",
@@ -74,7 +74,7 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
             1,  # sc
             0,  # jc
             [[3, 3]],  # loaded_points
-            [0, -1],  # load_val
+            (0, -1),  # load_direction
             50,  # load_large
             5,  # load_small
             18,  # max_length
@@ -94,7 +94,7 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
             1,  # sc
             0,  # jc
             [[8, 0], [8, 4]],  # loaded_points
-            [0, -1],  # load_val
+            (0, -1),  # load_direction
             50,  # load_large
             5,  # load_small
             15,  # max_length
@@ -114,7 +114,7 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
             1,  # sc
             0,  # jc
             [[3, 0], [3, 1]],  # loaded_points
-            [0, -1],  # load_val
+            (0, -1),  # load_direction
             50,  # load_large
             5,  # load_small
             2.5,  # max_length
@@ -145,7 +145,7 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
                 [16.0, 4],
                 [18.0, 4],
             ],  # loaded_points
-            [0, -1],  # load_val
+            (0, -1),  # load_direction
             3.75,  # load_large
             0.204,  # load_small
             36,  # max_length
@@ -167,12 +167,12 @@ def test_testname(
     sc: int,
     jc: int,
     loaded_points: list[list[int]],
-    load_val: list[int],
+    load_direction: tuple[float, float],
     load_large: int,
     load_small: int,
     max_length: int,
     support_points: list[list[int]],
-    filter: bool,
+    filtering: bool,
     primal_method: str,
     problem_name: str,
     save_to_csv: bool,
@@ -184,16 +184,16 @@ def test_testname(
     results = layopt.trussopt(
         width=width,
         height=height,
-        st=st,
-        sc=sc,
-        jc=jc,
-        loadedPoints=loaded_points,
-        loadVal=load_val,
-        loadLarge=load_large,
-        loadSmall=load_small,
-        maxLength=max_length,
-        supportPoints=support_points,
-        doFilter=filter,
+        stress_tensile=st,
+        stress_compressive=sc,
+        joint_cost=jc,
+        loaded_points=loaded_points,
+        load_direction=load_direction,
+        load_large=load_large,
+        load_small=load_small,
+        max_length=max_length,
+        support_points=support_points,
+        member_area_filtering=filtering,
         primal_method=primal_method,
         problem_name=problem_name,
         save_to_csv=save_to_csv,
@@ -208,3 +208,4 @@ def test_testname(
             replacer=lambda data, _: round_values(data, PRECISION),
         ),
     )
+    # ns-rse 2026-03-17 - load results and test against snapshot
