@@ -610,6 +610,9 @@ def trussopt(
     # save_to_csv: bool = True,
     # csv_filename: str = "pattern_loading_results.csv",
     notes: str = "",
+    plot: bool = False,
+    bar_thickness: float = 0.3,
+    dpi: int = 1200,
 ) -> tuple[float, npt.NDArray, pd.DataFrame, float]:
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
@@ -646,6 +649,12 @@ def trussopt(
         Name of problem to solve (default=``None``).
     notes : str
         Notes (default='').
+    plot : bool
+        Whether to plot the trusses.
+    bar_thickness : float
+        Bar thickness for plotting.
+    dpi : int
+        Dots per inch for plotting.
 
     Returns
     -------
@@ -858,42 +867,20 @@ def trussopt(
         "load_large": load_large,
         "load_small": load_small,
         "iterations": itr,
-        "final_volume": None,
+        "final_volume": final_vol,
         "n_members_final": len(c_n),
         "n_nodes": len(nodal_coords),
         "n_ground_structure": len(potential_members),
         "cpu_time_setup": setup_end - setup_start,
         "cpu_time_solve": solve_end - setup_end,
-        # 'cpu_time_total': total_cpu_time,
-        # 'wall_time_total': total_wall_time,
         "primal_method": primal_method,
         "notes": notes,
     }
 
     # Plot results
-    # plotTruss(nodal_coords, c_n, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
-
-    ## Filter
-    if member_area_filtering:
-        filter_levels = [
-            0.001,
-            0.01,
-            0.02,
-            0.03,
-            0.04,
-            0.05,
-            0.06,
-            0.07,
-            0.08,
-            0.09,
-            0.1,
-        ]
-    else:
-        filter_levels = []
-    for multiplier in filter_levels:
-        max_a = max(a)
-        filter_val = multiplier * max_a
-        keep = [a_value > filter_val for a_value in a]
+    if plot:
+        multiplier = 1.0 if filter_level is None else filter_level
+        keep = [a_value > (multiplier * max(a)) for a_value in a]
         kept = c_n[keep]
         vol, filer_a, filter_q, u = solve(
             nodal_coords,
@@ -905,26 +892,21 @@ def trussopt(
             joint_cost,
         )
         if vol > 0:
-            print(
+            logger.info(
                 f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
             )
-            plot_truss(
+            _, _ = plot_truss(
                 nodal_coords=nodal_coords,
                 c_n=kept,
                 areas=filer_a,
                 forces=filter_q,
                 threshold=max(a) * 1e-3,
                 title="Filtered " + str(100 * multiplier) + "%",
-                all_cases=False,
+                bar_thickness=bar_thickness,
+                dpi=dpi,
             )
 
-    print(f"Plotting took {time.process_time() - solve_end!s}")
-    results["final_volume"] = final_vol
-    # Save results to CSV
-    # if save_to_csv:
-    #     # ns-rse 2026-03-16 - inefficient to write to CSV, build dictionary/dataframe in memory and write to disk on
-    #     #                     completion (as we may end up paralllelising processing)
-    #     save_results_to_csv(results, csv_filename)
+    logger.info(f"Plotting took {time.process_time() - solve_end!s}")
     return vol, a, dict_to_df(results), filter_level
 
 

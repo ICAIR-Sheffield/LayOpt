@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 if TYPE_CHECKING:
+    import numpy as np
     import numpy.typing as npt
 
 plt.rcParams["figure.max_open_warning"] = 0
@@ -23,6 +23,7 @@ def plot_truss(
     title: str,
     outfile: str | Path | None = "truss",
     img_ext: str = ".png",
+    bar_thickness: float = 0.3,
     dpi: int = 1200,
 ) -> tuple[plt.Figure, plt.Axes]:
     """
@@ -46,6 +47,8 @@ def plot_truss(
         If not ``None`` saves the image to the given filename.
     img_ext : str
         Image format to save as.
+    bar_thickness : float
+        Bar thickness.
     dpi : int
         Dots Per Image for image resolution.
 
@@ -59,8 +62,8 @@ def plot_truss(
     ax.axis("off")
     ax.axis("equal")
     ax.set_title(title)
-    bar_thickness = 0.4  # bar thickness scale
     for i in [i for i in range(len(areas)) if areas[i] >= threshold]:
+        # for i in [i for i in areas if i >= threshold]:
         if len(forces) > 1:  # multiple LC coloring
             if all(forces[lc][i] >= -0.001 for lc in range(len(forces))):
                 color = "r"

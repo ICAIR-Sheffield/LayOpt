@@ -1845,7 +1845,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 41b9e35 (refactor(plotting): plotting submodule and tests)
 name = "pytest-testmon"
 version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }

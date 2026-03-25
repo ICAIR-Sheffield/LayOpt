@@ -17,8 +17,12 @@ load_small: 5.0 # Small load
 max_length: 18.0 # Max length
 support_points: # Support points
   - []
-filter_levels: [] # List of values to filter by if empty no filtering is performed
+filter_levels: [1.0] # List of values to filter by if empty no filtering is performed
 primal_method: load_factor # Primal method
 problem_name: short cantilever # Problem name
 csv_filename: results.csv # Filename to save results to, if left as `results.csv` will have YYYY-MM-DD-hhmmss added
 notes: short cantilever test # Notes to include
+plotting:
+  run: false # Whether to plot the trusses
+  bar_thickness: 0.3 # Bar thickness when plotting
+  dpi: 1200 # Dots per inch when plotting

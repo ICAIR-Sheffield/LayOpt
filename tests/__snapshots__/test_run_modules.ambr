@@ -2,16 +2,12 @@
 # name: test_optimise[1x1]
   '''
          problem_name  filter_level  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
-  0  short cantilever         0.001      1       1              1                 2                  1        50.0         5.0           2         150.0                6        4                   6   load_factor  short cantilever test
-  1  short cantilever         0.010      1       1              1                 2                  1        50.0         5.0           2         150.0                6        4                   6   load_factor  short cantilever test
-  2  short cantilever         0.100      1       1              1                 2                  1        50.0         5.0           2         150.0                6        4                   6   load_factor  short cantilever test
+  0  short cantilever           1.0      1       1              1                 2                  1        50.0         5.0           2         150.0                6        4                   6   load_factor  short cantilever test
   '''
 # ---
 # name: test_optimise[2x2]
   '''
          problem_name  filter_level  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
-  0  short cantilever         0.001      2       2              1                 2                  1        50.0         5.0           2         300.0               22        9                  28   load_factor  short cantilever test
-  1  short cantilever         0.010      2       2              1                 2                  1        50.0         5.0           2         300.0               22        9                  28   load_factor  short cantilever test
-  2  short cantilever         0.100      2       2              1                 2                  1        50.0         5.0           2         300.0               22        9                  28   load_factor  short cantilever test
+  0  short cantilever           1.0      2       2              1                 2                  1        50.0         5.0           2         300.0               22        9                  28   load_factor  short cantilever test
   '''
 # ---
