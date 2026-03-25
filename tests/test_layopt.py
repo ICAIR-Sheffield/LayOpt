@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pytest
 from syrupy.matchers import path_type
 
@@ -40,6 +41,143 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
     if isinstance(to_be_rounded, np.ndarray):
         return np.round(to_be_rounded, precision)
     return to_be_rounded
+
+
+@pytest.mark.parametrize(
+    ("structure_fixture"),
+    [
+        pytest.param(
+            "input_one_by_one",
+            id="1x1",
+        ),
+        pytest.param(
+            "input_two_by_two",
+            id="2x2",
+        ),
+        pytest.param(
+            "input_three_by_six",
+            id="3x6",
+        ),
+    ],
+)
+def test_calc_eq_matrix_b(
+    structure_fixture: str,
+    request,
+    snapshot,
+) -> None:
+    """Test for calc_eq_matrix_b()."""
+    structure = request.getfixturevalue(structure_fixture)
+    result = layopt.calc_eq_matrix_b(
+        nodal_coords=structure["nodal_coords"],
+        c_n=structure["c_n"],
+        dof=structure["dof"],
+    )
+    assert result.coords == snapshot
+    assert result.ndim == snapshot
+    assert result.shape == snapshot
+
+
+@pytest.mark.parametrize(
+    ("nodal_coords", "c_n", "dof", "expected"),
+    [
+        pytest.param(
+            np.asarray([[0.0, 0.0], [1.0, 0.0]]),
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 1.0],
+                    [0.0, 2.0, 1.0, 1.0],
+                    [0.0, 3.0, 1.41421356, 1.0],
+                    [1.0, 2.0, 1.41421356, 1.0],
+                    [1.0, 3.0, 1.0, 1.0],
+                    [2.0, 3.0, 1.0, 1.0],
+                ]
+            ),
+            np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]),
+            IndexError,
+            id="nodal_coords too short",
+        ),
+        pytest.param(
+            None,
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 1.0],
+                    [0.0, 2.0, 1.0, 1.0],
+                    [0.0, 3.0, 1.41421356, 1.0],
+                    [1.0, 2.0, 1.41421356, 1.0],
+                    [1.0, 3.0, 1.0, 1.0],
+                    [2.0, 3.0, 1.0, 1.0],
+                ]
+            ),
+            np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]),
+            TypeError,
+            id="nodal_coords is None",
+        ),
+        pytest.param(
+            np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 1.0],
+                    [0.0, 2.0, 1.0, 1.0],
+                    [0.0, 3.0, 1.41421356, 1.0],
+                ]
+            ),
+            np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]),
+            IndexError,
+            id="c_n too short",
+            marks=pytest.mark.skip(
+                reason="no IndexError as serves as basis for subsetting other arrays"
+            ),
+        ),
+        pytest.param(
+            np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+            None,
+            np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]),
+            TypeError,
+            id="c_n is None",
+        ),
+        pytest.param(
+            np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 1.0],
+                    [0.0, 2.0, 1.0, 1.0],
+                    [0.0, 3.0, 1.41421356, 1.0],
+                    [1.0, 2.0, 1.41421356, 1.0],
+                    [1.0, 3.0, 1.0, 1.0],
+                    [2.0, 3.0, 1.0, 1.0],
+                ]
+            ),
+            np.asarray([0.0, 0.0, 1.0, 1.0]),
+            IndexError,
+            id="dof too short",
+        ),
+        pytest.param(
+            np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 1.0],
+                    [0.0, 2.0, 1.0, 1.0],
+                    [0.0, 3.0, 1.41421356, 1.0],
+                    [1.0, 2.0, 1.41421356, 1.0],
+                    [1.0, 3.0, 1.0, 1.0],
+                    [2.0, 3.0, 1.0, 1.0],
+                ]
+            ),
+            None,
+            TypeError,
+            id="dof is None",
+        ),
+    ],
+)
+def test_calc_eq_matrix_b_errors(
+    nodal_coords: npt.NDArray[np.float32],
+    c_n: npt.NDArray[np.float32],
+    dof: npt.NDArray[np.float32],
+    expected,
+) -> None:
+    """Test for calc_eq_matrix_b()."""
+    with pytest.raises(expected):
+        layopt.calc_eq_matrix_b(nodal_coords=nodal_coords, c_n=c_n, dof=dof)
 
 
 @pytest.mark.skipif(
