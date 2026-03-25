@@ -1,5 +1,7 @@
 """Fixtures for layopt tests."""
 
+from typing import Any
+
 import numpy as np
 import numpy.typing as npt
 import pytest
@@ -273,4 +275,111 @@ def input_three_by_six() -> dict[str, npt.NDArray[np.float32]]:
                 1.0,
             ]
         ),
+    }
+
+
+@pytest.fixture
+def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
+    """Input parameters for 3x6 structure for ``layopt.trussopt()``."""
+    return {
+        "width": 3,
+        "height": 6,
+        "st": 1,
+        "sc": 1,
+        "jc": 0,
+        "loaded_points": [[3, 3]],
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 18,
+        "support_points": [],
+        "member_area_filtering": False,
+        "primal_method": "load_factor",
+        "problem_name": "short cantilever",
+        "save_to_csv": True,
+        "csv_filename": "short_cantilever.csv",
+        "notes": "short cantliever test",
+    }
+
+
+@pytest.fixture
+def trussopt_param_eight_by_eight_square_cantilever() -> dict[str, Any]:
+    """Input parameters for 8x8 structure for ``layopt.trussopt()``."""
+    return {
+        "width": 8,
+        "height": 8,
+        "st": 1,
+        "sc": 1,
+        "jc": 0,
+        "loaded_points": [[8, 0], [8, 4]],
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 15,
+        "support_points": [],
+        "member_area_filtering": False,
+        "primal_method": "load_factor",
+        "problem_name": "square cantilever",
+        "save_to_csv": True,
+        "csv_filename": "square_cantilever.csv",
+        "notes": "square cantliever test",
+    }
+
+
+@pytest.fixture
+def trussopt_param_three_by_one_parallel_forces() -> dict[str, Any]:
+    """Input parameters for 3x1 (parallel) structure for ``layopt.trussopt()``."""
+    return {
+        "width": 3,
+        "height": 1,
+        "st": 1,
+        "sc": 1,
+        "jc": 0,
+        "loaded_points": [[3, 0], [3, 1]],
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 2.5,
+        "support_points": [],
+        "member_area_filtering": False,
+        "primal_method": "load_factor",
+        "problem_name": "parallel forces",
+        "save_to_csv": True,
+        "csv_filename": "parallel_forces.csv",
+        "notes": "parallel forces test",
+    }
+
+
+@pytest.fixture
+def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
+    """Input parameters for 18x4 (spanning) structure for ``layopt.trussopt()``."""
+    return {
+        "width": 18,
+        "height": 4,
+        "st": 1,
+        "sc": 1,
+        "jc": 0,
+        "loaded_points": [
+            [0.0, 4],
+            [2.0, 4],
+            [4.0, 4],
+            [6.0, 4],
+            [8.0, 4],
+            [10.0, 4],
+            [12.0, 4],
+            [14.0, 4],
+            [16.0, 4],
+            [18.0, 4],
+        ],
+        "load_direction": (0, -1),
+        "load_large": 3.75,
+        "load_small": 0.204,
+        "max_length": 36,
+        "support_points": [[0, 0], [18, 0]],
+        "member_area_filtering": False,
+        "primal_method": "load_factor",
+        "problem_name": "spanning example",
+        "save_to_csv": True,
+        "csv_filename": "spanning_example.csv",
+        "notes": "spanning example test",
     }

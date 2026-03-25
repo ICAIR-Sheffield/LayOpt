@@ -51,6 +51,7 @@ Changelog = "https://github.com/ICAIR-Sheffield/LayOpt/releases"
 
 [dependency-groups]
 test = [
+  "pandas",
   "pytest >=9",
   "pytest-cov >=7",
   "pytest-testmon",
