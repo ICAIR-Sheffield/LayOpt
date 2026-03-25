@@ -24,3 +24,4 @@ timestamp,problem_name,width,height,n_load_points,n_patterns_total,n_patterns_ac
 2026-03-19 10:28:26,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.0,load_factor,short cantliever test
 2026-03-23 13:56:17,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.0,load_factor,short cantliever test
 2026-03-25 13:22:59,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.015625,load_factor,short cantliever test
+2026-03-25 13:28:21,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.0,load_factor,short cantliever test
