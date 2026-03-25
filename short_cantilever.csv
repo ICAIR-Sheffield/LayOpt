@@ -1,0 +1,26 @@
+timestamp,problem_name,width,height,n_load_points,n_patterns_total,n_patterns_active,load_large,load_small,iterations,final_volume,n_members_final,n_nodes,n_ground_structure,cpu_time_setup,cpu_time_solve,primal_method,notes
+2026-03-11 16:14:19,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-11 16:15:48,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-11 16:19:12,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 11:41:29,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 11:49:31,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 11:54:07,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 12:02:50,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 12:52:39,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-12 12:52:44,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 12:54:42,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 13:16:05,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-12 13:18:20,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-12 13:27:01,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-12 13:43:49,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 13:48:24,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-12 13:50:53,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-12 14:16:23,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-12 15:33:00,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-16 14:33:33,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.015625,load_factor,short cantliever test
+2026-03-16 14:44:15,short cantilever,2,6,1,2,1,50,5,2,200.00000000158025,56,21,140,0.0,0.0,load_factor,short cantliever test
+2026-03-16 16:00:20,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.0,load_factor,short cantliever test
+2026-03-19 10:26:38,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.0,load_factor,short cantliever test
+2026-03-19 10:28:26,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.0,load_factor,short cantliever test
+2026-03-23 13:56:17,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.0,load_factor,short cantliever test
+2026-03-25 13:22:59,short cantilever,3,6,1,2,1,50,5,2,300.0000000000194,81,28,251,0.0,0.015625,load_factor,short cantliever test
