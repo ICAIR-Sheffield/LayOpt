@@ -24,3 +24,4 @@ timestamp,problem_name,width,height,n_load_points,n_patterns_total,n_patterns_ac
 2026-03-19 10:28:27,square cantilever,8,8,2,4,1,50,5,8,2070.370370396299,376,81,2040,0.0,0.0,load_factor,square cantliever test
 2026-03-23 13:56:17,square cantilever,8,8,2,4,1,50,5,8,2070.370370396299,376,81,2040,0.0,0.03125,load_factor,square cantliever test
 2026-03-25 13:22:59,square cantilever,8,8,2,4,1,50,5,8,2070.370370396299,376,81,2040,0.0,0.046875,load_factor,square cantliever test
+2026-03-25 13:28:21,square cantilever,8,8,2,4,1,50,5,8,2070.370370396299,376,81,2040,0.0,0.015625,load_factor,square cantliever test

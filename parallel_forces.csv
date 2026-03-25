@@ -23,3 +23,4 @@ timestamp,problem_name,width,height,n_load_points,n_patterns_total,n_patterns_ac
 2026-03-19 10:28:27,parallel forces,3,1,2,4,1,50,5,2,1500.0000000002715,16,8,20,0.0,0.0,load_factor,parallel forces test
 2026-03-23 13:56:18,parallel forces,3,1,2,4,1,50,5,2,1500.0000000002715,16,8,20,0.0,0.0,load_factor,parallel forces test
 2026-03-25 13:22:59,parallel forces,3,1,2,4,1,50,5,2,1500.0000000002715,16,8,20,0.0,0.0,load_factor,parallel forces test
+2026-03-25 13:28:21,parallel forces,3,1,2,4,1,50,5,2,1500.0000000002715,16,8,20,0.0,0.03125,load_factor,parallel forces test

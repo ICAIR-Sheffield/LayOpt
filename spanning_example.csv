@@ -21,3 +21,4 @@ timestamp,problem_name,width,height,n_load_points,n_patterns_total,n_patterns_ac
 2026-03-19 10:28:27,spanning example,18,4,10,1024,17,3.75,0.204,21,533.207204457615,758,95,2734,0.0,32.484375,load_factor,spanning example test
 2026-03-23 13:56:18,spanning example,18,4,10,1024,17,3.75,0.204,21,533.207204457615,758,95,2734,0.015625,33.0625,load_factor,spanning example test
 2026-03-25 13:22:59,spanning example,18,4,10,1024,17,3.75,0.204,21,533.207204457615,758,95,2734,0.0,33.4375,load_factor,spanning example test
+2026-03-25 13:28:21,spanning example,18,4,10,1024,17,3.75,0.204,21,533.207204457615,758,95,2734,0.015625,31.296875,load_factor,spanning example test
