@@ -354,6 +354,57 @@ def trussopt_param_two_by_two() -> dict[str, Any]:
 
 
 @pytest.fixture
+||||||| parent of 41b9e35 (refactor(plotting): plotting submodule and tests)
+=======
+def trussopt_param_one_by_one() -> dict[str, Any]:
+    """Input parameters for 1x1 structure for ``layopt.trussopt()``."""
+    return {
+        "width": 1,
+        "height": 1,
+        "st": 1,
+        "sc": 1,
+        "jc": 0,
+        "loaded_points": [[3, 3]],
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 18,
+        "support_points": [],
+        "member_area_filtering": True,
+        "primal_method": "load_factor",
+        "problem_name": "short cantilever",
+        "save_to_csv": True,
+        "csv_filename": "short_cantilever.csv",
+        "notes": "short cantliever test",
+    }
+
+
+@pytest.fixture
+def trussopt_param_two_by_two() -> dict[str, Any]:
+    """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
+    return {
+        "width": 1,
+        "height": 1,
+        "st": 1,
+        "sc": 1,
+        "jc": 0,
+        "loaded_points": [[3, 3]],
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 18,
+        "support_points": [],
+        "member_area_filtering": False,
+        "primal_method": "load_factor",
+        "problem_name": "short cantilever",
+        "save_to_csv": True,
+        "csv_filename": "short_cantilever.csv",
+        "notes": "short cantliever test",
+    }
+
+
+@pytest.fixture
+>>>>>>> 41b9e35 (refactor(plotting): plotting submodule and tests)
 def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
     """Input parameters for 3x6 structure for ``layopt.trussopt()``."""
     return {
@@ -454,6 +505,7 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
         "csv_filename": "spanning_example.csv",
         "notes": "spanning example test",
     }
+<<<<<<< HEAD
 
 
 @pytest.fixture

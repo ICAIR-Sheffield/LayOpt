@@ -58,8 +58,13 @@ Changelog = "https://github.com/ICAIR-Sheffield/LayOpt/releases"
 test = [
   "pytest>=9.0.3",
   "pytest-cov >=7",
+<<<<<<< HEAD
   "pytest-loguru",
   "pytest-mpl",
+||||||| parent of 41b9e35 (refactor(plotting): plotting submodule and tests)
+=======
+  "pytest-mpl",
+>>>>>>> 41b9e35 (refactor(plotting): plotting submodule and tests)
   "pytest-testmon",
   "pytest-xdist",
   "syrupy"
