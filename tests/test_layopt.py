@@ -234,6 +234,7 @@ def test_make_pattern_loads_num_load_patterns(
     )
     assert len(all_patterns) == expected_pattern_count
 
+
 @pytest.mark.parametrize(
     "loaded_points, direction, expected_patterns",
     [
@@ -441,6 +442,7 @@ def test_make_pattern_loads_load_directions_and_node_snapping(
 
     # Check that base_load is correctly extracted as the first pattern
     np.testing.assert_equal(base_load, expected_patterns[0])
+
 
 @pytest.mark.parametrize(
     "loaded_points, expected_pattern_descriptions",
