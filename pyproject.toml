@@ -54,6 +54,7 @@ test = [
   "pandas",
   "pytest >=9",
   "pytest-cov >=7",
+  "pytest-mpl",
   "pytest-testmon",
   "pytest-xdist",
   "syrupy"

@@ -94,6 +94,32 @@
     81,
   )
 # ---
+# name: test_testname[1x1]
+  tuple(
+    np.float64(150.0),
+    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
+         50.        ]),
+  )
+# ---
+# name: test_testname[1x1].1
+  '''
+         problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
+  0  short cantilever      1       1              1                 2                  1          50           5           2         150.0                6        4                   6   load_factor  short cantliever test
+  '''
+# ---
+# name: test_testname[2x2]
+  tuple(
+    np.float64(150.0),
+    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
+         50.        ]),
+  )
+# ---
+# name: test_testname[2x2].1
+  '''
+         problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
+  0  short cantilever      1       1              1                 2                  1          50           5           2         150.0                6        4                   6   load_factor  short cantliever test
+  '''
+# ---
 # name: test_testname[parallel forces]
   tuple(
     np.float64(1500.0),

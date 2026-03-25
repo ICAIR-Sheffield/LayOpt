@@ -23,7 +23,6 @@ import time
 from math import ceil, gcd, isinf
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import mosek.fusion as mosek
 import numpy as np
 import numpy.typing as npt
@@ -32,7 +31,7 @@ from scipy import sparse
 # from numpy.matlib import repmat
 from shapely.geometry import LineString, Point, Polygon
 
-plt.rcParams["figure.max_open_warning"] = 0
+from layopt.plotting import plot_truss
 
 # pylint: disable=too-many-lines
 
@@ -218,127 +217,6 @@ def stop_violation(
     for i in range(min(num, len(vio_sort))):
         potential_members[lst[vio_c_n[vio_sort[i]]]][3] = True  # set member as active
     return min(num, len(vio_sort))
-
-
-def plot_truss(
-    nodal_coords: npt.NDArray,
-    c_n: npt.NDArray,
-    areas: list,
-    forces: list,
-    threshold: float,
-    title: str,
-    update: bool = True,
-    all_cases: bool = False,
-):
-    """
-    Visualise truss.
-
-    Parameters
-    ----------
-    nodal_coords : npt.NDArray
-        Nodal coordinates.
-    c_n : npt.NDArray
-        Active members.
-    areas : npt.NDArray
-        Member areas.
-    forces : list
-        Member forces.
-    threshold : float
-        Minimum allowable member area.
-    title : str
-        Title for plot, typically includes the filter level expressed as a percentage.
-    update : bool
-        Enable interactive mode (default=``True``).
-    all_cases : bool
-        Plot all load cases individually (default=``False``).
-    """
-    if all_cases:
-        plot_all_cases(
-            nodal_coords=nodal_coords,
-            c_n=c_n,
-            areas=areas,
-            forces=forces,
-            threshold=threshold,
-            stress_tensile=title,
-        )
-    else:
-        fig = plt.figure()
-        ax = fig.subplots()
-        if update:
-            plt.ion()
-        else:
-            plt.ioff()
-        ax.axis("off")
-        ax.axis("equal")
-        ax.set_title(title)
-        bar_thickness = 0.4  # bar thickness scale
-        for i in [i for i in range(len(areas)) if areas[i] >= threshold]:
-            if len(forces) > 1:  # multiple LC coloring
-                if all(forces[lc][i] >= -0.001 for lc in range(len(forces))):
-                    color = "r"
-                elif all(forces[lc][i] <= 0.001 for lc in range(len(forces))):
-                    color = "b"
-                else:
-                    color = "tab:gray"
-            else:  # single LC coloring (black = no load, dark = less load)
-                color = (
-                    min(max(forces[0][i] / areas[i], 0), 1),
-                    0,
-                    min(max(-forces[0][i] / areas[i], 0), 1),
-                )
-            pos = nodal_coords[c_n[i, [0, 1]].astype(int), :]
-            ax.plot(
-                pos[:, 0],
-                pos[:, 1],
-                color=color,
-                linewidth=areas[i] * bar_thickness,
-                solid_capstyle="round",
-            )
-        if update:
-            plt.pause(0.01)
-        else:
-            plt.show()
-        # fig.savefig(st+'.pdf', dpi=1200)
-
-
-def plot_all_cases(
-    nodal_coords: npt.NDArray,
-    c_n: npt.NDArray,
-    areas: npt.NDArray,
-    forces: list,
-    threshold: float,
-    stress_tensile: str,
-) -> None:
-    """
-    Visualise truss, loop through all load cases and plot individually.
-
-    Parameters
-    ----------
-    nodal_coords : npt.NDArray
-        Nodal coordinates.
-    c_n : npt.NDArray
-        Active members.
-    areas : npt.NDArray
-        Member areas.
-    forces : list
-        Member forces.
-    threshold : float
-        Minimum allowable member area.
-    stress_tensile : str
-        Stress tensile in string format as a percentage.
-    """
-    n_cases = len(forces)
-    for k in range(n_cases):
-        plot_truss(
-            nodal_coords=nodal_coords,
-            c_n=c_n,
-            areas=areas,
-            forces=[forces[k]],
-            threshold=threshold,
-            title=stress_tensile + " case " + str(k),
-            update=True,
-            all_cases=False,
-        )
 
 
 def make_pattern_loads(
@@ -959,12 +837,11 @@ def trussopt(
         ]
     else:
         filter_levels = []
+
     for multiplier in filter_levels:
-        max_a = max(a)
-        filter_val = multiplier * max_a
-        keep = [a_value > filter_val for a_value in a]
+        keep = [a_value > (multiplier * max(a)) for a_value in a]
         kept = c_n[keep]
-        vol, filer_a, filter_q, u = solve(
+        vol, filter_areas, filter_forces, u = solve(
             nodal_coords,
             kept,
             f_active,
@@ -975,20 +852,18 @@ def trussopt(
         )
         if vol > 0:
             print(
-                f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
+                f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filter_areas)!s} members"
             )
-            plot_truss(
+            _, _ = plot_truss(
                 nodal_coords=nodal_coords,
                 c_n=kept,
-                areas=filer_a,
-                forces=filter_q,
+                areas=filter_areas,
+                forces=filter_forces,
                 threshold=max(a) * 1e-3,
                 title="Filtered " + str(100 * multiplier) + "%",
-                update=False,
                 all_cases=False,
             )
-
-    print(f"Plotting took {time.process_time() - solve_end!s}")
+            print(f"Plotting took {time.process_time() - solve_end!s}")
 
     # Save results to CSV
     if save_to_csv:
