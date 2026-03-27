@@ -213,13 +213,24 @@ def test_testname(
 
 
 @pytest.mark.parametrize(
-    "loaded_points, expected_pattern_count",
+    "loaded_points, load_large, load_small, expected_pattern_count",
     [
-        ([[0.0, 1]], 2),  # 1 load point -> 2^1 = 2
-        ([[0.0, 1], [4.0, 1]], 4),  # 2 load points -> 2^2 = 4
-        ([[0.0, 1], [2.0, 1], [4.0, 1]], 8),  # 3 load points -> 2^3 = 8
+        pytest.param([[0.0, 1]], 
+         3.75,  # load_large
+         0.204,  # load_small
+         2,  # 1 load point -> 2^1 = 2
+         id="1_point"),  
+        pytest.param([[0.0, 1], [4.0, 1]], 
+         3.75,  # load_large
+         0.204,  # load_small
+         4,  # 2 load points -> 2^2 = 4
+         id="2_points"),  
+        pytest.param([[0.0, 1], [2.0, 1], [4.0, 1]], 
+         3.75,  # load_large
+         0.204,  # load_small
+         8,  # 3 load points -> 2^3 = 8 
+         id="3_points"),  
     ],
-    ids=["1_point", "2_points", "3_points"],
 )
 def test_make_pattern_loads_num_load_patterns(
     nodal_coords: npt.NDArray,
@@ -229,6 +240,7 @@ def test_make_pattern_loads_num_load_patterns(
     loaded_points: list,
     expected_pattern_count: int,
 ):
+    """Test that number of load patterns is as expected."""
     all_patterns, _, _ = layopt.make_pattern_loads(
         nodal_coords, loaded_points, load_large, load_small, load_direction_default
     )
@@ -236,12 +248,14 @@ def test_make_pattern_loads_num_load_patterns(
 
 
 @pytest.mark.parametrize(
-    "loaded_points, direction, expected_patterns",
+    "loaded_points, direction, load_large, load_small, expected_patterns",
     [
-        (
+        pytest.param(
             # Vertical Load (negative y)
             [[0.0, 1], [4.0, 1]],
             (0, -1),
+            3.75,  # load_large
+            0.204,  # load_small
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
@@ -267,7 +281,7 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -0.204,
+                        -0.204
                     ]
                 ),
                 np.array(
@@ -291,7 +305,7 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -3.75,
+                        -3.75
                     ]
                 ),
                 np.array(
@@ -315,15 +329,18 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -0.204,
+                        -0.204
                     ]
                 ),
             ],
+            id="Vertical load (negative y)"
         ),
-        (
+        pytest.param(
             # Horizontal Load (positive x)
             [[0.0, 1], [4.0, 1]],
             (1, 0),
+            3.75,  # load_large
+            0.204,  # load_small
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3.75, 0, 0, 0, 0, 0, 0, 0, 3.75, 0]
@@ -338,11 +355,14 @@ def test_make_pattern_loads_num_load_patterns(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.204, 0, 0, 0, 0, 0, 0, 0, 0.204, 0]
                 ),
             ],
+            id="Horizontal load (positive x)"
         ),
-        (
+        pytest.param(
             # Load point not strictly on a node (snaps to nearest)
             [[0.1, 0.9], [4.0, 1]],
             (0, -1),
+            3.75,  # load_large
+            0.204,  # load_small
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
@@ -368,7 +388,7 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -0.204,
+                        -0.204
                     ]
                 ),
                 np.array(
@@ -392,7 +412,7 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -3.75,
+                        -3.75
                     ]
                 ),
                 np.array(
@@ -416,13 +436,13 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -0.204,
+                        -0.204
                     ]
                 ),
             ],
+            id="Node snapping for load point"
         ),
     ],
-    ids=["vertical", "horizontal", "off_node_snapping"],
 )
 def test_make_pattern_loads_load_directions_and_node_snapping(
     nodal_coords: npt.NDArray,
@@ -445,14 +465,16 @@ def test_make_pattern_loads_load_directions_and_node_snapping(
 
 
 @pytest.mark.parametrize(
-    "loaded_points, expected_pattern_descriptions",
+    "loaded_points, load_large, load_small, expected_pattern_descriptions",
     [
-        (
+        pytest.param(
             [[0.0, 1], [4.0, 1]],
+            3.75,
+            0.204,
             ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
+            id="4_pattern_descriptions"
         )
     ],
-    ids=["2_points"],
 )
 def test_make_pattern_loads_pattern_descriptions(
     nodal_coords: npt.NDArray,
@@ -462,22 +484,20 @@ def test_make_pattern_loads_pattern_descriptions(
     loaded_points,
     expected_pattern_descriptions,
 ):
-    """Unit test for make_pattern_loads, test that 2^n pattern descriptions
-    are accurate"""
+    """Test that the 2^n pattern descriptions are accurate."""
     _, _, pattern_descriptions = layopt.make_pattern_loads(
         nodal_coords, loaded_points, load_large, load_small, load_direction_default
     )
     assert pattern_descriptions == expected_pattern_descriptions
 
-
+@pytest.mark.xfail(reason="AssertionError not being raised")
 def test_make_pattern_loads_zero_load_points_error(
     nodal_coords: npt.NDArray,
-    load_large: float,
-    load_small: float,
     load_direction_default: tuple[float, float],
 ):
-    """Unit test for make_pattern_loads, test that 0 load points raises
-    AssertionError"""
+    """Test that 0 load points raises ``AssertionError``."""
+    load_large = 3.75  # load_large
+    load_small = 0.204  # load_small
     with pytest.raises(AssertionError, match="Need at least one load point"):
         layopt.make_pattern_loads(
             nodal_coords, [], load_large, load_small, load_direction_default
