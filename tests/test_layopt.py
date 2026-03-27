@@ -215,21 +215,27 @@ def test_testname(
 @pytest.mark.parametrize(
     "loaded_points, load_large, load_small, expected_pattern_count",
     [
-        pytest.param([[0.0, 1]], 
-         3.75,  # load_large
-         0.204,  # load_small
-         2,  # 1 load point -> 2^1 = 2
-         id="1_point"),  
-        pytest.param([[0.0, 1], [4.0, 1]], 
-         3.75,  # load_large
-         0.204,  # load_small
-         4,  # 2 load points -> 2^2 = 4
-         id="2_points"),  
-        pytest.param([[0.0, 1], [2.0, 1], [4.0, 1]], 
-         3.75,  # load_large
-         0.204,  # load_small
-         8,  # 3 load points -> 2^3 = 8 
-         id="3_points"),  
+        pytest.param(
+            [[0.0, 1]],
+            3.75,  # load_large
+            0.204,  # load_small
+            2,  # 1 load point -> 2^1 = 2
+            id="1_point",
+        ),
+        pytest.param(
+            [[0.0, 1], [4.0, 1]],
+            3.75,  # load_large
+            0.204,  # load_small
+            4,  # 2 load points -> 2^2 = 4
+            id="2_points",
+        ),
+        pytest.param(
+            [[0.0, 1], [2.0, 1], [4.0, 1]],
+            3.75,  # load_large
+            0.204,  # load_small
+            8,  # 3 load points -> 2^3 = 8
+            id="3_points",
+        ),
     ],
 )
 def test_make_pattern_loads_num_load_patterns(
@@ -281,7 +287,7 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -0.204
+                        -0.204,
                     ]
                 ),
                 np.array(
@@ -305,7 +311,7 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -3.75
+                        -3.75,
                     ]
                 ),
                 np.array(
@@ -329,11 +335,11 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -0.204
+                        -0.204,
                     ]
                 ),
             ],
-            id="Vertical load (negative y)"
+            id="Vertical load (negative y)",
         ),
         pytest.param(
             # Horizontal Load (positive x)
@@ -355,7 +361,7 @@ def test_make_pattern_loads_num_load_patterns(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.204, 0, 0, 0, 0, 0, 0, 0, 0.204, 0]
                 ),
             ],
-            id="Horizontal load (positive x)"
+            id="Horizontal load (positive x)",
         ),
         pytest.param(
             # Load point not strictly on a node (snaps to nearest)
@@ -388,7 +394,7 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -0.204
+                        -0.204,
                     ]
                 ),
                 np.array(
@@ -412,7 +418,7 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -3.75
+                        -3.75,
                     ]
                 ),
                 np.array(
@@ -436,11 +442,11 @@ def test_make_pattern_loads_num_load_patterns(
                         0,
                         0,
                         0,
-                        -0.204
+                        -0.204,
                     ]
                 ),
             ],
-            id="Node snapping for load point"
+            id="Node snapping for load point",
         ),
     ],
 )
@@ -472,7 +478,7 @@ def test_make_pattern_loads_load_directions_and_node_snapping(
             3.75,
             0.204,
             ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
-            id="4_pattern_descriptions"
+            id="4_pattern_descriptions",
         )
     ],
 )
@@ -489,6 +495,7 @@ def test_make_pattern_loads_pattern_descriptions(
         nodal_coords, loaded_points, load_large, load_small, load_direction_default
     )
     assert pattern_descriptions == expected_pattern_descriptions
+
 
 @pytest.mark.xfail(reason="AssertionError not being raised")
 def test_make_pattern_loads_zero_load_points_error(
