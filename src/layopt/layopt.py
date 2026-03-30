@@ -38,7 +38,9 @@ plt.rcParams["figure.max_open_warning"] = 0
 # pylint: disable=too-many-lines
 
 
-def calc_eq_matrix_b(nodal_coords: npt.NDArray, c_n: npt.NDArray, dof: npt.NDArray):
+def calc_eq_matrix_b(
+    nodal_coords: npt.NDArray, c_n: npt.NDArray, dof: npt.NDArray
+) -> sparse.coo_matrix:
     """
     Calculate equilibrium matrix B.
 
@@ -53,17 +55,37 @@ def calc_eq_matrix_b(nodal_coords: npt.NDArray, c_n: npt.NDArray, dof: npt.NDArr
 
     Returns
     -------
-    coo_matrix
+    sparse.coo_matrix
         Equilibrium matrix B.
     """
-    m, n1, n2 = len(c_n), c_n[:, 0].astype(int), c_n[:, 1].astype(int)
-    length, x, y = (
-        c_n[:, 2],
-        nodal_coords[n2, 0] - nodal_coords[n1, 0],
-        nodal_coords[n2, 1] - nodal_coords[n1, 1],
-    )
-    d0, d1, d2, d3 = dof[n1 * 2], dof[n1 * 2 + 1], dof[n2 * 2], dof[n2 * 2 + 1]
-    # ns-rse 2026-03-18 : What are s, r and c? They are arrays but what do the elements represent?
+    try:
+        m, n1, n2 = len(c_n), c_n[:, 0].astype(int), c_n[:, 1].astype(int)
+    except TypeError as e:
+        msg = "Missing 'c_n'"
+        raise TypeError(msg) from e
+
+    try:
+        length, x, y = (
+            c_n[:, 2],
+            nodal_coords[n2, 0] - nodal_coords[n1, 0],
+            nodal_coords[n2, 1] - nodal_coords[n1, 1],
+        )
+    except IndexError as e:
+        msg = f"{nodal_coords.shape=}, expected (2,{c_n.shape[1]})"
+        raise IndexError(msg) from e
+    except TypeError as e:
+        msg = "Missing 'nodal_coords'"
+        raise TypeError(msg) from e
+
+    try:
+        d0, d1, d2, d3 = dof[n1 * 2], dof[n1 * 2 + 1], dof[n2 * 2], dof[n2 * 2 + 1]
+    except IndexError as e:
+        msg = f"{dof.shape=}, expected ({(c_n.shape[0],)})"
+        raise IndexError(msg) from e
+    except TypeError as e:
+        msg = "Missing 'dof'"
+        raise TypeError(msg) from e
+
     s = np.concatenate(
         (-x / length * d0, -y / length * d1, x / length * d2, y / length * d3)
     )
