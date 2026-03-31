@@ -500,3 +500,112 @@ def test_make_pattern_loads_zero_load_points_error(
             load_small=0.204,
             load_direction=(0.0, -1.0),
         )
+
+
+# stress limits for tests
+stress_tensile = 1
+stress_compressive = 1
+
+
+@pytest.mark.parametrize(
+    "all_patterns, active_load_cases, expected_converge",
+    [
+        pytest.param(
+            [
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                    ]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+            ],
+            [1, 1, 1, 1],  # all load cases active
+            True,
+            id="All active load cases",
+        ),
+    ],
+)
+def test_stop_primal_violation_active_convergence(
+    nodal_coords, c_n, areas, all_patterns, active_load_cases, dof, expected_converge
+):
+    """Test that all load cases active converges"""
+    actual_converge = layopt.stop_primal_violation_pattern(
+        nodal_coords,
+        c_n,
+        areas,
+        all_patterns,
+        active_load_cases,
+        dof,
+        stress_tensile,
+        stress_compressive,
+    )
+    assert actual_converge == expected_converge
