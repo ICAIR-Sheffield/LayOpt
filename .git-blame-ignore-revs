@@ -3,3 +3,12 @@
 # Please include a comment above the commit(s) added to this file to aid understanding why they are ignored
 #
 # # YYYY-MM-DD @<github-username> <action-or-reason-for-ignoring>
+
+# 2026-03-23 @ns-rse Ignore print() -> logger.info() changes
+ab268f5ad8a6fd6f927f2dbe8221aea6b9a37fb4
+
+# 2026-03-23 @ns-rse Ignoring PEP8 related commits which mostly rename parameters/variables/functions
+ad79daf8163578364dcd26873d05fcb874f8b89b
+a666ff9524f13db3dc4d0dce86194526cb423443
+23e003e1f572d7dc88a9d14c79431673f598eac2
+3d09189dc10087b1681dba210a5c368597f682a2
