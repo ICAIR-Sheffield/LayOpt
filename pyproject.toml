@@ -52,10 +52,12 @@ Changelog = "https://github.com/ICAIR-Sheffield/LayOpt/releases"
 [dependency-groups]
 test = [
   "pandas",
+  "pandas-stubs",
   "pytest >=9",
   "pytest-cov >=7",
   "pytest-testmon",
   "pytest-xdist",
+  "scipy-stubs",
   "syrupy"
 ]
 dev = [
@@ -115,6 +117,8 @@ disallow_incomplete_defs = false
 module = [
   "layopt.*",
   "loguru.*",
+  "numpy.*",
+  "pandas.*",
   "pydantic.*",
   "schema.*",
   "syrupy.*",

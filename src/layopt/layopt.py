@@ -372,7 +372,16 @@ def make_pattern_loads(
         (base load case) and ``pattern_descriptions`` (description of each load
         case using ``L`` for large or ``S`` for small at each load point).
     """
-    n = len(loaded_points)
+    if loaded_points is None or not isinstance(loaded_points, np.ndarray):
+        msg = f"'loaded_points' is not a numpy array : {type(loaded_points)=}"
+        raise TypeError(msg)
+    try:
+        assert loaded_points.shape[1] >= 1, IndexError(
+            f"Need at least one load point : {loaded_points.shape=}"
+        )
+    except IndexError as e:
+        msg = f"Need at least one load point : {loaded_points.shape}"
+        raise IndexError(msg) from e
 
     # Find node indices for each load point
     load_node_indices = []
@@ -386,7 +395,7 @@ def make_pattern_loads(
 
     # Generate all 2^n combinations
     # First combo (all loadLarge) is base case
-    for combo in itertools.product([load_large, load_small], repeat=n):
+    for combo in itertools.product([load_large, load_small], repeat=len(loaded_points)):
         fk = np.zeros(len(nodal_coords) * 2)
         desc = []
         for pt_idx, magnitude in enumerate(combo):
@@ -400,9 +409,8 @@ def make_pattern_loads(
 
     # ns-rse 2026-03-17 : Return directly as part of tuple
     base_load = all_patterns[0]  # First pattern = all large loads
-
     logger.info(
-        f"\nPattern loading: {n} load points -> {len(all_patterns)} total patterns"
+        f"\nPattern loading: {len(loaded_points)} load points -> {len(all_patterns)} total patterns"
     )
     logger.info(f"Base case (all large): {pattern_descriptions[0]}")
 
