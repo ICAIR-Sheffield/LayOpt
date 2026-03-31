@@ -30,7 +30,8 @@ def c_n():
             [4, 9, 1, True],
         ]
     )
-  
+
+
 @pytest.fixture
 def input_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
     """``nodal_coords``, ``c_n`` and ``dof`` for a 1x1 structure."""
