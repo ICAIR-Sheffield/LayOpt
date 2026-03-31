@@ -502,19 +502,22 @@ def test_make_pattern_loads_zero_load_points_error(
         )
 
 
-# stress limits for tests
-stress_tensile = 1
-stress_compressive = 1
-
-
 @pytest.mark.parametrize(
-    "all_patterns, active_load_cases, expected_converge",
+    (
+        "all_patterns",
+        "active_load_cases",
+        "areas",
+        "stress_tensile",
+        "stress_compressive",
+        "dof",
+        "expected_converge",
+    ),
     [
         pytest.param(
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
-                ),
+                ),  # all_patterns
                 np.array(
                     [
                         0,
@@ -588,15 +591,29 @@ stress_compressive = 1
                     ]
                 ),
             ],
-            [1, 1, 1, 1],  # all load cases active
-            True,
+            np.asarray([1, 1, 1, 1]),  # active_load_cases
+            np.ones(10),  # areas
+            1,  # stress_tensile
+            1,  # stress_compressive
+            np.array(
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ),  # dof
+            True,  # expected converge
             id="All active load cases",
         ),
     ],
 )
 def test_stop_primal_violation_active_convergence(
-    nodal_coords, c_n, areas, all_patterns, active_load_cases, dof, expected_converge
-):
+    nodal_coords: npt.NDArray,
+    c_n: npt.NDArray,
+    all_patterns: npt.NDArray,
+    active_load_cases: npt.NDArray,
+    areas: npt.NDArray,
+    stress_tensile: int,
+    stress_compressive: int,
+    dof: npt.NDArray,
+    expected_converge: list[int],
+) -> None:
     """Test that all load cases active converges"""
     actual_converge = layopt.stop_primal_violation_pattern(
         nodal_coords,
