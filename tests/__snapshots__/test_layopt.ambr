@@ -94,7 +94,7 @@
     81,
   )
 # ---
-# name: test_testname[parallel forces]
+# name: test_trussopt[parallel forces]
   tuple(
     np.float64(1500.0),
     array([250.        ,   0.        ,  70.71067812, 150.        ,
@@ -103,13 +103,13 @@
            0.        , 250.        , 150.        ,  50.        ]),
   )
 # ---
-# name: test_testname[parallel forces].1
+# name: test_trussopt[parallel forces].1
   '''
         problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                 notes
   0  parallel forces      3       1              2                 4                  1          50           5           2        1500.0               16        8                  20   load_factor  parallel forces test
   '''
 # ---
-# name: test_testname[short cantilever]
+# name: test_trussopt[short cantilever]
   tuple(
     np.float64(300.0),
     array([ 0.        ,  0.        , 35.35533906,  0.        ,  0.        ,
@@ -131,13 +131,13 @@
           0.        ]),
   )
 # ---
-# name: test_testname[short cantilever].1
+# name: test_trussopt[short cantilever].1
   '''
          problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
   0  short cantilever      3       6              1                 2                  1          50           5           2         300.0               81       28                 251   load_factor  short cantliever test
   '''
 # ---
-# name: test_testname[spanning example]
+# name: test_trussopt[spanning example]
   tuple(
     np.float64(533.20722988),
     array([0.00000000e+00, 3.75000000e+00, 3.33139108e+00, 1.99458382e+00,
@@ -324,13 +324,13 @@
          0.00000000e+00, 0.00000000e+00]),
   )
 # ---
-# name: test_testname[spanning example].1
+# name: test_trussopt[spanning example].1
   '''
          problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
   0  spanning example     18       4             10              1024                 16        3.75       0.204          18     533.20723              726       95                2734   load_factor  spanning example test
   '''
 # ---
-# name: test_testname[square cantilever]
+# name: test_trussopt[square cantilever]
   tuple(
     np.float64(2070.3703704),
     array([1.66666667e+01, 0.00000000e+00, 1.35914871e+01, 1.00000000e-08,
@@ -429,7 +429,7 @@
          0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00]),
   )
 # ---
-# name: test_testname[square cantilever].1
+# name: test_trussopt[square cantilever].1
   '''
           problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                   notes
   0  square cantilever      8       8              2                 4                  1          50           5           8    2070.37037              376       81                2040   load_factor  square cantliever test

@@ -189,97 +189,6 @@ def test_calc_eq_matrix_b_errors(
     ("trussopt_param_fixture"),
     [
         pytest.param(
-            3,  # width
-            6,  # height
-            1,  # st
-            1,  # sc
-            0,  # jc
-            np.asarray([[3, 3]]),  # loaded_points
-            (0, -1),  # load_direction
-            50,  # load_large
-            5,  # load_small
-            18,  # max_length
-            [],  # support_points
-            False,  # filter
-            "load_factor",  # primal_method
-            "short cantilever",  # problem_name
-            True,  # save_to_csv
-            "short_cantilever.csv",  # csv_filename
-            "short cantliever test",  # notes
-            id="short cantilever",
-        ),
-        pytest.param(
-            8,  # width
-            8,  # height
-            1,  # st
-            1,  # sc
-            0,  # jc
-            np.asarray([[8, 0], [8, 4]]),  # loaded_points
-            (0, -1),  # load_direction
-            50,  # load_large
-            5,  # load_small
-            15,  # max_length
-            [],  # support_points
-            False,  # filter
-            "load_factor",  # primal_method
-            "square cantilever",  # problem_name
-            True,  # save_to_csv
-            "square_cantilever.csv",  # csv_filename
-            "square cantliever test",  # notes
-            id="square cantilever",
-        ),
-        pytest.param(
-            3,  # width
-            1,  # height
-            1,  # st
-            1,  # sc
-            0,  # jc
-            np.asarray([[3, 0], [3, 1]]),  # loaded_points
-            (0, -1),  # load_direction
-            50,  # load_large
-            5,  # load_small
-            2.5,  # max_length
-            [],  # support_points
-            False,  # filter
-            "load_factor",  # primal_method
-            "parallel forces",  # problem_name
-            True,  # save_to_csv
-            "parallel_forces.csv",  # csv_filename
-            "parallel forces test",  # notes
-            id="parallel forces",
-        ),
-        pytest.param(
-            18,  # width
-            4,  # height
-            1,  # st
-            1,  # sc
-            0,  # jc
-            np.asarray(
-                [
-                    [0.0, 4],
-                    [2.0, 4],
-                    [4.0, 4],
-                    [6.0, 4],
-                    [8.0, 4],
-                    [10.0, 4],
-                    [12.0, 4],
-                    [14.0, 4],
-                    [16.0, 4],
-                    [18.0, 4],
-                ]
-            ),  # loaded_points
-            (0, -1),  # load_direction
-            3.75,  # load_large
-            0.204,  # load_small
-            36,  # max_length
-            [[0, 0], [18, 0]],  # support_points
-            False,  # filter
-            "load_factor",  # primal_method
-            "spanning example",  # problem_name
-            True,  # save_to_csv
-            "spanning_example.csv",  # csv_filename
-            "spanning example test",  # notes
-            id="spanning example",
             "trussopt_param_three_by_six_short_cantilever",
             id="short cantilever",
         ),
@@ -292,7 +201,7 @@ def test_calc_eq_matrix_b_errors(
         pytest.param("trussopt_param_eighteen_by_four_spanning", id="spanning example"),
     ],
 )
-def test_testname(
+def test_trussopt(
     trussopt_param_fixture: str,
     tmp_path: Path,
     request,
@@ -334,6 +243,7 @@ def test_testname(
         ).to_string()
         == snapshot
     )
+
 
 # @pytest.mark.parametrize(
 #     ("loaded_points", "expected_pattern_count"),
