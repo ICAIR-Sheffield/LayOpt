@@ -1,15 +1,19 @@
-# conftest.py
+"""Fixtures for layopt tests."""
+
 import numpy as np
+import numpy.typing as npt
 import pytest
 
 
 @pytest.fixture
-def nodal_coords():
+def nodal_coords() -> npt.NDArray[np.int32]:
+    """Coordinates for simple test."""
     return np.array([[x, y] for y in range(2) for x in range(5)])
 
 
 @pytest.fixture
 def c_n():
+    """Active members."""
     return np.array(
         [
             [0, 1, 1, True],
@@ -24,18 +28,3 @@ def c_n():
             [4, 9, 1, True],
         ]
     )
-
-
-@pytest.fixture
-def areas():
-    return np.ones(10)
-
-
-@pytest.fixture
-def dof():
-    return np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-
-
-@pytest.fixture
-def load_direction_default():
-    return (0, -1)

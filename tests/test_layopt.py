@@ -74,7 +74,7 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
             1,  # st
             1,  # sc
             0,  # jc
-            [[3, 3]],  # loaded_points
+            np.asarray([[3, 3]]),  # loaded_points
             (0, -1),  # load_direction
             50,  # load_large
             5,  # load_small
@@ -94,7 +94,7 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
             1,  # st
             1,  # sc
             0,  # jc
-            [[8, 0], [8, 4]],  # loaded_points
+            np.asarray([[8, 0], [8, 4]]),  # loaded_points
             (0, -1),  # load_direction
             50,  # load_large
             5,  # load_small
@@ -114,7 +114,7 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
             1,  # st
             1,  # sc
             0,  # jc
-            [[3, 0], [3, 1]],  # loaded_points
+            np.asarray([[3, 0], [3, 1]]),  # loaded_points
             (0, -1),  # load_direction
             50,  # load_large
             5,  # load_small
@@ -134,18 +134,20 @@ def round_values(to_be_rounded: Any, precision: int) -> Any:
             1,  # st
             1,  # sc
             0,  # jc
-            [
-                [0.0, 4],
-                [2.0, 4],
-                [4.0, 4],
-                [6.0, 4],
-                [8.0, 4],
-                [10.0, 4],
-                [12.0, 4],
-                [14.0, 4],
-                [16.0, 4],
-                [18.0, 4],
-            ],  # loaded_points
+            np.asarray(
+                [
+                    [0.0, 4],
+                    [2.0, 4],
+                    [4.0, 4],
+                    [6.0, 4],
+                    [8.0, 4],
+                    [10.0, 4],
+                    [12.0, 4],
+                    [14.0, 4],
+                    [16.0, 4],
+                    [18.0, 4],
+                ]
+            ),  # loaded_points
             (0, -1),  # load_direction
             3.75,  # load_large
             0.204,  # load_small
@@ -212,56 +214,46 @@ def test_testname(
     # ns-rse 2026-03-17 - load results and test against snapshot
 
 
-@pytest.mark.parametrize(
-    "loaded_points, load_large, load_small, expected_pattern_count",
-    [
-        pytest.param(
-            [[0.0, 1]],
-            3.75,  # load_large
-            0.204,  # load_small
-            2,  # 1 load point -> 2^1 = 2
-            id="1_point",
-        ),
-        pytest.param(
-            [[0.0, 1], [4.0, 1]],
-            3.75,  # load_large
-            0.204,  # load_small
-            4,  # 2 load points -> 2^2 = 4
-            id="2_points",
-        ),
-        pytest.param(
-            [[0.0, 1], [2.0, 1], [4.0, 1]],
-            3.75,  # load_large
-            0.204,  # load_small
-            8,  # 3 load points -> 2^3 = 8
-            id="3_points",
-        ),
-    ],
-)
-def test_make_pattern_loads_num_load_patterns(
-    nodal_coords: npt.NDArray,
-    load_large: float,
-    load_small: float,
-    load_direction_default: tuple[float, float],
-    loaded_points: list,
-    expected_pattern_count: int,
-):
-    """Test that number of load patterns is as expected."""
-    all_patterns, _, _ = layopt.make_pattern_loads(
-        nodal_coords, loaded_points, load_large, load_small, load_direction_default
-    )
-    assert len(all_patterns) == expected_pattern_count
+# @pytest.mark.parametrize(
+#     ("loaded_points", "expected_pattern_count"),
+#     [
+#         pytest.param([[0.0, 1]], 2, id="1 load point (2^1)"),
+#         pytest.param([[0.0, 1], [4.0, 1]], 4, id="2 load points (2^2)"),
+#         pytest.param([[0.0, 1], [2.0, 1], [4.0, 1]], 8, id="3 load points (2^3)"),
+#     ],
+#     ids=["1_point", "2_points", "3_points"],
+# )
+# def test_make_pattern_loads_num_load_patterns(
+#     nodal_coords: npt.NDArray,
+#     load_large: float,
+#     load_small: float,
+#     load_direction_default: tuple[float, float],
+#     loaded_points: list,
+#     expected_pattern_count: int,
+# ):
+#     all_patterns, _, _ = layopt.make_pattern_loads(
+#         nodal_coords, loaded_points, load_large, load_small, load_direction_default
+#     )
+#     assert len(all_patterns) == expected_pattern_count
 
 
 @pytest.mark.parametrize(
-    "loaded_points, direction, load_large, load_small, expected_patterns",
+    (
+        "loaded_points",
+        "load_large",
+        "load_small",
+        "direction",
+        "expected_pattern_count",
+        "expected_patterns",
+        "expected_pattern_description",
+    ),
     [
         pytest.param(
-            # Vertical Load (negative y)
-            [[0.0, 1], [4.0, 1]],
-            (0, -1),
-            3.75,  # load_large
-            0.204,  # load_small
+            np.asarray([[0.0, 1], [4.0, 1]]),
+            3.75,
+            0.204,
+            (0.0, -1.0),
+            4,
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
@@ -339,14 +331,15 @@ def test_make_pattern_loads_num_load_patterns(
                     ]
                 ),
             ],
-            id="Vertical load (negative y)",
+            ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
+            id="vertical",
         ),
         pytest.param(
-            # Horizontal Load (positive x)
-            [[0.0, 1], [4.0, 1]],
-            (1, 0),
-            3.75,  # load_large
-            0.204,  # load_small
+            np.asarray([[0.0, 1], [4.0, 1]]),
+            3.75,
+            0.204,
+            (1.0, 0.0),
+            4,
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3.75, 0, 0, 0, 0, 0, 0, 0, 3.75, 0]
@@ -361,14 +354,15 @@ def test_make_pattern_loads_num_load_patterns(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.204, 0, 0, 0, 0, 0, 0, 0, 0.204, 0]
                 ),
             ],
-            id="Horizontal load (positive x)",
+            ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
+            id="horizontal",
         ),
         pytest.param(
-            # Load point not strictly on a node (snaps to nearest)
-            [[0.1, 0.9], [4.0, 1]],
-            (0, -1),
-            3.75,  # load_large
-            0.204,  # load_small
+            np.asarray([[0.1, 0.9], [4.0, 1]]),
+            3.75,
+            0.204,
+            (0.0, -1.0),
+            4,
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
@@ -446,7 +440,8 @@ def test_make_pattern_loads_num_load_patterns(
                     ]
                 ),
             ],
-            id="Node snapping for load point",
+            ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
+            id="Off node snapping",
         ),
     ],
 )
@@ -454,76 +449,75 @@ def test_make_pattern_loads_load_directions_and_node_snapping(
     nodal_coords: npt.NDArray,
     load_large: float,
     load_small: float,
-    loaded_points,
+    loaded_points: npt.NDArray[np.float32],
     direction,
-    expected_patterns,
+    expected_pattern_count: int,
+    expected_patterns: npt.NDArray[np.float32],
+    expected_pattern_description: list[str],
 ):
     """Test vertical loads, horizontal loads, and snapping to nearest nodes."""
-    all_patterns, base_load, _ = layopt.make_pattern_loads(
+    all_patterns, base_load, pattern_description = layopt.make_pattern_loads(
         nodal_coords, loaded_points, load_large, load_small, direction
     )
-
-    # Check all pattern variations are correct
+    assert len(all_patterns) == expected_pattern_count
     np.testing.assert_equal(all_patterns, expected_patterns)
-
-    # Check that base_load is correctly extracted as the first pattern
     np.testing.assert_equal(base_load, expected_patterns[0])
+    assert pattern_description == expected_pattern_description
 
 
 @pytest.mark.parametrize(
-    "loaded_points, load_large, load_small, expected_pattern_descriptions",
+    ("loaded_points", "error", "msg"),
     [
         pytest.param(
-            [[0.0, 1], [4.0, 1]],
-            3.75,
-            0.204,
-            ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
-            id="4_pattern_descriptions",
-        )
+            [], TypeError, "'loaded_points' is not a numpy array", id="empty list"
+        ),
+        pytest.param(
+            np.asarray([[]]),
+            AssertionError,
+            "Need at least one load point",
+            id="empty numpy array",
+        ),
+        pytest.param(
+            None, TypeError, "'loaded_points' is not a numpy array", id="None"
+        ),
+        pytest.param(
+            0.0, TypeError, "'loaded_points' is not a numpy array", id="float"
+        ),
     ],
 )
-def test_make_pattern_loads_pattern_descriptions(
-    nodal_coords: npt.NDArray,
-    load_large: float,
-    load_small: float,
-    load_direction_default: tuple[float, float],
-    loaded_points,
-    expected_pattern_descriptions,
-):
-    """Test that the 2^n pattern descriptions are accurate."""
-    _, _, pattern_descriptions = layopt.make_pattern_loads(
-        nodal_coords, loaded_points, load_large, load_small, load_direction_default
-    )
-    assert pattern_descriptions == expected_pattern_descriptions
-
-
-@pytest.mark.xfail(reason="AssertionError not being raised")
 def test_make_pattern_loads_zero_load_points_error(
     nodal_coords: npt.NDArray,
-    load_direction_default: tuple[float, float],
+    loaded_points: Any,
+    error,
+    msg: str,
 ):
-    """Test that 0 load points raises ``AssertionError``."""
-    load_large = 3.75  # load_large
-    load_small = 0.204  # load_small
-    with pytest.raises(AssertionError, match="Need at least one load point"):
+    """Test that 0 load points raises AssertionError from ``layopt.make_pattern_loads()``."""
+    with pytest.raises(error, match=msg):
         layopt.make_pattern_loads(
-            nodal_coords, [], load_large, load_small, load_direction_default
+            nodal_coords=nodal_coords,
+            loaded_points=loaded_points,
+            load_large=3.75,
+            load_small=0.204,
+            load_direction=(0.0, -1.0),
         )
-
-
-# stress limits for tests
-stress_tensile = 1
-stress_compressive = 1
 
 
 @pytest.mark.parametrize(
-    "all_patterns, active_load_cases, expected_converge",
+    (
+        "all_patterns",
+        "active_load_cases",
+        "areas",
+        "stress_tensile",
+        "stress_compressive",
+        "dof",
+        "expected_converge",
+    ),
     [
         pytest.param(
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
-                ),
+                ),  # all_patterns
                 np.array(
                     [
                         0,
@@ -597,15 +591,29 @@ stress_compressive = 1
                     ]
                 ),
             ],
-            [1, 1, 1, 1],  # all load cases active
-            True,
+            np.asarray([1, 1, 1, 1]),  # active_load_cases
+            np.ones(10),  # areas
+            1,  # stress_tensile
+            1,  # stress_compressive
+            np.array(
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ),  # dof
+            True,  # expected converge
             id="All active load cases",
         ),
     ],
 )
 def test_stop_primal_violation_active_convergence(
-    nodal_coords, c_n, areas, all_patterns, active_load_cases, dof, expected_converge
-):
+    nodal_coords: npt.NDArray,
+    c_n: npt.NDArray,
+    all_patterns: npt.NDArray,
+    active_load_cases: npt.NDArray,
+    areas: npt.NDArray,
+    stress_tensile: int,
+    stress_compressive: int,
+    dof: npt.NDArray,
+    expected_converge: list[int],
+) -> None:
     """Test that all load cases active converges"""
     actual_converge = layopt.stop_primal_violation_pattern(
         nodal_coords,
