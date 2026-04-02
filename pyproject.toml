@@ -31,6 +31,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  "art",
   "loguru",
   "matplotlib",
   "mosek",
@@ -58,7 +59,6 @@ test = [
   "pytest-loguru",
   "pytest-testmon",
   "pytest-xdist",
-  "scipy-stubs",
   "syrupy"
 ]
 dev = [
@@ -67,11 +67,14 @@ dev = [
   "black",
   "codespell",
   "ipdb",
+  "mypy",
   "pre-commit",
   "pydocstyle[toml]",
   "pylint",
   "ruff",
+  "scipy-stubs",
   "tomli",
+  "types-PyYAML",
 ]
 docs = [
   "markdown>=3.9",
@@ -225,3 +228,6 @@ skip = 'uv.lock'
 count = ''
 quiet-level = 3
 # ignore-words-list = ''
+
+[project.scripts]
+layopt = "layopt.entry_point:entry_point"
