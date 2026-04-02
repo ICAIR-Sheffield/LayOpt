@@ -1,0 +1,119 @@
+"""Validation of configuration."""
+
+import os
+from pathlib import Path
+
+import numpy as np
+from loguru import logger
+from schema import And, Or, Schema, SchemaError
+
+
+# pylint: disable=line-too-long
+# pylint: disable=too-many-lines
+def validate_config(config: dict, schema: Schema, config_type: str) -> None:
+    """
+    Validate configuration.
+
+    NB - This will fail on raw YAML files, the configuration should be passed through ``clean_config()`` first to
+    convert configuration values to their expected types.
+
+    Parameters
+    ----------
+    config : dict
+        Config dictionary imported by ``read_yaml()`` and parsed through ``clean_config()``.
+    schema : Schema
+        A schema against which the configuration is to be compared.
+    config_type : str
+        Description of of configuration being validated.
+    """
+    try:
+        schema.validate(config)
+        logger.info(f"✅ The {config_type} configuration is valid.")
+    except SchemaError as schema_error:
+        msg = (
+            f"❌ There is an error in your {config_type} configuration. "
+            "Please refer to the first error message above for details"
+        )
+        raise SchemaError(msg) from schema_error
+
+
+DEFAULT_CONFIG_SCHEMA = Schema(
+    {
+        "output_dir": Path,
+        "log_level": Or(
+            "debug",
+            "info",
+            "warning",
+            "error",
+            error="❌ Invalid value in config for 'log_level', valid values are 'info' (default), 'debug', 'error' or 'warning",
+        ),
+        "cores": lambda n: 1 <= n <= os.cpu_count(),
+        "width": lambda n: n > 1,
+        "height": lambda n: n > 1,
+        "stress_tensile": Or(
+            And(int, lambda n: n > 0.0),
+            And(float, lambda n: n >= 0.0),
+            error="❌ Invalid value in config for 'stress_tensile', valid values are >= 0.0.",
+        ),
+        "stress_compressive": Or(
+            And(int, lambda n: n > 0.0),
+            And(float, lambda n: n >= 0.0),
+            error="❌ Invalid value in config for 'stress_compressive', valid values are >= 0.0.",
+        ),
+        "joint_cost": And(
+            float,
+            lambda n: n >= 0.0,
+            error="❌ Invalid value in config for 'joint_cost', valid values are >= 0.0",
+        ),
+        "loaded_points": And(
+            np.ndarray,
+            lambda n: len(n.shape) == 2,
+            error="❌ Invalid value in config for 'loaded_points', should be a 2-dimensional array.",
+        ),
+        "load_direction": And(
+            tuple,
+            lambda n: len(n) == 2,
+            error="❌ Invalid value in config for 'load_direction', should be a tuple of length 2.",
+        ),
+        "load_large": And(
+            float,
+            lambda n: n >= 0.0,
+            error="❌ Invalid value in config for 'load_large', valid values are >= 0.0.",
+        ),
+        "load_small": And(
+            float,
+            lambda n: n >= 0.0,
+            error="❌ Invalid value in config for 'load_small', valid values are >= 0.0.",
+        ),
+        "max_length": And(
+            float,
+            lambda n: n >= 0.0,
+            error="❌ Invalid value in config for 'max_length', valid values are >= 0.0.",
+        ),
+        "support_points": And(
+            np.ndarray,
+            lambda n: len(n.shape) == 2,
+            error="❌ Invalid value in config for 'support_points', this should be a list of coordinates.",
+        ),
+        "member_area_filtering": Or(
+            True,
+            False,
+            error="❌ Invalid value for 'member_area_filtering', should be boolean (i.e. true or false).",
+        ),
+        "primal_method": And(
+            str,
+            Or(
+                # ns-rse 2026-04-02 : What other primal methods are there?
+                "load_factor",
+            ),
+            error="❌ Invalid value in config for 'primal_methods', this should be a list of coordinates.",
+        ),
+        "problem_name": str,
+        "save_to_csv": Or(
+            True,
+            False,
+            error="❌ Invalid value for 'save_to_csv', should be boolean (i.e. true or false).",
+        ),
+        "notes": str,
+    }
+)

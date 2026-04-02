@@ -1,0 +1,23 @@
+output_dir: ./output # Where to save output to
+log_level: info # Verbosity used in logging
+cores: 2 # Number of cores to use when processing
+width: 3 # Width of structure
+height: 6 # Height of structure
+stress_tensile: 1.0 # Tensile stress
+stress_compressive: 1.0 # Compressive stress
+joint_cost: 0.0 # Joint costs
+loaded_points: # Loaded points
+  - [3, 3]
+load_direction: # Load direction
+  - 0.0
+  - -1.0
+load_large: 50.0 # Large load
+load_small: 5.0 # Small load
+max_length: 18.0 # Max length
+support_points: # Support points
+  - []
+member_area_filtering: false # Whether to filter member areas
+primal_method: load_factor # Primal method
+problem_name: short cantilever # Problem name
+save_to_csv: true # Whether to save results to csv
+notes: short cantilever test # Notes to include
