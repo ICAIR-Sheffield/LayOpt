@@ -17,7 +17,6 @@
 # !pip install mosek
 
 import csv
-import datetime
 import itertools
 import time
 from math import ceil, gcd, isinf
@@ -32,6 +31,8 @@ from scipy import sparse
 
 # from numpy.matlib import repmat
 from shapely.geometry import LineString, Point, Polygon
+
+from layopt.io import get_date_time
 
 plt.rcParams["figure.max_open_warning"] = 0
 
@@ -771,7 +772,6 @@ def trussopt(
         A tuple consisting of ``volume`` (the final volume of the solved problem)
         and ``area`` (final member areas of the solved problem).
     """
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     setup_start = time.process_time()
 
     # Make domain
@@ -1004,7 +1004,7 @@ def trussopt(
     # Save results to CSV
     if save_to_csv:
         results = {
-            "timestamp": timestamp,
+            "timestamp": get_date_time(),
             "problem_name": problem_name or f"w{width}_h{height}_n{len(loaded_points)}",
             "width": width,
             "height": height,

@@ -6,6 +6,7 @@ from argparse import Namespace  # noqa: TC003
 from datetime import datetime
 from pathlib import Path
 from pkgutil import get_data
+from time import tzname
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -42,9 +43,7 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
         raise (FileNotFoundError(msg)) from exc
     with config_path.open("w", encoding="utf-8") as f:
         try:
-            f.write(
-                f"# Config generated {datetime.now(tz=ZoneInfo()).strftime('%Y-%m-%d %H:%M:%S')}\n"
-            )
+            f.write(f"# Config generated {get_date_time()}\n")
             f.write(f"{CONFIG_DOCUMENTATION_REFERENCE}")
             f.write(config.decode("utf-8"))
         except:  # noqa: E722, pylint: disable=W0702
@@ -89,3 +88,23 @@ def convert_path(path: str | Path) -> Path:
         Pathlib object of path.
     """
     return Path().cwd() if path == "./" else Path(path).expanduser()
+
+
+def get_date_time(strftime: str = "%Y-%m-%d %H:%M:%S", tz: str | None = None) -> str:
+    """
+    Get the current date-time.
+
+    Parameters
+    ----------
+    strftime : str
+        String for formatting date-time, default is ``%Y-%m-%d %H:%M:%S``.
+    tz : str
+        Timezone, default is ``None`` in which case ``ZoneInfo`` is used.
+
+    Returns
+    -------
+    str
+        Date-time as a string.
+    """
+    timezone = ZoneInfo(tzname[0]) if tz is None else ZoneInfo(tz)
+    return datetime.now(tz=timezone).strftime(strftime)
