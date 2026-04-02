@@ -55,6 +55,7 @@ test = [
   "pandas-stubs",
   "pytest >=9",
   "pytest-cov >=7",
+  "pytest-loguru",
   "pytest-testmon",
   "pytest-xdist",
   "scipy-stubs",
