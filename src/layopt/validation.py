@@ -37,7 +37,7 @@ def validate_config(config: dict, schema: Schema, config_type: str) -> None:
         raise SchemaError(msg) from schema_error
 
 
-DEFAULT_CONFIG_SCHEMA = Schema(
+LAYOPT_CONFIG_SCHEMA = Schema(
     {
         "output_dir": Path,
         "log_level": Or(
@@ -95,10 +95,9 @@ DEFAULT_CONFIG_SCHEMA = Schema(
             lambda n: len(n.shape) == 2,
             error="❌ Invalid value in config for 'support_points', this should be a list of coordinates.",
         ),
-        "member_area_filtering": Or(
-            True,
-            False,
-            error="❌ Invalid value for 'member_area_filtering', should be boolean (i.e. true or false).",
+        "filter_levels": Or(
+            np.ndarray,
+            error="❌ Invalid value for 'filter_levels', should be boolean (i.e. true or false).",
         ),
         "primal_method": And(
             str,

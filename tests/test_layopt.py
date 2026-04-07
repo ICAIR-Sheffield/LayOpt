@@ -221,7 +221,7 @@ def test_trussopt(
         load_small=params["load_small"],
         max_length=params["max_length"],
         support_points=params["support_points"],
-        member_area_filtering=params["member_area_filtering"],
+        filter_levels=params["filter_levels"],
         primal_method=params["primal_method"],
         problem_name=params["problem_name"],
         save_to_csv=params["save_to_csv"],
@@ -533,6 +533,7 @@ def test_make_pattern_loads_zero_load_points_error(
         )
 
 
+# pylint: disable=duplicate-code
 @pytest.mark.parametrize(
     (
         "all_patterns",

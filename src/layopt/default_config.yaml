@@ -16,7 +16,7 @@ load_small: 5.0 # Small load
 max_length: 18.0 # Max length
 support_points: # Support points
   - []
-member_area_filtering: false # Whether to filter member areas
+filter_levels: [] # List of values to filter by if empty no filtering is performed
 primal_method: load_factor # Primal method
 problem_name: short cantilever # Problem name
 save_to_csv: true # Whether to save results to csv

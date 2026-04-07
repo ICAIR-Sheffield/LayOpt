@@ -84,8 +84,11 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
             map1["load_direction"][0],
             map1["load_direction"][1],
         )
+    # Convert to numpy arrays
     if "loaded_points" in map1:
         map1["loaded_points"] = np.asarray(map1["loaded_points"])
     if "support_points" in map1:
         map1["support_points"] = np.asarray(map1["support_points"])
+    if "filter_levels" in map1:
+        map1["filter_levels"] = np.asarray(map1["filter_levels"])
     return dict(map1)

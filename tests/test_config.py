@@ -16,7 +16,7 @@ from layopt.config import (
     merge_mappings,
     reconcile_config_args,
 )
-from layopt.validation import DEFAULT_CONFIG_SCHEMA, validate_config
+from layopt.validation import LAYOPT_CONFIG_SCHEMA, validate_config
 
 BASE_DIR = Path.cwd()
 RESOURCES = BASE_DIR / "tests" / "resources"
@@ -36,7 +36,7 @@ def test_reconcile_config_args_no_config(caplog) -> None:
     # Check that the config passes the schema
     config.pop("config_file")
     with caplog.at_level(logging.INFO):
-        validate_config(config, schema=DEFAULT_CONFIG_SCHEMA, config_type="default")
+        validate_config(config, schema=LAYOPT_CONFIG_SCHEMA, config_type="default")
 
     assert "✅ The default configuration is valid." in caplog.text
 
@@ -57,10 +57,10 @@ def test_reconcile_config_args_no_config(caplog) -> None:
             id="loaded_points [[6, 2]]",
         ),
         pytest.param(
-            argparse.Namespace(config_file=None, member_area_filtering=True),
-            "member_area_filtering",
-            True,
-            id="member_area_filtering True",
+            argparse.Namespace(config_file=None, filter_levels=[0.001, 0.01, 0.1]),
+            "filter_levels",
+            [0.001, 0.01, 0.1],
+            id="filter_levels not None",
         ),
     ],
 )
@@ -73,7 +73,10 @@ def test_reconcile_config_args(
     config: dict[str, Any] = reconcile_config_args(
         args=args, default_config=DEFAULT_CONFIG
     )
-    assert config[parameter] == value
+    if isinstance(config[parameter], np.ndarray):
+        np.testing.assert_array_equal(config[parameter], value)
+    else:
+        assert config[parameter] == value
 
 
 @pytest.mark.parametrize(
@@ -88,8 +91,8 @@ def test_reconcile_config_args(
             id="loaded_points 1 dimension",
         ),
         pytest.param(
-            argparse.Namespace(config_file=None, member_area_filtering="yes"),
-            id="member_area_filtering str not bool",
+            argparse.Namespace(config_file=None, filter_levels="yes"),
+            id="filter_levels str not bool",
         ),
     ],
 )
@@ -101,7 +104,7 @@ def test_reconcile_config_args_invalid_args(
         args=args, default_config=DEFAULT_CONFIG
     )
     with pytest.raises(SchemaError):
-        validate_config(config, schema=DEFAULT_CONFIG_SCHEMA, config_type="default")
+        validate_config(config, schema=LAYOPT_CONFIG_SCHEMA, config_type="default")
 
 
 @pytest.mark.parametrize(

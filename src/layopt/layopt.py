@@ -21,6 +21,7 @@ import itertools
 import time
 from math import ceil, gcd, isinf
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import mosek.fusion as mosek
@@ -719,13 +720,13 @@ def trussopt(
     max_length: float = 1000.0,
     # ns-rse 2026-03-17 : Set type hint and default to None
     support_points: list | None = None,
-    member_area_filtering: bool = False,  # as boolean makes it "pythonic" to remove 'do' but what is being filered?
+    filter_levels: list[float] | None = None,
     primal_method: str = "load_factor",
     problem_name: str = "None",
     save_to_csv: bool = True,
     csv_filename: str = "pattern_loading_results.csv",
     notes: str = "",
-):
+) -> tuple[float, npt.NDArray, dict[str, Any], float]:
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
 
@@ -753,8 +754,8 @@ def trussopt(
         Maximum member length.
     support_points : list
         Support points (default=[]).
-    member_area_filtering : bool
-        Enable post-processing filtering on member areas (default=``False``).
+    filter_levels : list[float]
+        List of levels to filter on.
     primal_method : str
         Primal violation method (default='load_factor').
     problem_name : str
@@ -768,7 +769,7 @@ def trussopt(
 
     Returns
     -------
-    tuple[float, npt.NDArray]
+    tuple[float, npt.NDArray, dict[str, Any], float]
         A tuple consisting of ``volume`` (the final volume of the solved problem)
         and ``area`` (final member areas of the solved problem).
     """
@@ -949,87 +950,78 @@ def trussopt(
     logger.info(
         f"Active patterns: {int(np.sum(active_load_cases))}/{len(all_patterns)}"
     )
+    # Build dictionary of results
+    results = {
+        "timestamp": get_date_time(),
+        "problem_name": problem_name or f"w{width}_h{height}_n{len(loaded_points)}",
+        "width": width,
+        "height": height,
+        "n_load_points": len(loaded_points),
+        "n_patterns_total": len(all_patterns),
+        "n_patterns_active": int(np.sum(active_load_cases)),
+        "load_large": load_large,
+        "load_small": load_small,
+        "iterations": itr,
+        "final_volume": None,
+        "n_members_final": len(c_n),
+        "n_nodes": len(nodal_coords),
+        "n_ground_structure": len(potential_members),
+        "cpu_time_setup": setup_end - setup_start,
+        "cpu_time_solve": solve_end - setup_end,
+        # 'cpu_time_total': total_cpu_time,
+        # 'wall_time_total': total_wall_time,
+        "primal_method": primal_method,
+        "notes": notes,
+    }
 
     # Plot results
     # plotTruss(nodal_coords, c_n, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
 
     ## Filter
-    if member_area_filtering:
-        filter_levels = [
-            0.001,
-            0.01,
-            0.02,
-            0.03,
-            0.04,
-            0.05,
-            0.06,
-            0.07,
-            0.08,
-            0.09,
-            0.1,
-        ]
-    else:
-        filter_levels = []
-    for multiplier in filter_levels:
-        max_a = max(a)
-        filter_val = multiplier * max_a
-        keep = [a_value > filter_val for a_value in a]
-        kept = c_n[keep]
-        vol, filer_a, filter_q, u = solve(
-            nodal_coords,
-            kept,
-            f_active,
-            dof,
-            stress_tensile,
-            stress_compressive,
-            joint_cost,
-        )
-        if vol > 0:
-            logger.info(
-                f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
+    if filter_levels:
+        results["final_vol"] = {}
+        for multiplier in filter_levels:
+            max_a = max(a)
+            filter_val = multiplier * max_a
+            keep = [a_value > filter_val for a_value in a]
+            kept = c_n[keep]
+            vol, filer_a, filter_q, u = solve(
+                nodal_coords,
+                kept,
+                f_active,
+                dof,
+                stress_tensile,
+                stress_compressive,
+                joint_cost,
             )
-            plot_truss(
-                nodal_coords=nodal_coords,
-                c_n=kept,
-                areas=filer_a,
-                forces=filter_q,
-                threshold=max(a) * 1e-3,
-                title="Filtered " + str(100 * multiplier) + "%",
-                update=False,
-                all_cases=False,
-            )
+            if vol > 0:
+                logger.info(
+                    f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
+                )
+                plot_truss(
+                    nodal_coords=nodal_coords,
+                    c_n=kept,
+                    areas=filer_a,
+                    forces=filter_q,
+                    threshold=max(a) * 1e-3,
+                    title="Filtered " + str(100 * multiplier) + "%",
+                    update=False,
+                    all_cases=False,
+                )
+            results["final_vol"][multiplier] = vol
 
-    logger.info(f"Plotting took {time.process_time() - solve_end!s}")
+        logger.info(f"Plotting took {time.process_time() - solve_end!s}")
+        save_results_to_csv(results, csv_filename)
+        return vol, a, results, None
 
+    results["final_volume"] = final_vol
+    filter_level = 0.0
     # Save results to CSV
     if save_to_csv:
-        results = {
-            "timestamp": get_date_time(),
-            "problem_name": problem_name or f"w{width}_h{height}_n{len(loaded_points)}",
-            "width": width,
-            "height": height,
-            "n_load_points": len(loaded_points),
-            "n_patterns_total": len(all_patterns),
-            "n_patterns_active": int(np.sum(active_load_cases)),
-            "load_large": load_large,
-            "load_small": load_small,
-            "iterations": itr,
-            "final_volume": final_vol,
-            "n_members_final": len(c_n),
-            "n_nodes": len(nodal_coords),
-            "n_ground_structure": len(potential_members),
-            "cpu_time_setup": setup_end - setup_start,
-            "cpu_time_solve": solve_end - setup_end,
-            # 'cpu_time_total': total_cpu_time,
-            # 'wall_time_total': total_wall_time,
-            "primal_method": primal_method,
-            "notes": notes,
-        }
         # ns-rse 2026-03-16 - inefficient to write to CSV, build dictionary/dataframe in memory and write to disk on
         #                     completion (as we may end up paralllelising processing)
         save_results_to_csv(results, csv_filename)
-
-    return vol, a
+    return vol, a, results, filter_level
 
 
 def save_results_to_csv(
@@ -1048,13 +1040,17 @@ def save_results_to_csv(
         - problem_name
         - width, height
         - n_load_points
-        - n_patterns_total, n_patterns_active
-        - load_large, load_small
+        - n_patterns_total
+        - n_patterns_active
+        - load_large
+        - load_small
         - iterations
         - final_volume
         - n_members_final
-        - n_nodes, n_ground_structure
-        - cpu_time_setup, cpu_time_solve
+        - n_nodes
+        - n_ground_structure
+        - cpu_time_setup
+        - cpu_time_solve
         - primal_method
         - notes
     filename : str

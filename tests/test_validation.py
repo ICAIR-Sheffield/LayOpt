@@ -8,7 +8,7 @@ import pytest
 import yaml
 from schema import Or, Schema, SchemaError
 
-from layopt.validation import DEFAULT_CONFIG_SCHEMA, validate_config
+from layopt.validation import LAYOPT_CONFIG_SCHEMA, validate_config
 
 TEST_SCHEMA = Schema(
     {
@@ -74,7 +74,7 @@ def test_validate_default_config(caplog) -> None:
     with does_not_raise():
         validate_config(
             default_config,
-            schema=DEFAULT_CONFIG_SCHEMA,
+            schema=LAYOPT_CONFIG_SCHEMA,
             config_type="default",
         )
     assert "The default configuration is valid" in caplog.text
