@@ -10,6 +10,7 @@ from time import tzname
 from typing import Any
 from zoneinfo import ZoneInfo
 
+import pandas as pd
 import yaml
 from loguru import logger
 from yaml import YAMLError
@@ -108,3 +109,22 @@ def get_date_time(strftime: str = "%Y-%m-%d %H:%M:%S", tz: str | None = None) ->
     """
     timezone = ZoneInfo(tzname[0]) if tz is None else ZoneInfo(tz)
     return datetime.now(tz=timezone).strftime(strftime)
+
+
+def dict_to_df(results: dict[str, Any]) -> pd.DataFrame:
+    """
+    Convert a dictionary of LayOpt results to Pandas DataFrame.
+
+    Typically a set of results is a dictionary with no nesting and the resulting data frame has a single row.
+
+    Parameters
+    ----------
+    results : dict[str, Any]
+        Dictionary to convert to Pandas DataFrame.
+
+    Returns
+    -------
+    pd.DataFrame
+        Data as a Pandas dictionary.
+    """
+    return pd.DataFrame.from_dict(results, orient="index").T
