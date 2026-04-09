@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from argparse import Namespace  # noqa: TC003
 from collections.abc import MutableMapping
+from pathlib import Path
 from pprint import pformat
 from typing import Any
 
 import numpy as np
 from loguru import logger
 
-from layopt.io import convert_path, read_yaml
+from layopt.io import convert_path, get_date_time, read_yaml
 
 
 def reconcile_config_args(
@@ -38,8 +39,14 @@ def reconcile_config_args(
     dict[str, Any]
         The configuration dictionary.
     """
-    # If we have args check for 'config_file', if present load and merge with default
+    # If we have args check for 'config_file', if present load and merge with default_config
     if args is not None and args.config_file is not None:
+        logger.debug(
+            f"BEFORE update with config_file args :\n{pformat(vars(args), indent=4)}"
+        )
+        logger.debug(
+            f"BEFORE update with config_file default_config :\n{pformat(default_config, indent=4)}"
+        )
         config = read_yaml(str(args.config_file))
         config = merge_mappings(map1=default_config, map2=config)
     # If no args we use the default_config
@@ -47,8 +54,19 @@ def reconcile_config_args(
         config = default_config
     # Override the config with command line arguments
     if args is not None:
-        config = merge_mappings(map1=config, map2=vars(args))
-    logger.debug(f"\nConfiguration after update : \n{pformat(config, indent=4)}\n")
+        _args = vars(args)
+        # Remove args that are not part of the configuration
+        _args.pop("config_file")
+        _args.pop("func")
+        _args.pop("module")
+        logger.debug(
+            f"BEFORE update from command line args :\n{pformat(_args, indent=4)}"
+        )
+        logger.debug(
+            f"BEFORE update from command line config :\n{pformat(default_config, indent=4)}"
+        )
+        config = merge_mappings(map1=config, map2=_args)
+    logger.debug(f"Final configuration AFTER update : \n{pformat(config, indent=4)}\n")
     return dict(config)
 
 
@@ -75,8 +93,16 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
         if isinstance(value, MutableMapping):
             map1[key] = merge_mappings(map1.get(key, {}), value)
         # Otherwise update the value
-        else:
+        elif value is not None:
+            logger.debug(f"key  : {key=}")
+            logger.debug(f"map1 : {map1[key]=}")
+            logger.debug(f"map2 : {value=}")
             map1[key] = value
+    # Tidy up variables
+    if "base_dir" in map1:
+        map1["base_dir"] = (
+            Path("./") if map1["base_dir"] is None else convert_path(map1["base_dir"])
+        )
     if "output_dir" in map1:
         map1["output_dir"] = convert_path(map1["output_dir"])
     if "load_direction" in map1:
@@ -91,4 +117,8 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
         map1["support_points"] = np.asarray(map1["support_points"])
     if "filter_levels" in map1:
         map1["filter_levels"] = np.asarray(map1["filter_levels"])
+    if map1["csv_filename"] == "results.csv":
+        map1["csv_filename"] = (
+            f"results_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.csv"
+        )
     return dict(map1)

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 from loguru import logger
-from schema import And, Or, Schema, SchemaError
+from schema import And, Or, Schema, SchemaError, SchemaWrongKeyError, Use
 
 
 # pylint: disable=line-too-long
@@ -29,6 +29,8 @@ def validate_config(config: dict, schema: Schema, config_type: str) -> None:
     try:
         schema.validate(config)
         logger.info(f"✅ The {config_type} configuration is valid.")
+    except SchemaWrongKeyError:
+        raise
     except SchemaError as schema_error:
         msg = (
             f"❌ There is an error in your {config_type} configuration. "
@@ -39,7 +41,14 @@ def validate_config(config: dict, schema: Schema, config_type: str) -> None:
 
 LAYOPT_CONFIG_SCHEMA = Schema(
     {
-        "output_dir": Path,
+        "base_dir": Use(
+            Path,
+            error="❌ Invalid value in config for 'base_dir', value should be type 'Path'.",
+        ),
+        "output_dir": Use(
+            Path,
+            error="❌ Invalid value in config for 'output_dir', value should be type 'Path'.",
+        ),
         "log_level": Or(
             "debug",
             "info",
@@ -48,8 +57,8 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             error="❌ Invalid value in config for 'log_level', valid values are 'info' (default), 'debug', 'error' or 'warning",
         ),
         "cores": lambda n: 1 <= n <= os.cpu_count(),
-        "width": lambda n: n > 1,
-        "height": lambda n: n > 1,
+        "width": lambda n: n >= 1,
+        "height": lambda n: n >= 1,
         "stress_tensile": Or(
             And(int, lambda n: n > 0.0),
             And(float, lambda n: n >= 0.0),
@@ -95,24 +104,25 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             lambda n: len(n.shape) == 2,
             error="❌ Invalid value in config for 'support_points', this should be a list of coordinates.",
         ),
-        "filter_levels": Or(
+        "filter_levels": And(
             np.ndarray,
-            error="❌ Invalid value for 'filter_levels', should be boolean (i.e. true or false).",
+            error="❌ Invalid value for 'filter_levels', this should be a list of floats.",
         ),
         "primal_method": And(
             str,
             Or(
                 # ns-rse 2026-04-02 : What other primal methods are there?
+                "residual",
                 "load_factor",
             ),
             error="❌ Invalid value in config for 'primal_methods', this should be a list of coordinates.",
         ),
-        "problem_name": str,
-        "save_to_csv": Or(
-            True,
-            False,
-            error="❌ Invalid value for 'save_to_csv', should be boolean (i.e. true or false).",
+        "problem_name": Use(
+            str, error="❌ Invalid value for 'problem_name', should be a string."
         ),
-        "notes": str,
+        "csv_filename": Use(
+            str, error="❌ Invalid value for 'csv_filename', should be a string."
+        ),
+        "notes": Use(str, error="❌ Invalid value for 'notes', should be a string."),
     }
 )

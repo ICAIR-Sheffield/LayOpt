@@ -33,7 +33,7 @@ from scipy import sparse
 # from numpy.matlib import repmat
 from shapely.geometry import LineString, Point, Polygon
 
-from layopt.io import get_date_time
+from layopt.io import dict_to_df, get_date_time
 
 plt.rcParams["figure.max_open_warning"] = 0
 
@@ -412,9 +412,9 @@ def make_pattern_loads(
     # ns-rse 2026-03-17 : Return directly as part of tuple
     base_load = all_patterns[0]  # First pattern = all large loads
     logger.info(
-        f"\nPattern loading: {len(loaded_points)} load points -> {len(all_patterns)} total patterns"
+        f"Total patterns for {len(loaded_points)} load point(s) : {len(all_patterns)}"
     )
-    logger.info(f"Base case (all large): {pattern_descriptions[0]}")
+    logger.info(f"Base case (all large) : {pattern_descriptions[0]}")
 
     return all_patterns, base_load, pattern_descriptions
 
@@ -707,8 +707,9 @@ def stop_primal_violation_pattern(
 
 # Main function - edited for pattern loading
 def trussopt(
-    width: float,
-    height: float,
+    filter_level: float | None = None,
+    width: float = 1.0,
+    height: float = 1.0,
     stress_tensile: float = 1.0,
     stress_compressive: float = 1.0,
     joint_cost: float = 0.0,
@@ -720,11 +721,10 @@ def trussopt(
     max_length: float = 1000.0,
     # ns-rse 2026-03-17 : Set type hint and default to None
     support_points: list | None = None,
-    filter_levels: list[float] | None = None,
     primal_method: str = "load_factor",
     problem_name: str = "None",
-    save_to_csv: bool = True,
-    csv_filename: str = "pattern_loading_results.csv",
+    # save_to_csv: bool = True,
+    # csv_filename: str = "pattern_loading_results.csv",
     notes: str = "",
 ) -> tuple[float, npt.NDArray, dict[str, Any], float]:
     """
@@ -732,6 +732,8 @@ def trussopt(
 
     Parameters
     ----------
+    filter_level : float
+        Levels to filter on.
     width : float
         Width of structure.
     height : float
@@ -754,16 +756,10 @@ def trussopt(
         Maximum member length.
     support_points : list
         Support points (default=[]).
-    filter_levels : list[float]
-        List of levels to filter on.
     primal_method : str
         Primal violation method (default='load_factor').
     problem_name : str
         Name of problem to solve (default=``None``).
-    save_to_csv : bool
-        Enable saving results to CSV file (default=True).
-    csv_filename : str
-        CSV filename for saved results (default='pattern_loading_results.csv').
     notes : str
         Notes (default='').
 
@@ -778,19 +774,24 @@ def trussopt(
     # Make domain
     poly = Polygon([(0, 0), (width, 0), (width, height), (0, height)])
     convex = poly.convex_hull.area == poly.area
+    logger.debug(f"Domain created, convex? : {convex=}")
 
     # Make nodes
     xv, yv = np.meshgrid(range(width + 1), range(height + 1))
     points = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
+    logger.debug(f"Points created : {len(points)=}")
     nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
+    logger.debug(f"Node coordinates :\n{nodal_coords=}")
     dof = np.ones((len(nodal_coords), 2))
+    logger.debug(f"Degrees of Freedom : {dof=}")
 
     # Default load point
     if loaded_points is None:
         loaded_points = [[width, height // 2]]
+        logger.info("Loaded points not provided, calculated as : {loaded_points=}")
     # support conditions
     for i, node in enumerate(nodal_coords):
-        if support_points == []:
+        if support_points.size == 0 or support_points == []:
             if node[0] == 0:
                 dof[i, :] = [0, 0]  # Support nodes with x=0
         else:
@@ -851,9 +852,9 @@ def trussopt(
 
     setup_end = time.process_time()
     logger.info(f"Setup took {setup_end - setup_start!s}")
-    logger.info(
-        f"Nodes: {len(nodal_coords)} Members: {len(potential_members)} Total load patterns: {len(all_patterns)}"
-    )
+    logger.info(f"    Nodes               : {len(nodal_coords)}")
+    logger.info(f"    Members             : {len(potential_members)}")
+    logger.info(f"    Total load patterns : {len(all_patterns)}")
 
     vol = 1e9  # arbitrary large number to initialise
     # Start the 'member adding' loop
@@ -879,6 +880,16 @@ def trussopt(
             stress_compressive,
             joint_cost,
         )
+        # We need to solve once so that we have valid values for `a` which we then filter based on `fitler_level[s]`
+        # (rename to `filter_level` but need to check first if that is what we want to parallelise on or if it is
+        # `primal_method`).
+        # if filter_level != 1.0:
+        #     # max_a = max(a)
+        #     # filter_val = filter_level * max_a
+        #     # keep = [a_value > filter_val for a_value in a]
+        #     keep = [_a > (filter_level * max(a)) for _a in a]
+        #     kept = c_n[keep]
+        # c_n = [_a for _a in a if _a > filter_level * max(a)]
 
         # output
         if isinf(vol):
@@ -954,6 +965,7 @@ def trussopt(
     results = {
         "timestamp": get_date_time(),
         "problem_name": problem_name or f"w{width}_h{height}_n{len(loaded_points)}",
+        "filter_level": filter_level,
         "width": width,
         "height": height,
         "n_load_points": len(loaded_points),
@@ -978,50 +990,49 @@ def trussopt(
     # plotTruss(nodal_coords, c_n, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
 
     ## Filter
-    if filter_levels:
-        results["final_vol"] = {}
-        for multiplier in filter_levels:
-            max_a = max(a)
-            filter_val = multiplier * max_a
-            keep = [a_value > filter_val for a_value in a]
-            kept = c_n[keep]
-            vol, filer_a, filter_q, u = solve(
-                nodal_coords,
-                kept,
-                f_active,
-                dof,
-                stress_tensile,
-                stress_compressive,
-                joint_cost,
-            )
-            if vol > 0:
-                logger.info(
-                    f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
-                )
-                plot_truss(
-                    nodal_coords=nodal_coords,
-                    c_n=kept,
-                    areas=filer_a,
-                    forces=filter_q,
-                    threshold=max(a) * 1e-3,
-                    title="Filtered " + str(100 * multiplier) + "%",
-                    update=False,
-                    all_cases=False,
-                )
-            results["final_vol"][multiplier] = vol
+    # if filter_levels:
+    #     results["final_vol"] = {}
+    #     for multiplier in filter_levels:
+    #         max_a = max(a)
+    #         filter_val = multiplier * max_a
+    #         keep = [a_value > filter_val for a_value in a]
+    #         kept = c_n[keep]
+    #         vol, filer_a, filter_q, u = solve(
+    #             nodal_coords,
+    #             kept,
+    #             f_active,
+    #             dof,
+    #             stress_tensile,
+    #             stress_compressive,
+    #             joint_cost,
+    #         )
+    #         if vol > 0:
+    #             logger.info(
+    #                 f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
+    #             )
+    #             plot_truss(
+    #                 nodal_coords=nodal_coords,
+    #                 c_n=kept,
+    #                 areas=filer_a,
+    #                 forces=filter_q,
+    #                 threshold=max(a) * 1e-3,
+    #                 title="Filtered " + str(100 * multiplier) + "%",
+    #                 update=False,
+    #                 all_cases=False,
+    #             )
+    #         results["final_vol"][multiplier] = vol
 
-        logger.info(f"Plotting took {time.process_time() - solve_end!s}")
-        save_results_to_csv(results, csv_filename)
-        return vol, a, results, None
+    #     logger.info(f"Plotting took {time.process_time() - solve_end!s}")
+    #     save_results_to_csv(results, csv_filename)
+    #     return vol, a, results, None
 
     results["final_volume"] = final_vol
-    filter_level = 0.0
     # Save results to CSV
-    if save_to_csv:
-        # ns-rse 2026-03-16 - inefficient to write to CSV, build dictionary/dataframe in memory and write to disk on
-        #                     completion (as we may end up paralllelising processing)
-        save_results_to_csv(results, csv_filename)
-    return vol, a, results, filter_level
+    # if save_to_csv:
+    #     # ns-rse 2026-03-16 - inefficient to write to CSV, build dictionary/dataframe in memory and write to disk on
+    #     #                     completion (as we may end up paralllelising processing)
+    #     save_results_to_csv(results, csv_filename)
+    return vol, a, dict_to_df(results), filter_level
 
 
 def save_results_to_csv(

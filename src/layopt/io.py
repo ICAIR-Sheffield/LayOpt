@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from argparse import Namespace  # noqa: TC003
+from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 from pkgutil import get_data
@@ -24,12 +24,27 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
 
     Parameters
     ----------
-    args : Namespace, optional
+    args : Namespace | dict[str, Any], optional
         A Namespace object parsed from argparse. If there are values for ``output_dir`` and ``filename`` these will be
-        used to construct the path and filename to write the YAML file to.
+        used to construct the path and filename to write the YAML file to.  If not then output files are contingent on
+        how the function is being called. If it is from ``layopt create_config`` then ``default_config.yaml`` will be
+        written. If it is at the end of processing then ``config_YY-MM-DD-hhmmss.yaml`` will be used.
     """
-    output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)
-    filename = "default_config.yaml" if args.filename is None else args.filename
+    # If args is `Namespace` then we are writing config with 'layopt create_config' subcommand
+    if isinstance(args, Namespace):
+        output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)
+        filename = "default_config.yaml" if args.filename is None else args.filename
+    # Otherwise we are writing after 'layopt optimise' and config is a dictionary, this won't have a 'filename'
+    # key/value pair
+    elif isinstance(args, dict):
+        output_dir = (
+            Path("./") if args["output_dir"] is None else Path(args["output_dir"])
+        )
+        # Add missing 'filename' key/value pair
+        filename = f"config_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml"
+    else:
+        msg = f"args is neither 'Namespace' or 'dict' : {type(args)}"
+        raise TypeError(msg)
     if ".yaml" not in str(filename) and ".yml" not in str(filename):
         config_path = output_dir / f"{filename}.yaml"
     else:

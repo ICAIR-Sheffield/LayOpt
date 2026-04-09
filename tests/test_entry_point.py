@@ -1,8 +1,10 @@
 """Tests for the entry_point module."""
 
+import contextlib
 from collections.abc import Callable
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from layopt import io, run_modules
@@ -12,10 +14,8 @@ from layopt.entry_point import entry_point
 @pytest.mark.parametrize("option", ["-h", "--help"])
 def test_entry_point_help(option: str, capsys) -> None:
     """Test help for the ``entry_point()`` function."""
-    try:
+    with contextlib.suppress(SystemExit):
         entry_point(manually_provided_args=[option])
-    except SystemExit:
-        pass
     output = capsys.readouterr().out
     assert "usage:" in output
     assert "program" in output
@@ -32,10 +32,8 @@ def test_entry_point_help(option: str, capsys) -> None:
 )
 def test_entry_point_subprocess_help(capsys, argument: str, option: str) -> None:
     """Test the help argument to the sub-entry points."""
-    try:
+    with contextlib.suppress(SystemExit):
         entry_point(manually_provided_args=[argument, option])
-    except SystemExit:
-        pass
     output = capsys.readouterr().out
     assert "usage:" in output
     assert argument in output
@@ -114,3 +112,34 @@ def test_entry_points(
     # check that the argument has successfully been passed through into the dictionary
     for argument, value in expected_args.items():
         assert returned_args_dict[argument] == value
+
+
+# ns-rse 2026-04-14 - Tests `test_optimise()` is very similar to `test_run_modules.py::run_modules.optimise()`  as the
+# former  is a wrapper calling the later
+
+
+# pylint: disable=duplicate-code
+@pytest.mark.parametrize(
+    ("manual_args"),
+    [
+        pytest.param(
+            ["--log-level", "info", "optimise", "--width", "1", "--height", "1"],
+            id="optimise 1x1 structure ",
+        ),
+    ],
+)
+def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
+    """Test for ``run_modules.optimise()``."""
+    manual_args = ["--output-dir", str(tmp_path), *manual_args]
+    entry_point(manually_provided_args=manual_args)
+    # Check there are two files in the output directory
+    assert sum(1 for _ in tmp_path.iterdir() if _.is_file()) == 2
+    # Load csv file and check against snapshot
+    csv_out = list(tmp_path.glob("*.csv"))
+    csv_results = pd.read_csv(csv_out[0])
+    assert (
+        csv_results.drop(
+            ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
+        ).to_string()
+        == snapshot
+    )

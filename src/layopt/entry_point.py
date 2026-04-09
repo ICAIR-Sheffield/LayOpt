@@ -7,9 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from layopt import (
-    __version__,  # , run_modules
-)
+from layopt import __version__, run_modules
 from layopt.io import write_config
 
 
@@ -52,14 +50,16 @@ def layopt_parser() -> arg.ArgumentParser:
         "-l",
         "--log-level",
         dest="log_level",
+        default="info",
         type=str,
         required=False,
-        help="Set verbosity of logging.",
+        help="Set verbosity of logging, options (least verbose to most) are 'error', 'warning', 'info', 'error', 'debug'.",
     )
     parser.add_argument(
         "-j",
         "--cores",
         dest="cores",
+        type=int,
         required=False,
         help="Number of cores to use for parallel processing.",
     )
@@ -70,7 +70,7 @@ def layopt_parser() -> arg.ArgumentParser:
         dest="module",
     )
 
-    # Add an optomise parser
+    # Add an optimise parser
     optimise_parser = subparsers.add_parser(
         "optimise",
         description="Run Layopt",
@@ -141,11 +141,12 @@ def layopt_parser() -> arg.ArgumentParser:
         help="Max length.",
     )
     optimise_parser.add_argument(
-        "--member-area-filtering",
-        dest="member_area_filtering",
-        type=bool,
+        "--filter-levels",
+        dest="filter_levels",
+        nargs="+",
+        type=float,
         required=False,
-        help="Member area filtering.",
+        help="Member area filtering levels.",
     )
     optimise_parser.add_argument(
         "--primal-method",
@@ -169,9 +170,17 @@ def layopt_parser() -> arg.ArgumentParser:
         help="Whether to save output to '.csv' file.",
     )
     optimise_parser.add_argument(
+        "--csv-filename",
+        dest="csv_filename",
+        type=str,
+        default="results.csv",
+        required=False,
+        help="File to save results to. Defaults to 'results_<YYYY-MM-DD-hhmmss>.csv'.",
+    )
+    optimise_parser.add_argument(
         "--notes", dest="notes", type=str, required=False, help="Additional notes."
     )
-    # optimise_parser.set_defaults(func=run_modules.optimise)
+    optimise_parser.set_defaults(func=run_modules.optimise)
 
     # Add a create configuration parser
     create_config_parser = subparsers.add_parser(

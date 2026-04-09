@@ -1,3 +1,4 @@
+base_dir: ./ # Base directory where code is being run
 output_dir: ./output # Where to save output to
 log_level: info # Verbosity used in logging
 cores: 2 # Number of cores to use when processing
@@ -19,5 +20,5 @@ support_points: # Support points
 filter_levels: [] # List of values to filter by if empty no filtering is performed
 primal_method: load_factor # Primal method
 problem_name: short cantilever # Problem name
-save_to_csv: true # Whether to save results to csv
+csv_filename: results.csv # Filename to save results to, if left as `results.csv` will have YYYY-MM-DD-hhmmss added
 notes: short cantilever test # Notes to include
