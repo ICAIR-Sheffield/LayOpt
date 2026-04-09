@@ -209,7 +209,7 @@ def test_calc_eq_matrix_b_errors(
         pytest.param("trussopt_param_eighteen_by_four_spanning", id="spanning example"),
     ],
 )
-def test_testname(
+def test_trussopt(
     trussopt_param_fixture: str,
     tmp_path: Path,
     request,
@@ -251,3 +251,417 @@ def test_testname(
         ).to_string()
         == snapshot
     )
+
+
+# @pytest.mark.parametrize(
+#     ("loaded_points", "expected_pattern_count"),
+#     [
+#         pytest.param([[0.0, 1]], 2, id="1 load point (2^1)"),
+#         pytest.param([[0.0, 1], [4.0, 1]], 4, id="2 load points (2^2)"),
+#         pytest.param([[0.0, 1], [2.0, 1], [4.0, 1]], 8, id="3 load points (2^3)"),
+#     ],
+#     ids=["1_point", "2_points", "3_points"],
+# )
+# def test_make_pattern_loads_num_load_patterns(
+#     nodal_coords: npt.NDArray,
+#     load_large: float,
+#     load_small: float,
+#     load_direction_default: tuple[float, float],
+#     loaded_points: list,
+#     expected_pattern_count: int,
+# ):
+#     all_patterns, _, _ = layopt.make_pattern_loads(
+#         nodal_coords, loaded_points, load_large, load_small, load_direction_default
+#     )
+#     assert len(all_patterns) == expected_pattern_count
+
+
+@pytest.mark.parametrize(
+    (
+        "loaded_points",
+        "load_large",
+        "load_small",
+        "direction",
+        "expected_pattern_count",
+        "expected_patterns",
+        "expected_pattern_description",
+    ),
+    [
+        pytest.param(
+            np.asarray([[0.0, 1], [4.0, 1]]),
+            3.75,
+            0.204,
+            (0.0, -1.0),
+            4,
+            [
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                    ]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+            ],
+            ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
+            id="vertical",
+        ),
+        pytest.param(
+            np.asarray([[0.0, 1], [4.0, 1]]),
+            3.75,
+            0.204,
+            (1.0, 0.0),
+            4,
+            [
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3.75, 0, 0, 0, 0, 0, 0, 0, 3.75, 0]
+                ),
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3.75, 0, 0, 0, 0, 0, 0, 0, 0.204, 0]
+                ),
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.204, 0, 0, 0, 0, 0, 0, 0, 3.75, 0]
+                ),
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.204, 0, 0, 0, 0, 0, 0, 0, 0.204, 0]
+                ),
+            ],
+            ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
+            id="horizontal",
+        ),
+        pytest.param(
+            np.asarray([[0.1, 0.9], [4.0, 1]]),
+            3.75,
+            0.204,
+            (0.0, -1.0),
+            4,
+            [
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                    ]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+            ],
+            ["pt0=L, pt1=L", "pt0=L, pt1=S", "pt0=S, pt1=L", "pt0=S, pt1=S"],
+            id="Off node snapping",
+        ),
+    ],
+)
+def test_make_pattern_loads_load_directions_and_node_snapping(
+    nodal_coords: npt.NDArray,
+    load_large: float,
+    load_small: float,
+    loaded_points: npt.NDArray[np.float32],
+    direction,
+    expected_pattern_count: int,
+    expected_patterns: npt.NDArray[np.float32],
+    expected_pattern_description: list[str],
+):
+    """Test vertical loads, horizontal loads, and snapping to nearest nodes."""
+    all_patterns, base_load, pattern_description = layopt.make_pattern_loads(
+        nodal_coords, loaded_points, load_large, load_small, direction
+    )
+    assert len(all_patterns) == expected_pattern_count
+    np.testing.assert_equal(all_patterns, expected_patterns)
+    np.testing.assert_equal(base_load, expected_patterns[0])
+    assert pattern_description == expected_pattern_description
+
+
+@pytest.mark.parametrize(
+    ("loaded_points", "error", "msg"),
+    [
+        pytest.param(
+            [], TypeError, "'loaded_points' is not a numpy array", id="empty list"
+        ),
+        pytest.param(
+            np.asarray([[]]),
+            AssertionError,
+            "Need at least one load point",
+            id="empty numpy array",
+        ),
+        pytest.param(
+            None, TypeError, "'loaded_points' is not a numpy array", id="None"
+        ),
+        pytest.param(
+            0.0, TypeError, "'loaded_points' is not a numpy array", id="float"
+        ),
+    ],
+)
+def test_make_pattern_loads_zero_load_points_error(
+    nodal_coords: npt.NDArray,
+    loaded_points: Any,
+    error,
+    msg: str,
+):
+    """Test that 0 load points raises AssertionError from ``layopt.make_pattern_loads()``."""
+    with pytest.raises(error, match=msg):
+        layopt.make_pattern_loads(
+            nodal_coords=nodal_coords,
+            loaded_points=loaded_points,
+            load_large=3.75,
+            load_small=0.204,
+            load_direction=(0.0, -1.0),
+        )
+
+
+@pytest.mark.parametrize(
+    (
+        "all_patterns",
+        "active_load_cases",
+        "areas",
+        "stress_tensile",
+        "stress_compressive",
+        "dof",
+        "expected_converge",
+    ),
+    [
+        pytest.param(
+            [
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
+                ),  # all_patterns
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                    ]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+            ],
+            np.asarray([1, 1, 1, 1]),  # active_load_cases
+            np.ones(10),  # areas
+            1,  # stress_tensile
+            1,  # stress_compressive
+            np.array(
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ),  # dof
+            True,  # expected converge
+            id="All active load cases",
+        ),
+    ],
+)
+def test_stop_primal_violation_active_convergence(
+    nodal_coords: npt.NDArray,
+    c_n: npt.NDArray,
+    all_patterns: npt.NDArray,
+    active_load_cases: npt.NDArray,
+    areas: npt.NDArray,
+    stress_tensile: int,
+    stress_compressive: int,
+    dof: npt.NDArray,
+    expected_converge: list[int],
+) -> None:
+    """Test that all load cases active converges"""
+    actual_converge = layopt.stop_primal_violation_pattern(
+        nodal_coords,
+        c_n,
+        areas,
+        all_patterns,
+        active_load_cases,
+        dof,
+        stress_tensile,
+        stress_compressive,
+    )
+    assert actual_converge == expected_converge

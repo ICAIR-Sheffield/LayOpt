@@ -26,6 +26,7 @@ from pathlib import Path
 import mosek.fusion as mosek
 import numpy as np
 import numpy.typing as npt
+from loguru import logger
 from scipy import sparse
 
 # from numpy.matlib import repmat
@@ -249,7 +250,16 @@ def make_pattern_loads(
         (base load case) and ``pattern_descriptions`` (description of each load
         case using ``L`` for large or ``S`` for small at each load point).
     """
-    n = len(loaded_points)
+    if loaded_points is None or not isinstance(loaded_points, np.ndarray):
+        msg = f"'loaded_points' is not a numpy array : {type(loaded_points)=}"
+        raise TypeError(msg)
+    try:
+        assert loaded_points.shape[1] >= 1, IndexError(
+            f"Need at least one load point : {loaded_points.shape=}"
+        )
+    except IndexError as e:
+        msg = f"Need at least one load point : {loaded_points.shape}"
+        raise IndexError(msg) from e
 
     # Find node indices for each load point
     load_node_indices = []
@@ -259,11 +269,11 @@ def make_pattern_loads(
 
     # ns-rse 2026-03-17 : Could maybe use a dictionary here to link patterns and descriptions?
     all_patterns = []
-    patternodal_coordsescriptions = []
+    pattern_descriptions = []
 
     # Generate all 2^n combinations
     # First combo (all loadLarge) is base case
-    for combo in itertools.product([load_large, load_small], repeat=n):
+    for combo in itertools.product([load_large, load_small], repeat=len(loaded_points)):
         fk = np.zeros(len(nodal_coords) * 2)
         desc = []
         for pt_idx, magnitude in enumerate(combo):
@@ -273,17 +283,19 @@ def make_pattern_loads(
             desc.append(f"pt{pt_idx}={'L' if magnitude == load_large else 'S'}")
 
         all_patterns.append(fk)
-        patternodal_coordsescriptions.append(", ".join(desc))
+        pattern_descriptions.append(", ".join(desc))
 
     # ns-rse 2026-03-17 : Return directly as part of tuple
     base_load = all_patterns[0]  # First pattern = all large loads
+    logger.info(
+        f"\nPattern loading: {len(loaded_points)} load points -> {len(all_patterns)} total patterns"
+    )
+    logger.info(f"Base case (all large): {pattern_descriptions[0]}")
 
-    print(f"\nPattern loading: {n} load points -> {len(all_patterns)} total patterns")
-    print(f"Base case (all large): {patternodal_coordsescriptions[0]}")
-
-    return all_patterns, base_load, patternodal_coordsescriptions
+    return all_patterns, base_load, pattern_descriptions
 
 
+# ns-rse 2026-03-23 : Could this comment perhaps form the extended description for the function?
 # add new pattern load cases primal violation
 # violation criterion: check if min over active j of ||B*q[j] - f[k]*dof|| > tol
 # (essentially checking if Bq-f=0)
@@ -332,13 +344,9 @@ def stop_primal_violation_residual(
             continue  # skip active cases
 
         fk_dof = all_patterns[k] * dof
-        # ns-rse 2026-03-18 : potential list compreshension
-        # residuals = [np.linalg.norm(eq_matrix_b.dot(force) - fk_dof) for force in forces]
-        residuals = []
-        for qj in forces:
-            # store ||B*q[j] - f[k]*dof||
-            residual = np.linalg.norm(eq_matrix_b.dot(qj) - fk_dof)
-            residuals.append(residual)
+        residuals = [
+            np.linalg.norm(eq_matrix_b.dot(force) - fk_dof) for force in forces
+        ]
 
         # find min of residuals over active pattern load cases
         total_violation[k] = min(residuals)
@@ -514,7 +522,7 @@ def stop_primal_violation_pattern(
         # Add most violated (lowest lambda)
         most_violated_id = by_violation[0]
         active_load_cases[most_violated_id] = 1
-        print(
+        logger.info(
             f"  Adding most violated pattern {by_violation[0]}: lambda={load_factors[most_violated_id]:.3f}"
         )
         violations_added_this_iter = [by_violation[0]]
@@ -559,7 +567,7 @@ def stop_primal_violation_pattern(
                             break
                 if distinct:
                     active_load_cases[k] = 1
-                    print(
+                    logger.info(
                         f"  Adding {len(violations_added_this_iter) + 1} distinct pattern {k}: lambda={load_factors[k]:.3f}"
                     )
                     violations_added_this_iter.append(k)
@@ -671,8 +679,8 @@ def trussopt(
     dof = np.array(dof).flatten()
 
     # Generate all pattern loads
-    # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and patternodal_coordsescriptions to dict
-    # all_patterns, base_load, patternodal_coordsescriptions = mqake_pattern_loads(
+    # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and pattern_descriptions to dict
+    # all_patterns, base_load, pattern_descriptions = make_pattern_loads(
     all_patterns, _, _ = make_pattern_loads(
         nodal_coords, loaded_points, load_large, load_small, load_direction
     )
@@ -719,8 +727,8 @@ def trussopt(
         active_load_cases = np.ones(len(all_patterns), dtype=int)
 
     setup_end = time.process_time()
-    print(f"Setup took {setup_end - setup_start!s}")
-    print(
+    logger.info(f"Setup took {setup_end - setup_start!s}")
+    logger.info(
         f"Nodes: {len(nodal_coords)} Members: {len(potential_members)} Total load patterns: {len(all_patterns)}"
     )
 
@@ -751,11 +759,12 @@ def trussopt(
 
         # output
         if isinf(vol):
-            print("Error: infeasible problem detected")
+            logger.error("Infeasible problem detected")
             return [], [], []
         n_active = int(np.sum(active_load_cases))
-        print(
-            f"Itr: {itr}, vol: {vol}, mems: {len(c_n)} active load cases:{n_active}/{len(all_patterns)}"
+        # ns-rse 2026-03-23 : Could this perhaps be debugging?
+        logger.info(
+            f"Iteration: {itr}, vol: {vol}, mems: {len(c_n)} active load cases:{n_active}/{len(all_patterns)}"
         )
         # plot interim solutions (slow)
         # plotTruss(nodal_coords, c_n, a, q, max(a) * 1e-2, "Itr:" + str(itr), extraPlot = activeDamageDef)
@@ -812,10 +821,12 @@ def trussopt(
             break  # Converged
 
     final_vol = vol
-    print(f"Volume: {final_vol}")
+    logger.info(f"Volume: {final_vol}")
     solve_end = time.process_time()
-    print("Solve took " + str(solve_end - setup_end))
-    print(f"Active patterns: {int(np.sum(active_load_cases))}/{len(all_patterns)}")
+    logger.info("Solve took " + str(solve_end - setup_end))
+    logger.info(
+        f"Active patterns: {int(np.sum(active_load_cases))}/{len(all_patterns)}"
+    )
 
     # Plot results
     # plotTruss(nodal_coords, c_n, a, q, max(a)*1e-2, "Final", update=False, allCases=True)
@@ -851,8 +862,8 @@ def trussopt(
             joint_cost,
         )
         if vol > 0:
-            print(
-                f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filter_areas)!s} members"
+            logger.info(
+                f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
             )
             _, _ = plot_truss(
                 nodal_coords=nodal_coords,
@@ -862,7 +873,8 @@ def trussopt(
                 threshold=max(a) * 1e-3,
                 title="Filtered " + str(100 * multiplier) + "%",
             )
-            print(f"Plotting took {time.process_time() - solve_end!s}")
+
+    logger.info(f"Plotting took {time.process_time() - solve_end!s}")
 
     # Save results to CSV
     if save_to_csv:
@@ -959,7 +971,7 @@ def save_results_to_csv(
         # Write data
         writer.writerow(results)
 
-    print(f"\nResults saved to {filename}")
+    logger.info(f"\nResults saved to {filename}")
 
 
 # # Example usage:

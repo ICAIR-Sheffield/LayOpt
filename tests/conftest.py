@@ -8,6 +8,31 @@ import pytest
 
 
 @pytest.fixture
+def nodal_coords() -> npt.NDArray[np.int32]:
+    """Coordinates for simple test."""
+    return np.array([[x, y] for y in range(2) for x in range(5)])
+
+
+@pytest.fixture
+def c_n():
+    """Active members."""
+    return np.array(
+        [
+            [0, 1, 1, True],
+            [1, 2, 1, True],
+            [2, 3, 1, True],
+            [3, 4, 1, True],
+            [5, 6, 1, True],
+            [6, 7, 1, True],
+            [7, 8, 1, True],
+            [8, 9, 1, True],
+            [0, 5, 1, True],
+            [4, 9, 1, True],
+        ]
+    )
+
+
+@pytest.fixture
 def input_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
     """``nodal_coords``, ``c_n`` and ``dof`` for a 1x1 structure."""
     return {
@@ -335,7 +360,7 @@ def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
         "st": 1,
         "sc": 1,
         "jc": 0,
-        "loaded_points": [[3, 3]],
+        "loaded_points": np.asarray([[3, 3]]),
         "load_direction": (0, -1),
         "load_large": 50,
         "load_small": 5,
@@ -359,7 +384,7 @@ def trussopt_param_eight_by_eight_square_cantilever() -> dict[str, Any]:
         "st": 1,
         "sc": 1,
         "jc": 0,
-        "loaded_points": [[8, 0], [8, 4]],
+        "loaded_points": np.asarray([[8, 0], [8, 4]]),
         "load_direction": (0, -1),
         "load_large": 50,
         "load_small": 5,
@@ -383,7 +408,7 @@ def trussopt_param_three_by_one_parallel_forces() -> dict[str, Any]:
         "st": 1,
         "sc": 1,
         "jc": 0,
-        "loaded_points": [[3, 0], [3, 1]],
+        "loaded_points": np.asarray([[3, 0], [3, 1]]),
         "load_direction": (0, -1),
         "load_large": 50,
         "load_small": 5,
@@ -407,18 +432,20 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
         "st": 1,
         "sc": 1,
         "jc": 0,
-        "loaded_points": [
-            [0.0, 4],
-            [2.0, 4],
-            [4.0, 4],
-            [6.0, 4],
-            [8.0, 4],
-            [10.0, 4],
-            [12.0, 4],
-            [14.0, 4],
-            [16.0, 4],
-            [18.0, 4],
-        ],
+        "loaded_points": np.asarray(
+            [
+                [0.0, 4],
+                [2.0, 4],
+                [4.0, 4],
+                [6.0, 4],
+                [8.0, 4],
+                [10.0, 4],
+                [12.0, 4],
+                [14.0, 4],
+                [16.0, 4],
+                [18.0, 4],
+            ]
+        ),
         "load_direction": (0, -1),
         "load_large": 3.75,
         "load_small": 0.204,

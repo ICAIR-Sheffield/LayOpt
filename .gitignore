@@ -192,3 +192,6 @@ Thumbs.db
 \#*
 \.\#*
 *~
+
+# Data
+*.csv
