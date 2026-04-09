@@ -3,23 +3,26 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
-import numpy.typing as npt
+import numpy as np
+
+if TYPE_CHECKING:
+    import numpy.typing as npt
 
 plt.rcParams["figure.max_open_warning"] = 0
 
 
 def plot_truss(
-    nodal_coords: npt.NDArray,
-    c_n: npt.NDArray,
-    areas: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float32],
+    c_n: npt.NDArray[np.float32],
+    areas: npt.NDArray[np.float32],
     forces: list,
     threshold: float,
     title: str,
-    all_cases: bool = False,
-    outfile: str | Path | None = None,
-    img_ext: str = "png",
+    outfile: str | Path | None = "truss",
+    img_ext: str = ".png",
     dpi: int = 1200,
 ) -> tuple[plt.Figure, plt.Axes]:
     """
@@ -29,7 +32,7 @@ def plot_truss(
     ----------
     nodal_coords : npt.NDArray
         Nodal coordinates.
-    c_n : npt.NDArray
+    c_n : npt.NDArray[np.float32]
         Active members.
     areas : npt.NDArray
         Member areas.
@@ -39,8 +42,6 @@ def plot_truss(
         Minimum allowable member area.
     title : str
         Title for plot, typically includes the filter level expressed as a percentage.
-    all_cases : bool
-        Plot all load cases individually (default=``False``).
     outfile : str | Path | None
         If not ``None`` saves the image to the given filename.
     img_ext : str
@@ -53,57 +54,51 @@ def plot_truss(
     tuple[plt.Figure, plt.Axes]
         Matplotlib.pyplot figure and axes objects.
     """
-    # ns-rse 2026-03-25: may want to remove plot_all_cases() and use recursion
-    if all_cases:
-        plot_all_cases(
-            nodal_coords=nodal_coords,
-            c_n=c_n,
-            areas=areas,
-            forces=forces,
-            threshold=threshold,
-            stress_tensile=title,
-        )
-    else:
-        fig = plt.figure()
-        ax = fig.subplots()
-        ax.axis("off")
-        ax.axis("equal")
-        ax.set_title(title)
-        bar_thickness = 0.4  # bar thickness scale
-        for i in [i for i in range(len(areas)) if areas[i] >= threshold]:
-            if len(forces) > 1:  # multiple LC coloring
-                print(f"\n{forces=}\n")
-                if all(forces[lc][i] >= -0.001 for lc in range(len(forces))):
-                    color = "r"
-                elif all(forces[lc][i] <= 0.001 for lc in range(len(forces))):
-                    color = "b"
-                else:
-                    color = "tab:gray"
-            else:  # single LC coloring (black = no load, dark = less load)
-                color = (
-                    min(max(forces[0][i] / areas[i], 0), 1),
-                    0,
-                    min(max(-forces[0][i] / areas[i], 0), 1),
-                )
-            pos = nodal_coords[c_n[i, [0, 1]].astype(int), :]
-            ax.plot(
-                pos[:, 0],
-                pos[:, 1],
-                color=color,
-                linewidth=areas[i] * bar_thickness,
-                solid_capstyle="round",
+    fig = plt.figure()
+    ax = fig.subplots()
+    ax.axis("off")
+    ax.axis("equal")
+    ax.set_title(title)
+    bar_thickness = 0.4  # bar thickness scale
+    for i in [i for i in range(len(areas)) if areas[i] >= threshold]:
+        if len(forces) > 1:  # multiple LC coloring
+            if all(forces[lc][i] >= -0.001 for lc in range(len(forces))):
+                color = "r"
+            elif all(forces[lc][i] <= 0.001 for lc in range(len(forces))):
+                color = "b"
+            else:
+                color = "tab:gray"
+        else:  # single LC coloring (black = no load, dark = less load)
+            color = (
+                min(max(forces[0][i] / areas[i], 0), 1),
+                0,
+                min(max(-forces[0][i] / areas[i], 0), 1),
             )
+        pos = nodal_coords[c_n[i, [0, 1]].astype(int), :]
+        ax.plot(
+            pos[:, 0],
+            pos[:, 1],
+            color=color,
+            linewidth=areas[i] * bar_thickness,
+            solid_capstyle="round",
+        )
     if outfile is not None:
         # Strip any extension from outfile and replace with img_ext when saving the file
+        img_ext = "." + img_ext if img_ext[0] != "." else img_ext
+        outfile = (
+            Path(outfile).parent / Path(outfile).stem
+            if outfile is not None
+            else "truss"
+        )
         fig.savefig(Path(outfile).with_suffix(img_ext), dpi=dpi)
 
     return fig, ax
 
 
 def plot_all_cases(
-    nodal_coords: npt.NDArray,
-    c_n: npt.NDArray,
-    areas: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float32],
+    c_n: npt.NDArray[np.float32],
+    areas: npt.NDArray[np.float32],
     forces: list,
     threshold: float,
     stress_tensile: str,
@@ -134,5 +129,4 @@ def plot_all_cases(
             forces=[forces[k]],
             threshold=threshold,
             title=stress_tensile + " case " + str(k),
-            all_cases=False,
         )

@@ -861,7 +861,6 @@ def trussopt(
                 forces=filter_forces,
                 threshold=max(a) * 1e-3,
                 title="Filtered " + str(100 * multiplier) + "%",
-                all_cases=False,
             )
             print(f"Plotting took {time.process_time() - solve_end!s}")
 

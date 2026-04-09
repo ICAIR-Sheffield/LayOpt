@@ -13,48 +13,49 @@ from layopt import plotting  # type: ignore[import-not-found]
     (
         "structure_fixture",
         "plotting_data_fixture",
-        "all_cases",
         "outfile",
         "img_ext",
         "title",
+        "expected_file",
     ),
     [
         pytest.param(
             "input_one_by_one",
             "plotting_data_one_by_one",
-            False,
-            None,
+            "output",
             "png",
             "1x1 test",
-            id="1x1 plot",
+            "output.png",
+            id="1x1 plot outfile = output.png",
         ),
         pytest.param(
             "input_two_by_two",
             "plotting_data_two_by_two",
-            False,
-            None,
-            "png",
+            "truss",
+            ".png",
             "2x2 test",
-            id="2x2 plot",
+            "truss.png",
+            id="2x2 plot, outfile = truss.png",
         ),
         pytest.param(
             "input_three_by_six",
             "plotting_data_three_by_six_short_cantilever",
-            False,
-            None,
-            "png",
+            "another_plot",
+            "svg",
             "3x6 test",
-            id="3x6 plot",
+            "another_plot.svg",
+            id="3x6 plot, no outfile",
         ),
     ],
 )
 def test_plot_truss(
     structure_fixture: str,
     plotting_data_fixture: str,
-    all_cases: bool,
     outfile: Path,
     img_ext: str,
     title: str,
+    tmp_path: Path,
+    expected_file: str,
     request,
 ) -> Any:
     """Test for ``plotting.plot_truss()``."""
@@ -66,9 +67,10 @@ def test_plot_truss(
         areas=plotting_data["areas"],
         forces=plotting_data["forces"],
         threshold=plotting_data["threshold"],
-        all_cases=all_cases,
         title=title,
-        outfile=outfile,
+        outfile=tmp_path / outfile,
         img_ext=img_ext,
     )
+    assert Path(tmp_path / expected_file).is_file()
+    # assert False
     return fig
