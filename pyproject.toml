@@ -53,7 +53,7 @@ Changelog = "https://github.com/ICAIR-Sheffield/LayOpt/releases"
 test = [
   "pandas",
   "pandas-stubs",
-  "pytest >=9",
+  "pytest>=9.0.3",
   "pytest-cov >=7",
   "pytest-testmon",
   "pytest-xdist",
