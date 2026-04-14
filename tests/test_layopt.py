@@ -245,27 +245,49 @@ def test_trussopt(
     )
 
 
-# @pytest.mark.parametrize(
-#     ("loaded_points", "expected_pattern_count"),
-#     [
-#         pytest.param([[0.0, 1]], 2, id="1 load point (2^1)"),
-#         pytest.param([[0.0, 1], [4.0, 1]], 4, id="2 load points (2^2)"),
-#         pytest.param([[0.0, 1], [2.0, 1], [4.0, 1]], 8, id="3 load points (2^3)"),
-#     ],
-#     ids=["1_point", "2_points", "3_points"],
-# )
-# def test_make_pattern_loads_num_load_patterns(
-#     nodal_coords: npt.NDArray,
-#     load_large: float,
-#     load_small: float,
-#     load_direction_default: tuple[float, float],
-#     loaded_points: list,
-#     expected_pattern_count: int,
-# ):
-#     all_patterns, _, _ = layopt.make_pattern_loads(
-#         nodal_coords, loaded_points, load_large, load_small, load_direction_default
-#     )
-#     assert len(all_patterns) == expected_pattern_count
+@pytest.mark.parametrize(
+    (
+        "loaded_points",
+        "load_large",
+        "load_small",
+        "load_direction_default",
+        "expected_pattern_count",
+    ),
+    [
+        pytest.param(
+            np.array([[0.0, 1]]), 3.75, 0.204, (0, -1), 2, id="1 load point (2^1)"
+        ),
+        pytest.param(
+            np.array([[0.0, 1], [4.0, 1]]),
+            3.75,
+            0.204,
+            (0, -1),
+            4,
+            id="2 load points (2^2)",
+        ),
+        pytest.param(
+            np.array([[0.0, 1], [2.0, 1], [4.0, 1]]),
+            3.75,
+            0.204,
+            (0, -1),
+            8,
+            id="3 load points (2^3)",
+        ),
+    ],
+    ids=["1_point", "2_points", "3_points"],
+)
+def test_make_pattern_loads_num_load_patterns(
+    nodal_coords: npt.NDArray,
+    load_large: float,
+    load_small: float,
+    load_direction_default: tuple[float, float],
+    loaded_points: npt.NDArray,
+    expected_pattern_count: int,
+):
+    all_patterns, _, _ = layopt.make_pattern_loads(
+        nodal_coords, loaded_points, load_large, load_small, load_direction_default
+    )
+    assert len(all_patterns) == expected_pattern_count
 
 
 @pytest.mark.parametrize(
@@ -667,7 +689,6 @@ def test_stop_primal_violation_active_convergence(
         "deflections",
         "expected_num_added",
     ),
-
     [
         pytest.param(
             "input_one_by_one",
@@ -685,13 +706,6 @@ def test_stop_primal_violation_active_convergence(
             2,  # expected_num_added
             id="large_deflections_added",
         ),
-        # pytest.param(
-        #     "input_three_by_six",
-        #     1,  # stress_tensile
-        #     1,  # stress_compressive
-        #     [np.zeros(56)], # zero deflections
-        #     id="3x6",
-        # ),
     ],
 )
 def test_stop_violation(
