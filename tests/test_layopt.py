@@ -657,3 +657,61 @@ def test_stop_primal_violation_active_convergence(
         stress_compressive,
     )
     assert actual_converge == expected_converge
+
+
+@pytest.mark.parametrize(
+    (
+        "structure_fixture",
+        "stress_tensile",
+        "stress_compressive",
+        "deflections",
+        "expected_num_added",
+    ),
+    [
+        pytest.param(
+            "input_one_by_one",
+            1,  # stress_tensile
+            1,  # stress_compressive
+            [np.zeros(8)],  # zero deflections
+            0,  # expected_num_added
+            id="none_added",
+        ),
+        pytest.param(
+            "input_two_by_two",
+            1,  # stress_tensile
+            1,  # stress_compressive
+            [np.ones(18) * 100],  # large deflections
+            2,  # expected_num_added
+            id="large_deflections_added",
+        ),
+        # pytest.param(
+        #     "input_three_by_six",
+        #     1,  # stress_tensile
+        #     1,  # stress_compressive
+        #     [np.zeros(56)], # zero deflections
+        #     id="3x6",
+        # ),
+    ],
+)
+def test_stop_violation(
+    structure_fixture: str,
+    request,
+    stress_tensile: float,
+    stress_compressive: float,
+    deflections: list,
+    expected_num_added: int,
+):
+    """Test that the function sets members active correctly and returns non-negative integer."""
+    structure = request.getfixturevalue(structure_fixture)
+    actual_num_added = layopt.stop_violation(
+        nodal_coords=structure["nodal_coords"],
+        potential_members=structure["c_n"],
+        dof=structure["dof"],
+        stress_tensile=stress_tensile,
+        stress_compressive=stress_compressive,
+        deflections=deflections,
+        joint_cost=0.0,
+    )
+    assert isinstance(actual_num_added, int)
+    assert actual_num_added >= 0
+    assert actual_num_added == expected_num_added
