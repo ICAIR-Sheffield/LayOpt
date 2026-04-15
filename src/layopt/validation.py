@@ -106,7 +106,7 @@ LAYOPT_CONFIG_SCHEMA = Schema(
         ),
         "filter_levels": And(
             np.ndarray,
-            error="❌ Invalid value for 'filter_levels', this should be a list of floats.",
+            error="❌ Invalid value for 'filter_levels', this should be an array of floats.",
         ),
         "primal_method": And(
             str,

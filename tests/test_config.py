@@ -28,13 +28,10 @@ DEFAULT_CONFIG = yaml.full_load(default_config)
 
 def test_reconcile_config_args_no_config(caplog) -> None:
     """Test the handling of config file function with no config."""
-    args = argparse.Namespace(
-        config_file=None,
-    )
+    args = argparse.Namespace(config_file=None, func=None, module=None)
     config = reconcile_config_args(args=args, default_config=DEFAULT_CONFIG)
 
     # Check that the config passes the schema
-    config.pop("config_file")
     with caplog.at_level(logging.INFO):
         validate_config(config, schema=LAYOPT_CONFIG_SCHEMA, config_type="default")
 
@@ -45,19 +42,28 @@ def test_reconcile_config_args_no_config(caplog) -> None:
     ("args", "parameter", "value"),
     [
         pytest.param(
-            argparse.Namespace(config_file=None, stress_tensile=10.0),
+            argparse.Namespace(
+                config_file=None, stress_tensile=10.0, func=None, module=None
+            ),
             "stress_tensile",
             10.0,
             id="stress_tensile 10.0",
         ),
         pytest.param(
-            argparse.Namespace(config_file=None, loaded_points=[[6, 2]]),
+            argparse.Namespace(
+                config_file=None, loaded_points=[[6, 2]], func=None, module=None
+            ),
             "loaded_points",
             np.asarray([[6, 2]]),
             id="loaded_points [[6, 2]]",
         ),
         pytest.param(
-            argparse.Namespace(config_file=None, filter_levels=[0.001, 0.01, 0.1]),
+            argparse.Namespace(
+                config_file=None,
+                filter_levels=[0.001, 0.01, 0.1],
+                func=None,
+                module=None,
+            ),
             "filter_levels",
             [0.001, 0.01, 0.1],
             id="filter_levels not None",
@@ -83,15 +89,21 @@ def test_reconcile_config_args(
     ("args"),
     [
         pytest.param(
-            argparse.Namespace(config_file=None, stress_tensile=-1.0),
+            argparse.Namespace(
+                config_file=None, stress_tensile=-1.0, func=None, module=None
+            ),
             id="stress_tensile < 0.0",
         ),
         pytest.param(
-            argparse.Namespace(config_file=None, loaded_points=[1, 2]),
+            argparse.Namespace(
+                config_file=None, loaded_points=[1, 2], func=None, module=None
+            ),
             id="loaded_points 1 dimension",
         ),
         pytest.param(
-            argparse.Namespace(config_file=None, filter_levels="yes"),
+            argparse.Namespace(
+                config_file=None, filter_levels="yes", func=None, module=None
+            ),
             id="filter_levels str not bool",
         ),
     ],

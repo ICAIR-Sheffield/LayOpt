@@ -95,9 +95,9 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
         # Otherwise update the value
         elif value is not None:
             logger.debug(f"key  : {key=}")
+            map1[key] = value
             logger.debug(f"map1 : {map1[key]=}")
             logger.debug(f"map2 : {value=}")
-            map1[key] = value
     # Tidy up variables
     if "base_dir" in map1:
         map1["base_dir"] = (
@@ -117,7 +117,7 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
         map1["support_points"] = np.asarray(map1["support_points"])
     if "filter_levels" in map1:
         map1["filter_levels"] = np.asarray(map1["filter_levels"])
-    if map1["csv_filename"] == "results.csv":
+    if "csv_filename" in map1 and map1["csv_filename"] == "results.csv":
         map1["csv_filename"] = (
             f"results_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.csv"
         )
