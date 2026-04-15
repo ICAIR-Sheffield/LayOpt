@@ -36,6 +36,8 @@ dependencies = [
   "matplotlib",
   "mosek",
   "numpy",
+  "pandas",
+  "pandas-stubs",
   "pydantic",
   "schema",
   "scipy",
@@ -52,8 +54,6 @@ Changelog = "https://github.com/ICAIR-Sheffield/LayOpt/releases"
 
 [dependency-groups]
 test = [
-  "pandas",
-  "pandas-stubs",
   "pytest >=9",
   "pytest-cov >=7",
   "pytest-loguru",
