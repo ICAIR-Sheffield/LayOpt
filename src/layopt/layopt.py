@@ -21,12 +21,12 @@ import itertools
 import time
 from math import ceil, gcd, isinf
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import mosek.fusion as mosek
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 from loguru import logger
 from scipy import sparse
 
@@ -720,13 +720,13 @@ def trussopt(
     load_small: float = 5.0,
     max_length: float = 1000.0,
     # ns-rse 2026-03-17 : Set type hint and default to None
-    support_points: list | None = None,
+    support_points: npt.NDArray | None = None,
     primal_method: str = "load_factor",
     problem_name: str = "None",
     # save_to_csv: bool = True,
     # csv_filename: str = "pattern_loading_results.csv",
     notes: str = "",
-) -> tuple[float, npt.NDArray, dict[str, Any], float]:
+) -> tuple[float, npt.NDArray, pd.DataFrame, float]:
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
 
@@ -754,7 +754,7 @@ def trussopt(
         Small load to apply at each load point (default=5).
     max_length : float
         Maximum member length.
-    support_points : list
+    support_points : npt.NDArray
         Support points (default=[]).
     primal_method : str
         Primal violation method (default='load_factor').
@@ -765,9 +765,9 @@ def trussopt(
 
     Returns
     -------
-    tuple[float, npt.NDArray, dict[str, Any], float]
+    tuple[float, npt.NDArray, pd.DataFrame, float]
         A tuple consisting of ``volume`` (the final volume of the solved problem)
-        and ``area`` (final member areas of the solved problem).
+        and ``area`` (final member areas of the solved problem), a dataframe of results and the ``filter_level``.
     """
     setup_start = time.process_time()
 
@@ -791,7 +791,7 @@ def trussopt(
         logger.info("Loaded points not provided, calculated as : {loaded_points=}")
     # support conditions
     for i, node in enumerate(nodal_coords):
-        if support_points.size == 0 or support_points == []:
+        if support_points.size == 0:
             if node[0] == 0:
                 dof[i, :] = [0, 0]  # Support nodes with x=0
         else:

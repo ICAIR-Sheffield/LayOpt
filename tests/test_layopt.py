@@ -1,12 +1,10 @@
 """Tests for the layopt module."""
 
 import os
-from pathlib import Path
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
-import pandas as pd
 import pytest
 from syrupy.matchers import path_type
 
@@ -203,7 +201,6 @@ def test_calc_eq_matrix_b_errors(
 )
 def test_trussopt(
     trussopt_param_fixture: str,
-    tmp_path: Path,
     request,
     snapshot,
 ) -> None:
@@ -221,26 +218,23 @@ def test_trussopt(
         load_small=params["load_small"],
         max_length=params["max_length"],
         support_points=params["support_points"],
-        filter_levels=params["filter_levels"],
+        filter_level=params["filter_level"],
         primal_method=params["primal_method"],
         problem_name=params["problem_name"],
-        save_to_csv=params["save_to_csv"],
-        csv_filename=tmp_path / params["csv_filename"],
         notes=params["notes"],
     )
-    assert Path(tmp_path / params["csv_filename"]).is_file()
-    # Round values
+    # ns-rse 2026-04-15 - results is currently a tuple, the third item of which is now a dataframe rather than
+    # dictionary of results, we therefore split these to facilitate taking snapshots
+    df = results[2]
+    results = (results[0], results[1], results[3])
     assert results == snapshot(
         matcher=path_type(
             types=(float, np.ndarray),
             replacer=lambda data, _: round_values(data, PRECISION),
         ),
     )
-    results = pd.read_csv(tmp_path / params["csv_filename"])
     assert (
-        results.drop(
-            ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
-        ).to_string()
+        df.drop(["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1).to_string()
         == snapshot
     )
 
