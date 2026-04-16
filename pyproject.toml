@@ -55,7 +55,7 @@ Changelog = "https://github.com/ICAIR-Sheffield/LayOpt/releases"
 
 [dependency-groups]
 test = [
-  "pytest >=9",
+  "pytest>=9.0.3",
   "pytest-cov >=7",
   "pytest-loguru",
   "pytest-testmon",
