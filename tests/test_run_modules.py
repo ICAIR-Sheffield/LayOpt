@@ -1,6 +1,7 @@
 """Tests of the run_modules module."""
 
 import argparse
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -8,11 +9,17 @@ import pytest
 
 from layopt import LAYOPT_BASE_VERSION, run_modules
 
+GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+
 # ns-rse 2026-04-14 - Tests `run_modules.optimise()` is very similar to `tests_entry_point.py::test_optimise()` as the
 # later is a wrapper calling the former
 
 
 # pylint: disable=duplicate-code
+@pytest.mark.skipif(
+    GITHUB_ACTIONS,
+    reason="mosek library requires license so test will always fail in continuous integration",
+)
 @pytest.mark.parametrize(
     ("args", "result_files"),
     [

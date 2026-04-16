@@ -1,6 +1,7 @@
 """Tests for the entry_point module."""
 
 import contextlib
+import os
 from collections.abc import Callable
 from pathlib import Path
 
@@ -9,6 +10,8 @@ import pytest
 
 from layopt import io, run_modules
 from layopt.entry_point import entry_point
+
+GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
 
 @pytest.mark.parametrize("option", ["-h", "--help"])
@@ -54,15 +57,13 @@ def test_entry_point_subprocess_help(capsys, argument: str, option: str) -> None
         ),
         pytest.param(
             [
-                "-b",
-                "/tmp/",
                 "--output-dir",
                 "/tmp/output/",
                 "optimise",
             ],
             run_modules.optimise,
-            {"base_dir": Path("/tmp/"), "output_dir": Path("/tmp/output")},
-            id="Optimise with base dir (short) and output (long) arguments",
+            {"output_dir": Path("/tmp/output")},
+            id="Optimise with output (long) arguments",
         ),
         pytest.param(
             [
@@ -119,6 +120,10 @@ def test_entry_points(
 
 
 # pylint: disable=duplicate-code
+@pytest.mark.skipif(
+    GITHUB_ACTIONS,
+    reason="mosek library requires license so test will always fail in continuous integration",
+)
 @pytest.mark.parametrize(
     ("manual_args"),
     [
