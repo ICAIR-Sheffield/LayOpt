@@ -30,7 +30,7 @@ def reconcile_config_args(
     Parameters
     ----------
     args : Namespace
-        Command line arguments passed into TopoStats.
+        Command line arguments passed into LayOpt.
     default_config : dict[str, Any]
         Dictionary containing the default configuration for the package.
 

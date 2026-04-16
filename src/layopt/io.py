@@ -6,9 +6,7 @@ from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 from pkgutil import get_data
-from time import tzname
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import pandas as pd
 import yaml
@@ -106,24 +104,21 @@ def convert_path(path: str | Path) -> Path:
     return Path().cwd() if path == "./" else Path(path).expanduser()
 
 
-def get_date_time(strftime: str = "%Y-%m-%d %H:%M:%S", tz: str | None = None) -> str:
+def get_date_time(strftime: str = "%Y-%m-%d %H:%M:%S") -> str:
     """
-    Get the current date-time.
+    Get the current date-time as a string for the systems current timezone.
 
     Parameters
     ----------
     strftime : str
         String for formatting date-time, default is ``%Y-%m-%d %H:%M:%S``.
-    tz : str
-        Timezone, default is ``None`` in which case ``ZoneInfo`` is used.
 
     Returns
     -------
     str
-        Date-time as a string.
+        Date-time as a string for systems current timezone.
     """
-    timezone = ZoneInfo(tzname[0]) if tz is None else ZoneInfo(tz)
-    return datetime.now(tz=timezone).strftime(strftime)
+    return datetime.now(tz=datetime.now().astimezone().tzinfo).strftime(strftime)
 
 
 def dict_to_df(results: dict[str, Any]) -> pd.DataFrame:
