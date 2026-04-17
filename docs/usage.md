@@ -92,7 +92,7 @@ options:
   --width WIDTH         Width of structure.
   --height HEIGHT       Height of structure.
   --stress-tensile STRESS_TENSILE
-                        Tensile stress.
+                        Tensile stress limit.
   --stress-compressive STRESS_COMPRESSIVE
                         Compressive stress.
   --joint-cost JOINT_COST
