@@ -94,7 +94,7 @@ options:
   --stress-tensile STRESS_TENSILE
                         Tensile stress limit.
   --stress-compressive STRESS_COMPRESSIVE
-                        Compressive stress.
+                        Compressive stress limit.
   --joint-cost JOINT_COST
                         Joint cost.
   --load-direction LOAD_DIRECTION [LOAD_DIRECTION ...]
