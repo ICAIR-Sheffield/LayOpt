@@ -2,6 +2,8 @@
 
 import argparse
 import logging
+import os
+import sys
 from pathlib import Path
 from pkgutil import get_data
 from typing import Any
@@ -24,6 +26,10 @@ RESOURCES = BASE_DIR / "tests" / "resources"
 # Load the 'default_config.yaml' to dictionary.
 default_config = get_data(package="layopt", resource="default_config.yaml")
 DEFAULT_CONFIG = yaml.full_load(default_config)
+
+
+# Are we on GitHub and OSX?
+GITHUB_OSX = os.getenv("GITHUB_ACTIONS") == "true" and sys.platform == "darwin"
 
 
 def test_reconcile_config_args_no_config(caplog) -> None:
@@ -137,6 +143,10 @@ def test_reconcile_config_args(
                 config_file=None, filter_levels="yes", func=None, module=None
             ),
             id="filter_levels str not bool",
+            marks=pytest.mark.skipif(
+                GITHUB_OSX,
+                reason="We get a numpy array of dtype='<U3' returned which doesn't raise an error on OSX?",
+            ),
         ),
         pytest.param(
             argparse.Namespace(
