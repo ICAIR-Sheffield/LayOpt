@@ -65,7 +65,7 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
     logger.info(f"{logger_msg} : {config_path!s}")
 
 
-def read_yaml(filename: str | Path) -> dict:
+def read_yaml(filename: str | Path) -> dict[str, Any]:
     """
     Read a YAML file.
 

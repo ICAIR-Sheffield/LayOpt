@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from loguru import logger
@@ -10,7 +11,7 @@ from schema import And, Or, Schema, SchemaError, SchemaWrongKeyError, Use
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-lines
-def validate_config(config: dict, schema: Schema, config_type: str) -> None:
+def validate_config(config: dict[str, Any], schema: Schema, config_type: str) -> None:
     """
     Validate configuration.
 
@@ -111,9 +112,9 @@ LAYOPT_CONFIG_SCHEMA = Schema(
         "primal_method": And(
             str,
             Or(
-                # ns-rse 2026-04-02 : What other primal methods are there?
                 "residual",
                 "load_factor",
+                None,
             ),
             error="❌ Invalid value in config for 'primal_methods', this should be a list of coordinates.",
         ),

@@ -68,6 +68,38 @@ def test_reconcile_config_args_no_config(caplog) -> None:
             [0.001, 0.01, 0.1],
             id="filter_levels not None",
         ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, joint_cost=0.51, func=None, module=None
+            ),
+            "joint_cost",
+            0.51,
+            id="joint_cost 0.51",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, max_length=31.00002, func=None, module=None
+            ),
+            "max_length",
+            31.00002,
+            id="max_length 31.00002",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, load_large=1001.456, func=None, module=None
+            ),
+            "load_large",
+            1001.456,
+            id="load_large 1001.456",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, load_small=1.456, func=None, module=None
+            ),
+            "load_small",
+            1.456,
+            id="load_small 1.456",
+        ),
     ],
 )
 def test_reconcile_config_args(
@@ -105,6 +137,30 @@ def test_reconcile_config_args(
                 config_file=None, filter_levels="yes", func=None, module=None
             ),
             id="filter_levels str not bool",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, joint_cost=-0.2, func=None, module=None
+            ),
+            id="joint_cost -0.2",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, max_length="10.04", func=None, module=None
+            ),
+            id="max_length '10.04'",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, load_large=True, func=None, module=None
+            ),
+            id="load_large True",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, load_small=False, func=None, module=None
+            ),
+            id="load_small False",
         ),
     ],
 )

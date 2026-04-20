@@ -52,7 +52,7 @@ GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 def test_optimise(
     args: argparse.Namespace, result_files: int, tmp_path: Path, snapshot
 ) -> None:
-    """Test the ``optimse()`` function directly."""
+    """Test the ``optimise()`` function directly."""
     args.output_dir = tmp_path
     run_modules.optimise(args=args)
     # Check there are two files in the output directory

@@ -95,14 +95,14 @@ def layopt_parser() -> arg.ArgumentParser:
         dest="stress_tensile",
         type=float,
         required=False,
-        help="Tensile stress.",
+        help="Tensile stress limit.",
     )
     optimise_parser.add_argument(
         "--stress-compressive",
         dest="stress_compressive",
         type=float,
         required=False,
-        help="Compressive stress.",
+        help="Compressive stress limit.",
     )
     optimise_parser.add_argument(
         "--joint-cost",
@@ -124,21 +124,21 @@ def layopt_parser() -> arg.ArgumentParser:
         dest="load_large",
         type=float,
         required=False,
-        help="Load large.",
+        help="Large load to apply at each point.",
     )
     optimise_parser.add_argument(
         "--load-small",
         dest="load_small",
         type=float,
         required=False,
-        help="Load small.",
+        help="Small load to apply at each point.",
     )
     optimise_parser.add_argument(
         "--max-length",
         dest="max_length",
         type=float,
         required=False,
-        help="Max length.",
+        help="Maximum member length.",
     )
     optimise_parser.add_argument(
         "--filter-levels",
@@ -153,7 +153,7 @@ def layopt_parser() -> arg.ArgumentParser:
         dest="primal_method",
         type=str,
         required=False,
-        help="Primal method.",
+        help="Primal violation method.",
     )
     optimise_parser.add_argument(
         "--problem-name",
@@ -161,13 +161,6 @@ def layopt_parser() -> arg.ArgumentParser:
         type=str,
         required=False,
         help="Problem name",
-    )
-    optimise_parser.add_argument(
-        "--save-to-csv",
-        dest="save_to_csv",
-        type=bool,
-        required=False,
-        help="Whether to save output to '.csv' file.",
     )
     optimise_parser.add_argument(
         "--csv-filename",

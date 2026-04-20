@@ -5,7 +5,7 @@ Once you have [installed](installation.md) LayOpt in your virtual environment yo
 
 ## Accessing Help
 
-`layopt` has the flag `--help` (or `-h` for short) which shows the available options.
+`layopt` and its sub-commands have the flag `--help` (or `-h` for short) which shows the available options.
 
 ```shell
 (.venv) ❱ layopt --help
@@ -38,11 +38,11 @@ and the number of cores to use when running in parallel.
 
 There are two "program" or sub-commands available `optimise` and `create-config`
 
-## `layopt create-config`
+### `layopt create-config`
 
 This program will write a copy of the `default_config.yaml` to disk, users can specify the location to write to and the
 filename. This will be a [YAML][yaml] file with comments indicating what parameters are and can be edited by the user to
-control how `layopt` is run. It too includes help
+control how `layopt` is run. `layopt cretae-config` also has help available using the `-h`/`--help flag`.
 
 ```shell
 (.venv) ❱ layopt create-config --help
@@ -60,7 +60,7 @@ options:
   -c, --config CONFIG   Configuration to use, currently only 'default' is supported.
 ```
 
-## `layopt optimise`
+### `layopt optimise`
 
 The `optimise` program runs the analysis. If no configuration file is specified then the packages `default_config.yaml`
 will be used. Typically though users will want to use `layopt create-config` to create their own configuration file,
@@ -71,9 +71,8 @@ layopt --config-file my_custom_config.yaml
 ```
 
 If the `output_dir` has not been modified results will be in the `output/` directory where you will find a `.csv` file
-of results and a `.yaml` which reflects the parameters used in running the optimisation.
-
-`layopt optimise` also has help available.
+of results and a `.yaml` which reflects the parameters used in running the optimisation. `layopt optimise` also has help
+available using the `-h`/`--help` flag.
 
 ```shell
 (.venv) ❱ layopt optimise --help
@@ -100,15 +99,15 @@ options:
   --load-direction LOAD_DIRECTION [LOAD_DIRECTION ...]
                         Load direction.
   --load-large LOAD_LARGE
-                        Load large.
+                        Large load to apply at each load point.
   --load-small LOAD_SMALL
-                        Load small.
+                        Small load to apply at each load point.
   --max-length MAX_LENGTH
-                        Max length.
+                        Maximum member length.
   --filter-levels FILTER_LEVELS [FILTER_LEVELS ...]
                         Member area filtering levels.
   --primal-method PRIMAL_METHOD
-                        Primal method.
+                        Primal violation method.
   --problem-name PROBLEM_NAME
                         Problem name
   --save-to-csv SAVE_TO_CSV
@@ -135,4 +134,52 @@ specified `--output-dir <directory>`. To avoid over-writing results and configur
 with `YY-MM-DD-hhmmss` included in the filenames. Most of the time these will match for the `.csv` and `.yaml`, on rare
 occasions there may be a slight difference in the seconds values.
 
+## Interactive use
+
+Layopt can be used interactively in the Python REPL (Read-eval-print loop) shell. An example session using
+[iPython][ipython] is shown below. `layopt.trussopt()` returns a tuple of `volume`, `a`, a dataframe of results and the
+`filter_level`.
+
+```shell
+ipython
+
+In [1]: from layopt.layopt import trussopt
+
+In [2]: import numpy as np
+
+In [3]: parameters = {
+    "width": 1,
+    "height": 1,
+    "stress_tensile": 1.0,
+    "stress_compressive": 1.0,
+    "joint_cost": 0.0,
+    "loaded_points": np.asarray([[3, 3]]),
+    "load_direction": np.asarray([0.0, -1.0]),
+    "load_large": 50.0,
+    "load_small": 5.0,
+    "max_length": 18.0,
+    "support_points": np.asarray([[]]),
+    "primal_method": "load_factor",
+    "problem_name": "short cantilever",
+    "notes": "short cantilever test",
+}
+
+In [4]: results = layopt.trussopt(**parameters)
+   ...:
+2026-04-20 09:58:30.666 | INFO     | layopt.layopt:make_pattern_loads:414 - Total patterns for 1 load point(s) : 2
+2026-04-20 09:58:30.666 | INFO     | layopt.layopt:make_pattern_loads:417 - Base case (all large) : pt0=L
+2026-04-20 09:58:30.666 | INFO     | layopt.layopt:trussopt:854 - Setup took 0.0011236679999999666
+2026-04-20 09:58:30.666 | INFO     | layopt.layopt:trussopt:855 -     Nodes               : 4
+2026-04-20 09:58:30.666 | INFO     | layopt.layopt:trussopt:856 -     Members             : 6
+2026-04-20 09:58:30.666 | INFO     | layopt.layopt:trussopt:857 -     Total load patterns : 2
+2026-04-20 09:58:30.669 | INFO     | layopt.layopt:trussopt:900 - Iteration: 1, vol: 149.9999999955983, mems: 6 active load cases:1/2
+2026-04-20 09:58:30.672 | INFO     | layopt.layopt:trussopt:900 - Iteration: 2, vol: 149.9999999955983, mems: 6 active load cases:1/2
+2026-04-20 09:58:30.676 | INFO     | layopt.layopt:trussopt:958 - Volume: 149.9999999955983
+2026-04-20 09:58:30.676 | INFO     | layopt.layopt:trussopt:960 - Solve took 0.0137718109999998
+2026-04-20 09:58:30.677 | INFO     | layopt.layopt:trussopt:961 - Active patterns: 1/2
+
+In
+```
+
+[ipython]: https://ipython.org/
 [yaml]: https://yaml.org
