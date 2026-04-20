@@ -31,15 +31,19 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  "art",
   "loguru",
   "matplotlib",
   "mosek",
   "numpy",
+  "pandas",
+  "pandas-stubs",
   "pydantic",
   "schema",
   "scipy",
   "shapely",
   "tqdm",
+  "tzdata",
 ]
 
 [project.urls]
@@ -51,13 +55,11 @@ Changelog = "https://github.com/ICAIR-Sheffield/LayOpt/releases"
 
 [dependency-groups]
 test = [
-  "pandas",
-  "pandas-stubs",
   "pytest>=9.0.3",
   "pytest-cov >=7",
+  "pytest-loguru",
   "pytest-testmon",
   "pytest-xdist",
-  "scipy-stubs",
   "syrupy"
 ]
 dev = [
@@ -66,11 +68,14 @@ dev = [
   "black",
   "codespell",
   "ipdb",
+  "mypy",
   "pre-commit",
   "pydocstyle[toml]",
   "pylint",
   "ruff",
+  "scipy-stubs",
   "tomli",
+  "types-PyYAML",
 ]
 docs = [
   "markdown>=3.9",
@@ -112,6 +117,7 @@ enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 warn_unreachable = true
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
@@ -224,3 +230,6 @@ skip = 'uv.lock'
 count = ''
 quiet-level = 3
 # ignore-words-list = ''
+
+[project.scripts]
+layopt = "layopt.entry_point:entry_point"

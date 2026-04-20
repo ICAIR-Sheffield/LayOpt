@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: test_dict_to_df[basic]
+  '''
+     a  b
+  0  1  3
+  '''
+# ---
+# name: test_dict_to_df[realistic]
+  '''
+               timestamp      problem_name width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure cpu_time_setup cpu_time_solve primal_method                  notes
+  0  2026-04-08 13:57:09  short cantilever     3      6             1                2                 1       50.0        5.0          2        300.0              81      28                251       0.004292       0.043679   load_factor  short cantilever test
+  '''
+# ---
