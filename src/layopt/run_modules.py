@@ -178,7 +178,7 @@ def completion_message(_config: dict) -> None:
         f"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ COMPLETE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"
         f"  LayOpt Version              : {LAYOPT_BASE_VERSION}\n"
         f"  LayOpt Commit               : {LAYOPT_COMMIT}\n"
-        f"  All statistics              : {(_config['output_dir'] / _config['csv_filename'])!s}\n"
+        f"  All statistics              : {_config['output_dir']!s}/{_config['csv_filename']}\n"
         f"  Configuration               : {_config['output_dir']}/"
         f"config_{io.get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml\n\n"
         # f"  Email                       : layopt@sheffield.ac.uk\n"
