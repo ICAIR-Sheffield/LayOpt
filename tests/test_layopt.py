@@ -565,7 +565,7 @@ def test_make_pattern_loads_zero_load_points_error(
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
-                ),  # all_patterns
+                ),
                 np.array(
                     [
                         0,
@@ -638,8 +638,8 @@ def test_make_pattern_loads_zero_load_points_error(
                         -0.204,
                     ]
                 ),
-            ],
-            np.asarray([1, 1, 1, 1]),  # active_load_cases
+            ], # all_patterns
+            np.asarray([True, True, True, True]),  # active_load_cases
             np.ones(10),  # areas
             1,  # stress_tensile
             1,  # stress_compressive
@@ -647,11 +647,51 @@ def test_make_pattern_loads_zero_load_points_error(
                 [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ),  # dof
             True,  # expected converge
-            id="All active load cases",
+            id="All active load cases convergence",
+        ),
+        pytest.param(
+            [
+                np.array(
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                ),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                )
+            ], # all_patterns
+            np.asarray([True, False]),  # active_load_cases
+            np.ones(10),  # areas
+            1,  # stress_tensile
+            1,  # stress_compressive
+            np.array(
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ),  # dof
+            False,  # expected converge
+            id="One inactive load case no convergence",
         ),
     ],
 )
-def test_stop_primal_violation_active_convergence(
+def test_stop_primal_violation(
     nodal_coords: npt.NDArray,
     c_n: npt.NDArray,
     all_patterns: npt.NDArray,
@@ -662,7 +702,7 @@ def test_stop_primal_violation_active_convergence(
     dof: npt.NDArray,
     expected_converge: list[int],
 ) -> None:
-    """Test that all load cases active converges"""
+    """Test for convergence based on whether all load cases active"""
     actual_converge = layopt.stop_primal_violation_pattern(
         nodal_coords,
         c_n,
@@ -673,7 +713,8 @@ def test_stop_primal_violation_active_convergence(
         stress_tensile,
         stress_compressive,
     )
-    assert actual_converge == expected_converge
+    assert actual_converge is expected_converge
+    assert np.all(active_load_cases) is np.bool_(True) # checks that violating inactive load cases added
 
 
 @pytest.mark.parametrize(
