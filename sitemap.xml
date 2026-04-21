@@ -2,18 +2,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://LayOpt.readthedocs.io/</loc>
-         <lastmod>2026-03-09</lastmod>
-    </url>
-    <url>
-         <loc>https://LayOpt.readthedocs.io/api/</loc>
-         <lastmod>2026-03-09</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://LayOpt.readthedocs.io/contributing/</loc>
-         <lastmod>2026-03-09</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://LayOpt.readthedocs.io/installation/</loc>
-         <lastmod>2026-03-09</lastmod>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/usage/</loc>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/api/</loc>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/api/config/</loc>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/api/entry_point/</loc>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/api/io/</loc>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/api/layopt/</loc>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/api/logging/</loc>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/api/run_modules/</loc>
+         <lastmod>2026-04-21</lastmod>
+    </url>
+    <url>
+         <loc>https://LayOpt.readthedocs.io/api/validation/</loc>
+         <lastmod>2026-04-21</lastmod>
     </url>
 </urlset>
