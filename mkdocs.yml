@@ -35,17 +35,21 @@ plugins:
   mkdocstrings:
     handlers:
       python:
-        paths: [.]
+        paths: [src]
         inventories:
           - https://docs.python.org/3/objects.inv
           - https://docs.pydantic.dev/latest/objects.inv
         options:
+          docstrings_style: numpy
+          docstring_section_style: table
+          filters: ["!^_"]
           members_order: source
           separate_signature: true
-          filters: ["!^_"]
-          show_root_heading: true
-          show_if_no_docstring: true
-          show_signature_annotations: true
+          show_if_no_docstring: false
+          show_root_full_path: false
+          show_root_heading: false
+          show_signature_annotations: false
+          show_source: true
   search: {}
 
 markdown_extensions:
@@ -66,4 +70,16 @@ nav:
   - Installation: installation.md
   - Contributing: contributing.md
   - Usage: usage.md
-  - Python API: api.md
+  - Python API:
+      - API: api/index.md
+      - config: api/config.md
+      - entry_point: api/entry_point.md
+      - io: api/io.md
+      - layopt: api/layopt.md
+      - logging: api/logging.md
+      - run_modules: api/run_modules.md
+      - validation: api/validation.md
+
+watch:
+  - docs/
+  - src/

@@ -17,5 +17,12 @@ ignores:
   - "paper.md"
   - ".venv/"
   - ".github/CONTRIBUTING.md"
+  - "docs/api/config.md"
+  - "docs/api/entry_point.md"
+  - "docs/api/io.md"
+  - "docs/api/layopt.md"
+  - "docs/api/logging.md"
+  - "docs/api/run_modules.md"
+  - "docs/api/validation.md"
 
 fix: true
