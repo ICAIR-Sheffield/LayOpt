@@ -22,6 +22,6 @@ else:
     LAYOPT_COMMIT = ""
 # pylint: disable=invalid-name
 CONFIG_DOCUMENTATION_REFERENCE = """# For more information on configuration and how to use it:
-# https://afm-spm.github.io/Layopt/main/configuration.html\n"""
+# https://icair-sheffield.github.io/LayOpt/\n"""
 CONFIG_DOCUMENTATION_REFERENCE += f"# Layopt version : {LAYOPT_BASE_VERSION}\n"
 CONFIG_DOCUMENTATION_REFERENCE += f"# Commit: {LAYOPT_COMMIT}\n"

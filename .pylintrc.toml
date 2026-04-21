@@ -379,7 +379,35 @@ confidence = ["HIGH", "CONTROL_FLOW", "INFERENCE", "INFERENCE_FAILURE", "UNDEFIN
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable = ["raw-checker-failed", "bad-inline-option", "locally-disabled", "file-ignored", "suppressed-message", "useless-suppression", "deprecated-pragma", "use-symbolic-message-instead", "use-implicit-booleaness-not-comparison-to-string", "use-implicit-booleaness-not-comparison-to-zero", "too-many-ancestors", "too-many-instance-attributes", "too-few-public-methods", "too-many-public-methods", "too-many-return-statements", "too-many-branches", "too-many-arguments", "too-many-locals", "too-many-statements", "too-many-boolean-expressions", "too-many-positional-arguments", "fixme", "line-too-long", "missing-module-docstring", "missing-function-docstring", "wrong-import-position"]
+disable = [
+  "bad-inline-option",
+  "deprecated-pragma",
+  # "duplicate-code",
+  "file-ignored",
+  "fixme",
+  "line-too-long",
+  "locally-disabled",
+  "missing-function-docstring",
+  "missing-module-docstring",
+  "raw-checker-failed",
+  "suppressed-message",
+  "too-few-public-methods",
+  "too-many-ancestors",
+  "too-many-arguments",
+  "too-many-boolean-expressions",
+  "too-many-branches",
+  "too-many-instance-attributes",
+  "too-many-locals",
+  "too-many-positional-arguments",
+  "too-many-public-methods",
+  "too-many-return-statements",
+  "too-many-statements",
+  "use-implicit-booleaness-not-comparison-to-string",
+  "use-implicit-booleaness-not-comparison-to-zero",
+  "use-symbolic-message-instead",
+  "useless-suppression",
+  "wrong-import-position",
+]
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -556,5 +584,3 @@ ignored-argument-names = "_.*|^ignored_|^unused_"
 # List of qualified module names which can have objects that can redefine
 # builtins.
 redefining-builtins-modules = ["six.moves", "past.builtins", "future.builtins", "builtins", "io"]
-
-

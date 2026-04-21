@@ -65,4 +65,5 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Contributing: contributing.md
+  - Usage: usage.md
   - Python API: api.md
