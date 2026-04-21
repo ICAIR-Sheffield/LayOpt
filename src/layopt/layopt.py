@@ -32,8 +32,8 @@ from scipy import sparse
 # from numpy.matlib import repmat
 from shapely.geometry import LineString, Point, Polygon
 
-from layopt.plotting import plot_truss
 from layopt.io import dict_to_df, get_date_time
+from layopt.plotting import plot_truss
 
 plt.rcParams["figure.max_open_warning"] = 0
 
