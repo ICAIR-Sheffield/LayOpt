@@ -108,7 +108,7 @@ repos:
     rev: v0.22.0
     hooks:
       - id: markdownlint-cli2
-        args: []
+        args: ["--config .markdownlint-cli2.yaml"]
 
   - repo: https://github.com/numpy/numpydoc
     rev: v1.10.0
