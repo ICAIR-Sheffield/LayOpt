@@ -1,7 +1,9 @@
 """Tests for the layopt module."""
 
+import csv
 import os
 from typing import Any
+from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
@@ -702,7 +704,7 @@ def test_stop_primal_violation(
     dof: npt.NDArray,
     expected_converge: list[int],
 ) -> None:
-    """Test for convergence based on whether all load cases active"""
+    """Test for convergence based on whether all load cases active."""
     actual_converge = layopt.stop_primal_violation_pattern(
         nodal_coords,
         c_n,
@@ -766,3 +768,104 @@ def test_stop_violation(
     assert isinstance(actual_num_added, int)
     assert actual_num_added >= 0
     assert actual_num_added == expected_num_added
+
+
+@pytest.mark.parametrize(
+    (
+        "filename",
+        "expected_csv_header",
+    ),
+    [
+        pytest.param(
+            "results_2026-04-16-123456.csv",
+            [
+                'timestamp',
+                'problem_name',
+                'width',
+                'height',
+                'n_load_points',
+                'n_patterns_total',
+                'n_patterns_active',
+                'load_large',
+                'load_small',
+                'iterations',
+                'final_volume',
+                'n_members_final',
+                'n_nodes',
+                'n_ground_structure',
+                'cpu_time_setup',
+                'cpu_time_solve',
+                'primal_method',
+                'notes'
+            ],  # expected_csv_header
+            id="new_csv_file",
+        ),
+    ],
+)
+def test_save_results_to_csv_new(
+    sample_csv_results: dict[str, Any],
+    tmp_path,
+    filename: str,
+    expected_csv_header: list
+):
+    """Test that a new file is created with correct header row and one data row."""
+    filepath = tmp_path / filename
+    layopt.save_results_to_csv(sample_csv_results, filepath)
+    assert Path(filepath).is_file()
+    with Path(filepath).open(newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+    assert len(rows) == 1
+    assert reader.fieldnames == expected_csv_header
+
+
+@pytest.mark.parametrize(
+    (
+        "filename",
+        "expected_csv_header",
+    ),
+    [
+        pytest.param(
+            "results_2026-04-16-654321.csv",
+            [
+                'timestamp',
+                'problem_name',
+                'filter_level',
+                'width',
+                'height',
+                'n_load_points',
+                'n_patterns_total',
+                'n_patterns_active',
+                'load_large',
+                'load_small',
+                'iterations',
+                'final_volume',
+                'n_members_final',
+                'n_nodes',
+                'n_ground_structure',
+                'cpu_time_setup',
+                'cpu_time_solve',
+                'primal_method',
+                'notes'
+            ],  # expected_csv_header
+            id="append_to_csv_file",
+        ),
+    ],
+)
+def test_save_results_to_csv_appends(
+    sample_csv_results: dict[str, Any],
+    tmp_path,
+    filename: str,
+    expected_csv_header: list
+):
+    """Test that calling function twice produces two data rows."""
+    filepath = tmp_path / filename
+    layopt.save_results_to_csv(sample_csv_results, filepath)
+    layopt.save_results_to_csv(sample_csv_results, filepath)
+    assert Path(filepath).is_file()
+    with Path(filepath).open(newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+    assert len(rows) == 2
+    assert rows[0]['problem_name'] == 'test_problem'
+    assert rows[1]['problem_name'] == 'test_problem'
