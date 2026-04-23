@@ -1,10 +1,12 @@
 # Validation
 
 <!-- markdownlint-disable -->
+
 ::: layopt.validation
     handler: python
     options.extra:
         docstring_style: numpy
         rendering:
             show_signature_annotations: true
+
 <!-- markdownlint-restore -->
