@@ -55,7 +55,7 @@ Changelog = "https://github.com/ICAIR-Sheffield/LayOpt/releases"
 
 [dependency-groups]
 test = [
-  "pytest >=9",
+  "pytest>=9.0.3",
   "pytest-cov >=7",
   "pytest-loguru",
   "pytest-testmon",
@@ -80,10 +80,11 @@ dev = [
 docs = [
   "markdown>=3.9",
   "mdx-include>=1.4.2",
-  "mkdocs-material>=9.1.19",
+  "mkdocs-get-deps>=0.2.2",
+  "mkdocs-material>=9.7.6",
   "mkdocs-mermaid2-plugin",
-  "mkdocs>=1.1.2",
-  "mkdocstrings-python>=1.18.2",
+  "mkdocs>=1.6.1,<=2.0.0",
+  "mkdocstrings-python>=2.0.3",
   "pyyaml>=6.0.1",
 ]
 
