@@ -86,7 +86,8 @@ def _parse_configuration(args: argparse.Namespace | None = None) -> dict[str, An
         default_config = yaml.full_load(default_config)
     else:
         logger.info(f"Loading configuration from : {args.config_file!s}")
-        default_config = yaml.full_load(args.config_file)
+        with args.config_file.open(encoding="utf-8") as conf:
+            default_config = yaml.full_load(conf)
     _config = config.reconcile_config_args(args=args, default_config=default_config)
     # Validate configuration
     logger.debug(f"Configuration prior to validation :\n{pformat(_config, indent=4)}")
@@ -142,7 +143,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         all_results = defaultdict()
         with tqdm(
             total=len(_config["filter_levels"]),
-            desc=f"Solving optimisation for {len(_config['filter_levels'])}, results are under {_config['output_dir']}.",
+            desc=f"Solving optimisation results are under '{_config['output_dir']}'.",
         ) as pbar:
             for _, _, result, filter_level in pool.imap_unordered(
                 processing_function, _config["filter_levels"]
