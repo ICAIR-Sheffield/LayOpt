@@ -723,6 +723,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "art" },
+    { name = "click" },
     { name = "loguru" },
     { name = "matplotlib" },
     { name = "mosek" },
@@ -790,6 +791,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "art" },
+    { name = "click", specifier = "==8.3.2" },
     { name = "loguru" },
     { name = "matplotlib" },
     { name = "mosek" },
