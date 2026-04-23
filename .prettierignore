@@ -1,0 +1,2 @@
+# Let markdownlint-cli2 handle all .md linting
+**/*.md
