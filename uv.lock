@@ -723,7 +723,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "art" },
-    { name = "click" },
     { name = "loguru" },
     { name = "matplotlib" },
     { name = "mosek" },
@@ -741,6 +740,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "black" },
+    { name = "click" },
     { name = "codespell" },
     { name = "ipdb" },
     { name = "markdown" },
@@ -768,6 +768,7 @@ dev = [
     { name = "types-pyyaml" },
 ]
 docs = [
+    { name = "click" },
     { name = "markdown" },
     { name = "mdx-include" },
     { name = "mkdocs" },
@@ -790,7 +791,6 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "art" },
-    { name = "click", specifier = "==8.3.2" },
     { name = "loguru" },
     { name = "matplotlib" },
     { name = "mosek" },
@@ -808,6 +808,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "black" },
+    { name = "click", specifier = ">=8.3.2" },
     { name = "codespell" },
     { name = "ipdb" },
     { name = "markdown", specifier = ">=3.9" },
@@ -835,6 +836,7 @@ dev = [
     { name = "types-pyyaml" },
 ]
 docs = [
+    { name = "click", specifier = ">=8.3.2" },
     { name = "markdown", specifier = ">=3.9" },
     { name = "mdx-include", specifier = ">=1.4.2" },
     { name = "mkdocs", specifier = ">=1.6.1,<=2.0.0" },
