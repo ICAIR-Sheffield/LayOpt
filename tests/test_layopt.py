@@ -2,8 +2,8 @@
 
 import csv
 import os
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -551,6 +551,10 @@ def test_make_pattern_loads_zero_load_points_error(
         )
 
 
+@pytest.mark.skipif(
+    GITHUB_ACTIONS,
+    reason="mosek library requires license so test will always fail in continuous integration",
+)
 # pylint: disable=duplicate-code
 @pytest.mark.parametrize(
     (
@@ -640,7 +644,7 @@ def test_make_pattern_loads_zero_load_points_error(
                         -0.204,
                     ]
                 ),
-            ], # all_patterns
+            ],  # all_patterns
             np.asarray([True, True, True, True]),  # active_load_cases
             np.ones(10),  # areas
             1,  # stress_tensile
@@ -653,9 +657,7 @@ def test_make_pattern_loads_zero_load_points_error(
         ),
         pytest.param(
             [
-                np.array(
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-                ),
+                np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
                 np.array(
                     [
                         0,
@@ -679,8 +681,8 @@ def test_make_pattern_loads_zero_load_points_error(
                         0,
                         -0.204,
                     ]
-                )
-            ], # all_patterns
+                ),
+            ],  # all_patterns
             np.asarray([True, False]),  # active_load_cases
             np.ones(10),  # areas
             1,  # stress_tensile
@@ -716,7 +718,9 @@ def test_stop_primal_violation(
         stress_compressive,
     )
     assert actual_converge is expected_converge
-    assert np.all(active_load_cases) is np.bool_(True) # checks that violating inactive load cases added
+    assert np.all(active_load_cases) is np.bool_(
+        True
+    )  # checks that violating inactive load cases added
 
 
 @pytest.mark.parametrize(
@@ -751,7 +755,7 @@ def test_stop_violation(
     request,
     stress_tensile: float,
     stress_compressive: float,
-    deflections: list,
+    deflections: list[npt.NDArray],
     expected_num_added: int,
 ):
     """Test that the function sets members active correctly and returns non-negative integer."""
@@ -779,24 +783,24 @@ def test_stop_violation(
         pytest.param(
             "results_2026-04-16-123456.csv",
             [
-                'timestamp',
-                'problem_name',
-                'width',
-                'height',
-                'n_load_points',
-                'n_patterns_total',
-                'n_patterns_active',
-                'load_large',
-                'load_small',
-                'iterations',
-                'final_volume',
-                'n_members_final',
-                'n_nodes',
-                'n_ground_structure',
-                'cpu_time_setup',
-                'cpu_time_solve',
-                'primal_method',
-                'notes'
+                "timestamp",
+                "problem_name",
+                "width",
+                "height",
+                "n_load_points",
+                "n_patterns_total",
+                "n_patterns_active",
+                "load_large",
+                "load_small",
+                "iterations",
+                "final_volume",
+                "n_members_final",
+                "n_nodes",
+                "n_ground_structure",
+                "cpu_time_setup",
+                "cpu_time_solve",
+                "primal_method",
+                "notes",
             ],  # expected_csv_header
             id="new_csv_file",
         ),
@@ -806,7 +810,7 @@ def test_save_results_to_csv_new(
     sample_csv_results: dict[str, Any],
     tmp_path,
     filename: str,
-    expected_csv_header: list
+    expected_csv_header: list[str],
 ):
     """Test that a new file is created with correct header row and one data row."""
     filepath = tmp_path / filename
@@ -820,34 +824,10 @@ def test_save_results_to_csv_new(
 
 
 @pytest.mark.parametrize(
-    (
-        "filename",
-        "expected_csv_header",
-    ),
+    "filename",
     [
         pytest.param(
             "results_2026-04-16-654321.csv",
-            [
-                'timestamp',
-                'problem_name',
-                'filter_level',
-                'width',
-                'height',
-                'n_load_points',
-                'n_patterns_total',
-                'n_patterns_active',
-                'load_large',
-                'load_small',
-                'iterations',
-                'final_volume',
-                'n_members_final',
-                'n_nodes',
-                'n_ground_structure',
-                'cpu_time_setup',
-                'cpu_time_solve',
-                'primal_method',
-                'notes'
-            ],  # expected_csv_header
             id="append_to_csv_file",
         ),
     ],
@@ -856,7 +836,6 @@ def test_save_results_to_csv_appends(
     sample_csv_results: dict[str, Any],
     tmp_path,
     filename: str,
-    expected_csv_header: list
 ):
     """Test that calling function twice produces two data rows."""
     filepath = tmp_path / filename
@@ -867,5 +846,5 @@ def test_save_results_to_csv_appends(
         reader = csv.DictReader(csvfile)
         rows = list(reader)
     assert len(rows) == 2
-    assert rows[0]['problem_name'] == 'test_problem'
-    assert rows[1]['problem_name'] == 'test_problem'
+    assert rows[0]["problem_name"] == "test_problem"
+    assert rows[1]["problem_name"] == "test_problem"
