@@ -751,6 +751,8 @@ dev = [
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python" },
     { name = "mypy" },
+    { name = "packaging" },
+    { name = "pathspec" },
     { name = "pre-commit" },
     { name = "pydocstyle" },
     { name = "pylint" },
@@ -775,6 +777,8 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python" },
+    { name = "packaging" },
+    { name = "pathspec" },
     { name = "pyyaml" },
 ]
 test = [
@@ -817,6 +821,8 @@ dev = [
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python", specifier = ">=2.0.3" },
     { name = "mypy" },
+    { name = "packaging", specifier = ">=26.1" },
+    { name = "pathspec", specifier = ">=1.1.0" },
     { name = "pre-commit" },
     { name = "pydocstyle", extras = ["toml"] },
     { name = "pylint" },
@@ -841,6 +847,8 @@ docs = [
     { name = "mkdocs-material", specifier = ">=9.7.6" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python", specifier = ">=2.0.3" },
+    { name = "packaging", specifier = ">=26.1" },
+    { name = "pathspec", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0.1" },
 ]
 test = [
@@ -1394,11 +1402,11 @@ numpy = [
 
 [[package]]
 name = "packaging"
-version = "26.0"
+version = "26.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/65/ee/299d360cdc32edc7d2cf530f3accf79c4fca01e96ffc950d8a52213bd8e4/packaging-26.0.tar.gz", hash = "sha256:00243ae351a257117b6a241061796684b084ed1c516a08c48a3f7e147a9d80b4", size = 143416, upload-time = "2026-01-21T20:50:39.064Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/de/0d2b39fb4af88a0258f3bac87dfcbb48e73fbdea4a2ed0e2213f9a4c2f9a/packaging-26.1.tar.gz", hash = "sha256:f042152b681c4bfac5cae2742a55e103d27ab2ec0f3d88037136b6bfe7c9c5de", size = 215519, upload-time = "2026-04-14T21:12:49.362Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b7/b9/c538f279a4e237a006a2c98387d081e9eb060d203d8ed34467cc0f0b9b53/packaging-26.0-py3-none-any.whl", hash = "sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529", size = 74366, upload-time = "2026-01-21T20:50:37.788Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/c2/920ef838e2f0028c8262f16101ec09ebd5969864e5a64c4c05fad0617c56/packaging-26.1-py3-none-any.whl", hash = "sha256:5d9c0669c6285e491e0ced2eee587eaf67b670d94a19e94e3984a481aba6802f", size = 95831, upload-time = "2026-04-14T21:12:47.56Z" },
 ]
 
 [[package]]
@@ -1485,11 +1493,11 @@ wheels = [
 
 [[package]]
 name = "pathspec"
-version = "1.0.4"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fa/36/e27608899f9b8d4dff0617b2d9ab17ca5608956ca44461ac14ac48b44015/pathspec-1.0.4.tar.gz", hash = "sha256:0210e2ae8a21a9137c0d470578cb0e595af87edaa6ebf12ff176f14a02e0e645", size = 131200, upload-time = "2026-01-27T03:59:46.938Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/17/9c3094b822982b9f1ea666d8580ce59000f61f87c1663556fb72031ad9ec/pathspec-1.1.0.tar.gz", hash = "sha256:f5d7c555da02fd8dde3e4a2354b6aba817a89112fa8f333f7917a2a4834dd080", size = 133918, upload-time = "2026-04-23T01:46:22.298Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ef/3c/2c197d226f9ea224a9ab8d197933f9da0ae0aac5b6e0f884e2b8d9c8e9f7/pathspec-1.0.4-py3-none-any.whl", hash = "sha256:fb6ae2fd4e7c921a165808a552060e722767cfa526f99ca5156ed2ce45a5c723", size = 55206, upload-time = "2026-01-27T03:59:45.137Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/c9/8eed0486f074e9f1ca7f8ce5ad663e65f12fdab344028d658fa1b03d35e0/pathspec-1.1.0-py3-none-any.whl", hash = "sha256:574b128f7456bd899045ccd142dd446af7e6cfd0072d63ad73fbc55fbb4aaa42", size = 56264, upload-time = "2026-04-23T01:46:20.606Z" },
 ]
 
 [[package]]
