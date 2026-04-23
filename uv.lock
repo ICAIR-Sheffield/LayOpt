@@ -740,7 +740,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "black" },
-    { name = "click" },
     { name = "codespell" },
     { name = "ipdb" },
     { name = "markdown" },
@@ -751,8 +750,6 @@ dev = [
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python" },
     { name = "mypy" },
-    { name = "packaging" },
-    { name = "pathspec" },
     { name = "pre-commit" },
     { name = "pydocstyle" },
     { name = "pylint" },
@@ -770,7 +767,6 @@ dev = [
     { name = "types-pyyaml" },
 ]
 docs = [
-    { name = "click" },
     { name = "markdown" },
     { name = "mdx-include" },
     { name = "mkdocs" },
@@ -778,8 +774,6 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python" },
-    { name = "packaging" },
-    { name = "pathspec" },
     { name = "pyyaml" },
 ]
 test = [
@@ -812,7 +806,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "black" },
-    { name = "click", specifier = ">=8.3.2" },
     { name = "codespell" },
     { name = "ipdb" },
     { name = "markdown", specifier = ">=3.9" },
@@ -823,8 +816,6 @@ dev = [
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python", specifier = ">=2.0.3" },
     { name = "mypy" },
-    { name = "packaging", specifier = ">=26.1" },
-    { name = "pathspec", specifier = ">=1.1.0" },
     { name = "pre-commit" },
     { name = "pydocstyle", extras = ["toml"] },
     { name = "pylint" },
@@ -842,7 +833,6 @@ dev = [
     { name = "types-pyyaml" },
 ]
 docs = [
-    { name = "click", specifier = ">=8.3.2" },
     { name = "markdown", specifier = ">=3.9" },
     { name = "mdx-include", specifier = ">=1.4.2" },
     { name = "mkdocs", specifier = ">=1.6.1,<=2.0.0" },
@@ -850,8 +840,6 @@ docs = [
     { name = "mkdocs-material", specifier = ">=9.7.6" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python", specifier = ">=2.0.3" },
-    { name = "packaging", specifier = ">=26.1" },
-    { name = "pathspec", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0.1" },
 ]
 test = [
