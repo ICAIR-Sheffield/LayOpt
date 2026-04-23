@@ -752,6 +752,8 @@ dev = [
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python" },
     { name = "mypy" },
+    { name = "packaging" },
+    { name = "pathspec" },
     { name = "pre-commit" },
     { name = "pydocstyle" },
     { name = "pylint" },
@@ -777,6 +779,8 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python" },
+    { name = "packaging" },
+    { name = "pathspec" },
     { name = "pyyaml" },
 ]
 test = [
@@ -821,6 +825,8 @@ dev = [
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python", specifier = ">=2.0.3" },
     { name = "mypy" },
+    { name = "packaging", specifier = ">=26.1" },
+    { name = "pathspec", specifier = ">=1.1.0" },
     { name = "pre-commit" },
     { name = "pydocstyle", extras = ["toml"] },
     { name = "pylint" },
@@ -846,6 +852,8 @@ docs = [
     { name = "mkdocs-material", specifier = ">=9.7.6" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python", specifier = ">=2.0.3" },
+    { name = "packaging", specifier = ">=26.1" },
+    { name = "pathspec", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0.1" },
 ]
 test = [
