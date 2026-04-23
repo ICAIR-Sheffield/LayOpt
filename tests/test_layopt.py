@@ -704,7 +704,7 @@ def test_stop_primal_violation(
     stress_tensile: int,
     stress_compressive: int,
     dof: npt.NDArray,
-    expected_converge: list[int],
+    expected_converge: bool,
 ) -> None:
     """Test for convergence based on whether all load cases active."""
     actual_converge = layopt.stop_primal_violation_pattern(
