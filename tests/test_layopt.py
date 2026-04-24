@@ -717,7 +717,7 @@ def test_stop_primal_violation(
         stress_tensile,
         stress_compressive,
     )
-    assert actual_converge is expected_converge
+    assert actual_converge == expected_converge
     assert np.all(active_load_cases) is np.bool_(
         True
     )  # checks that violating inactive load cases added
@@ -775,52 +775,28 @@ def test_stop_violation(
 
 
 @pytest.mark.parametrize(
-    (
-        "filename",
-        "expected_csv_header",
-    ),
+    "filename",
     [
         pytest.param(
             "results_2026-04-16-123456.csv",
-            [
-                "timestamp",
-                "problem_name",
-                "width",
-                "height",
-                "n_load_points",
-                "n_patterns_total",
-                "n_patterns_active",
-                "load_large",
-                "load_small",
-                "iterations",
-                "final_volume",
-                "n_members_final",
-                "n_nodes",
-                "n_ground_structure",
-                "cpu_time_setup",
-                "cpu_time_solve",
-                "primal_method",
-                "notes",
-            ],  # expected_csv_header
             id="new_csv_file",
         ),
     ],
 )
 def test_save_results_to_csv_new(
     sample_csv_results: dict[str, Any],
-    tmp_path,
+    tmp_path: Path,
     filename: str,
-    expected_csv_header: list[str],
+    snapshot,
 ):
     """Test that a new file is created with correct header row and one data row."""
-    filepath = tmp_path / filename
-    layopt.save_results_to_csv(sample_csv_results, filepath)
-    assert Path(filepath).is_file()
-    with Path(filepath).open(newline="", encoding="utf-8") as csvfile:
+    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
+    assert Path(tmp_path / filename).is_file()
+    with Path(tmp_path / filename).open(newline="", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         rows = list(reader)
-    assert len(rows) == 1
-    assert reader.fieldnames == expected_csv_header
+    assert reader.fieldnames == snapshot
+    assert rows == snapshot
 
 
 @pytest.mark.parametrize(
@@ -834,17 +810,15 @@ def test_save_results_to_csv_new(
 )
 def test_save_results_to_csv_appends(
     sample_csv_results: dict[str, Any],
-    tmp_path,
+    tmp_path: Path,
     filename: str,
+    snapshot,
 ):
     """Test that calling function twice produces two data rows."""
-    filepath = tmp_path / filename
-    layopt.save_results_to_csv(sample_csv_results, filepath)
-    layopt.save_results_to_csv(sample_csv_results, filepath)
-    assert Path(filepath).is_file()
-    with Path(filepath).open(newline="", encoding="utf-8") as csvfile:
+    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
+    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
+    assert Path(tmp_path / filename).is_file()
+    with Path(tmp_path / filename).open(newline="", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         rows = list(reader)
-    assert len(rows) == 2
-    assert rows[0]["problem_name"] == "test_problem"
-    assert rows[1]["problem_name"] == "test_problem"
+    assert rows == snapshot
