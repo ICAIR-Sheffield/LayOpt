@@ -39,6 +39,7 @@ dependencies = [
   "pandas",
   "pandas-stubs",
   "pydantic",
+  "ruamel.yaml",
   "schema",
   "scipy",
   "shapely",
