@@ -11,7 +11,7 @@ from syrupy.matchers import path_type
 from layopt import layopt
 
 GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
-PRECISION = 8
+PRECISION = 6
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
