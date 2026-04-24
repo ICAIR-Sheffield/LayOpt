@@ -307,17 +307,18 @@ def input_three_by_six() -> dict[str, npt.NDArray[np.float32]]:
 def trussopt_param_one_by_one() -> dict[str, Any]:
     """Input parameters for 1x1 structure for ``layopt.trussopt()``."""
     return {
+        "filter_level": None,
         "width": 1,
         "height": 1,
         "st": 1,
         "sc": 1,
         "jc": 0,
-        "loaded_points": [[3, 3]],
+        "loaded_points": np.asarray([[3, 3]]),
         "load_direction": (0, -1),
         "load_large": 50,
         "load_small": 5,
         "max_length": 18,
-        "support_points": [],
+        "support_points": np.asarray([[]]),
         "member_area_filtering": True,
         "primal_method": "load_factor",
         "problem_name": "short cantilever",
@@ -331,17 +332,18 @@ def trussopt_param_one_by_one() -> dict[str, Any]:
 def trussopt_param_two_by_two() -> dict[str, Any]:
     """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
     return {
+        "filter_level": None,
         "width": 1,
         "height": 1,
         "st": 1,
         "sc": 1,
         "jc": 0,
-        "loaded_points": [[3, 3]],
+        "loaded_points": np.asarray([[3, 3]]),
         "load_direction": (0, -1),
         "load_large": 50,
         "load_small": 5,
         "max_length": 18,
-        "support_points": [],
+        "support_points": np.asarray([[]]),
         "member_area_filtering": False,
         "primal_method": "load_factor",
         "problem_name": "short cantilever",
@@ -465,7 +467,9 @@ def plotting_data_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
     """Relevant plotting data for 1x1 example."""
     return {
         "areas": np.asarray([70.71067812, 50.0]),
+        "c_n": np.asarray([[0.0, 3.0, 1.41421356, 1.0], [2.0, 3.0, 1.0, 1.0]]),
         "forces": [np.asarray([-70.71067812, 50.0])],
+        "nodal_coords": np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
         "threshold": 0.07071067811522617,
     }
 
@@ -474,9 +478,55 @@ def plotting_data_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
 def plotting_data_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
     """Relevant plotting data for 1x1 example."""
     return {
-        "areas": np.asarray([70.71067812, 50.0]),
-        "forces": [np.asarray([-70.71067812, 50.0])],
-        "threshold": 0.07071067811522617,
+        "areas": np.asarray(
+            [
+                31.96344547,
+                30.63237705,
+                31.96344547,
+                30.63237705,
+                27.39843096,
+                22.60156904,
+                22.60156904,
+            ]
+        ),
+        "c_n": np.asarray(
+            [
+                [0.0, 4.0, 1.41421356, 1.0],
+                [0.0, 5.0, 2.23606798, 1.0],
+                [4.0, 8.0, 1.41421356, 1.0],
+                [5.0, 6.0, 2.23606798, 1.0],
+                [5.0, 8.0, 1.0, 1.0],
+                [6.0, 7.0, 1.0, 1.0],
+                [7.0, 8.0, 1.0, 1.0],
+            ]
+        ),
+        "forces": [
+            np.asarray(
+                [
+                    -31.96344547,
+                    -30.63237705,
+                    -31.96344547,
+                    30.63237705,
+                    -27.39843096,
+                    22.60156904,
+                    22.60156904,
+                ]
+            )
+        ],
+        "nodal_coords": np.asarray(
+            [
+                [0.0, 0.0],
+                [1.0, 0.0],
+                [2.0, 0.0],
+                [0.0, 1.0],
+                [1.0, 1.0],
+                [2.0, 1.0],
+                [0.0, 2.0],
+                [1.0, 2.0],
+                [2.0, 2.0],
+            ]
+        ),
+        "threshold": 0.04468698843790225,
     }
 
 
@@ -494,6 +544,16 @@ def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.fl
                 35.35533906,
             ]
         ),
+        "c_n": np.asarray(
+            [
+                [0.0, 5.0, 1.41421356, 1.0],
+                [5.0, 10.0, 1.41421356, 1.0],
+                [10.0, 15.0, 1.41421356, 1.0],
+                [15.0, 18.0, 1.41421356, 1.0],
+                [18.0, 21.0, 1.41421356, 1.0],
+                [21.0, 24.0, 1.41421356, 1.0],
+            ]
+        ),
         "forces": [
             np.asarray(
                 [
@@ -506,5 +566,37 @@ def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.fl
                 ]
             )
         ],
+        "nodal_coords": np.asarray(
+            [
+                [0.0, 0.0],
+                [1.0, 0.0],
+                [2.0, 0.0],
+                [3.0, 0.0],
+                [0.0, 1.0],
+                [1.0, 1.0],
+                [2.0, 1.0],
+                [3.0, 1.0],
+                [0.0, 2.0],
+                [1.0, 2.0],
+                [2.0, 2.0],
+                [3.0, 2.0],
+                [0.0, 3.0],
+                [1.0, 3.0],
+                [2.0, 3.0],
+                [3.0, 3.0],
+                [0.0, 4.0],
+                [1.0, 4.0],
+                [2.0, 4.0],
+                [3.0, 4.0],
+                [0.0, 5.0],
+                [1.0, 5.0],
+                [2.0, 5.0],
+                [3.0, 5.0],
+                [0.0, 6.0],
+                [1.0, 6.0],
+                [2.0, 6.0],
+                [3.0, 6.0],
+            ]
+        ),
         "threshold": 0.035355339059325294,
     }

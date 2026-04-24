@@ -125,5 +125,22 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             str, error="❌ Invalid value for 'csv_filename', should be a string."
         ),
         "notes": Use(str, error="❌ Invalid value for 'notes', should be a string."),
+        "plotting": {
+            "run": And(
+                bool,
+                Or(True, False),
+                error="❌ Invalid value for 'plotting.run', should be a bool (True or False).",
+            ),
+            "bar_thickness": And(
+                float,
+                lambda n: n > 0.0,
+                error="❌ Invalid value for 'plotting.bar_thickness', should be a float > 0.0.",
+            ),
+            "dpi": And(
+                int,
+                lambda n: n >= 100,
+                error="❌ Invalid value for 'plotting.dpi', should be a float > 0.0.",
+            ),
+        },
     }
 )

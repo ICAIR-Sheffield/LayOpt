@@ -118,7 +118,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     _set_logging(log_level=_config["log_level"])
     processing_function = partial(
         layopt.trussopt,
-        # Placeholder,  # filter_levels
+        # filter_levels is the value substituted by partial when called within for ... pool.imap_unordrered():
         width=_config["width"],
         height=_config["height"],
         stress_tensile=_config["stress_tensile"],
@@ -130,13 +130,17 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         load_small=_config["load_small"],
         max_length=_config["max_length"],
         support_points=_config["support_points"],
-        # filter_levels=_config["filter_levels"],
         primal_method=_config["primal_method"],
         problem_name=_config["problem_name"],
-        # save_to_csv=_config["save_to_csv"],
         notes=_config["notes"],
+        plot=_config["plotting"]["run"],
+        bar_thickness=_config["plotting"]["bar_thickness"],
+        dpi=_config["plotting"]["dpi"],
     )
-    _config["filter_levels"] = [0.001, 0.01, 0.1]
+    # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value
+    _config["filter_levels"] = (
+        [1.0] if _config["filter_levels"] is None else _config["filter_levels"]
+    )
     # Run processing in parallel
     with Pool(processes=_config["cores"]) as pool:
         all_results = defaultdict()

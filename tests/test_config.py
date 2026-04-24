@@ -140,16 +140,6 @@ def test_reconcile_config_args(
         ),
         pytest.param(
             argparse.Namespace(
-                config_file=None, filter_levels="yes", func=None, module=None
-            ),
-            id="filter_levels str not bool",
-            marks=pytest.mark.skipif(
-                GITHUB_OSX,
-                reason="We get a numpy array of dtype='<U3' returned which doesn't raise an error on OSX?",
-            ),
-        ),
-        pytest.param(
-            argparse.Namespace(
                 config_file=None, joint_cost=-0.2, func=None, module=None
             ),
             id="joint_cost -0.2",

@@ -130,6 +130,44 @@
     None,
   )
 # ---
+# name: test_trussopt[1x1]
+  tuple(
+    np.float64(150.0),
+    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
+         50.        ]),
+    None,
+  )
+# ---
+# name: test_trussopt[1x1].1
+  '''
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  short cantilever         None     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
+  '''
+# ---
+# name: test_trussopt[2x2]
+  tuple(
+    np.float64(150.0),
+    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
+         50.        ]),
+    None,
+  )
+# ---
+# name: test_trussopt[2x2].1
+  '''
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  short cantilever         None     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
+  '''
+# ---
+# name: test_trussopt[parallel forces]
+  tuple(
+    np.float64(1500.0),
+    array([250.        ,   0.        ,  70.71067812, 150.        ,
+          70.71067812,   0.        ,  70.71067812,  50.        ,
+          70.71067812,   0.        ,  70.71067812,  70.71067812,
+           0.        , 250.        , 150.        ,  50.        ]),
+    None,
+  )
+# ---
 # name: test_trussopt[parallel forces].1
   '''
         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                 notes
