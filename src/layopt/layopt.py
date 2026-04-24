@@ -872,7 +872,9 @@ def trussopt(
 
     # Plot results
     if plot:
-        multiplier = 1.0 if filter_level is None else filter_level
+        # filter_level set to 1.0 if no value is set, otherwise we ensure we take the first element of filter_level
+        # (which should be a float but in some instances is being passed as a list?)
+        multiplier = 1.0 if len(filter_level) == 0 else filter_level[0]
         keep = [a_value > (multiplier * max(a)) for a_value in a]
         kept = c_n[keep]
         vol, filter_areas, filter_forces, u = solve(

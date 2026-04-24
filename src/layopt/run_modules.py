@@ -137,19 +137,19 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         bar_thickness=_config["plotting"]["bar_thickness"],
         dpi=_config["plotting"]["dpi"],
     )
-    # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value
-    _config["filter_levels"] = (
-        [1.0] if _config["filter_levels"] is None else _config["filter_levels"]
+    # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value in a list
+    filter_levels = (
+        [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
     )
     # Run processing in parallel
     with Pool(processes=_config["cores"]) as pool:
         all_results = defaultdict()
         with tqdm(
-            total=len(_config["filter_levels"]),
-            desc=f"Solving optimisation for {len(_config['filter_levels'])}, results are under {_config['output_dir']}.",
+            total=len(filter_levels),
+            desc=f"Solving optimisation, results are under {_config['output_dir']}.",
         ) as pbar:
             for _, _, result, filter_level in pool.imap_unordered(
-                processing_function, _config["filter_levels"]
+                processing_function, filter_levels
             ):
                 if result is not None:
                     all_results[filter_level] = result
