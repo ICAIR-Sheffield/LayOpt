@@ -137,16 +137,18 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         # save_to_csv=_config["save_to_csv"],
         notes=_config["notes"],
     )
-    _config["filter_levels"] = [0.001, 0.01, 0.1]
-    # Run processing in parallel
+    # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value
+    filter_levels = (
+        [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
+    )  # Run processing in parallel
     with Pool(processes=_config["cores"]) as pool:
         all_results = defaultdict()
         with tqdm(
-            total=len(_config["filter_levels"]),
+            total=len(filter_levels),
             desc=f"Solving optimisation results are under '{_config['output_dir']}'.",
         ) as pbar:
             for _, _, result, filter_level in pool.imap_unordered(
-                processing_function, _config["filter_levels"]
+                processing_function, filter_levels
             ):
                 if result is not None:
                     all_results[filter_level] = result
