@@ -465,7 +465,12 @@ def stop_primal_violation_pattern(
         ``True`` if converged and no load cases added.
     """
     tol = 0.99  # lambda must be >= 1 to be considered feasible
-    area_tol = 1e-8  # members with area below this are treated as having zero area
+    area_tol = 1e-8 # members with area below this are treated as having zero area
+    
+    # Filter out zero area members
+    nonzero_areas_bool = np.asarray(areas) > area_tol
+    c_n_nonzero = c_n[nonzero_areas_bool]
+    areas_nonzero = np.asarray(areas)[nonzero_areas_bool]
 
     # Filter out zero area members
     nonzero_areas_bool = np.asarray(areas) > area_tol
