@@ -386,16 +386,10 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
         "jc": 0,
         "loaded_points": np.asarray(
             [
-                [0.0, 4],
-                [2.0, 4],
-                [4.0, 4],
                 [6.0, 4],
                 [8.0, 4],
                 [10.0, 4],
                 [12.0, 4],
-                [14.0, 4],
-                [16.0, 4],
-                [18.0, 4],
             ]
         ),
         "load_direction": (0, -1),
