@@ -1,6 +1,8 @@
 """Tests for the layopt module."""
 
+import csv
 import os
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -239,27 +241,49 @@ def test_trussopt(
     )
 
 
-# @pytest.mark.parametrize(
-#     ("loaded_points", "expected_pattern_count"),
-#     [
-#         pytest.param([[0.0, 1]], 2, id="1 load point (2^1)"),
-#         pytest.param([[0.0, 1], [4.0, 1]], 4, id="2 load points (2^2)"),
-#         pytest.param([[0.0, 1], [2.0, 1], [4.0, 1]], 8, id="3 load points (2^3)"),
-#     ],
-#     ids=["1_point", "2_points", "3_points"],
-# )
-# def test_make_pattern_loads_num_load_patterns(
-#     nodal_coords: npt.NDArray,
-#     load_large: float,
-#     load_small: float,
-#     load_direction_default: tuple[float, float],
-#     loaded_points: list,
-#     expected_pattern_count: int,
-# ):
-#     all_patterns, _, _ = layopt.make_pattern_loads(
-#         nodal_coords, loaded_points, load_large, load_small, load_direction_default
-#     )
-#     assert len(all_patterns) == expected_pattern_count
+@pytest.mark.parametrize(
+    (
+        "loaded_points",
+        "load_large",
+        "load_small",
+        "load_direction_default",
+        "expected_pattern_count",
+    ),
+    [
+        pytest.param(
+            np.array([[0.0, 1]]), 3.75, 0.204, (0, -1), 2, id="1 load point (2^1)"
+        ),
+        pytest.param(
+            np.array([[0.0, 1], [4.0, 1]]),
+            3.75,
+            0.204,
+            (0, -1),
+            4,
+            id="2 load points (2^2)",
+        ),
+        pytest.param(
+            np.array([[0.0, 1], [2.0, 1], [4.0, 1]]),
+            3.75,
+            0.204,
+            (0, -1),
+            8,
+            id="3 load points (2^3)",
+        ),
+    ],
+    ids=["1_point", "2_points", "3_points"],
+)
+def test_make_pattern_loads_num_load_patterns(
+    nodal_coords: npt.NDArray,
+    load_large: float,
+    load_small: float,
+    load_direction_default: tuple[float, float],
+    loaded_points: npt.NDArray,
+    expected_pattern_count: int,
+):
+    all_patterns, _, _ = layopt.make_pattern_loads(
+        nodal_coords, loaded_points, load_large, load_small, load_direction_default
+    )
+    assert len(all_patterns) == expected_pattern_count
 
 
 @pytest.mark.parametrize(
@@ -527,6 +551,10 @@ def test_make_pattern_loads_zero_load_points_error(
         )
 
 
+@pytest.mark.skipif(
+    GITHUB_ACTIONS,
+    reason="mosek library requires license so test will always fail in continuous integration",
+)
 # pylint: disable=duplicate-code
 @pytest.mark.parametrize(
     (
@@ -543,7 +571,7 @@ def test_make_pattern_loads_zero_load_points_error(
             [
                 np.array(
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3.75, 0, 0, 0, 0, 0, 0, 0, -3.75]
-                ),  # all_patterns
+                ),
                 np.array(
                     [
                         0,
@@ -616,8 +644,8 @@ def test_make_pattern_loads_zero_load_points_error(
                         -0.204,
                     ]
                 ),
-            ],
-            np.asarray([1, 1, 1, 1]),  # active_load_cases
+            ],  # all_patterns
+            np.asarray([True, True, True, True]),  # active_load_cases
             np.ones(10),  # areas
             1,  # stress_tensile
             1,  # stress_compressive
@@ -625,11 +653,49 @@ def test_make_pattern_loads_zero_load_points_error(
                 [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ),  # dof
             True,  # expected converge
-            id="All active load cases",
+            id="All active load cases convergence",
+        ),
+        pytest.param(
+            [
+                np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+                np.array(
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -3.75,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -0.204,
+                    ]
+                ),
+            ],  # all_patterns
+            np.asarray([True, False]),  # active_load_cases
+            np.ones(10),  # areas
+            1,  # stress_tensile
+            1,  # stress_compressive
+            np.array(
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ),  # dof
+            False,  # expected converge
+            id="One inactive load case no convergence",
         ),
     ],
 )
-def test_stop_primal_violation_active_convergence(
+def test_stop_primal_violation(
     nodal_coords: npt.NDArray,
     c_n: npt.NDArray,
     all_patterns: npt.NDArray,
@@ -638,9 +704,9 @@ def test_stop_primal_violation_active_convergence(
     stress_tensile: int,
     stress_compressive: int,
     dof: npt.NDArray,
-    expected_converge: list[int],
+    expected_converge: bool,
 ) -> None:
-    """Test that all load cases active converges"""
+    """Test for convergence based on whether all load cases active."""
     actual_converge = layopt.stop_primal_violation_pattern(
         nodal_coords,
         c_n,
@@ -652,3 +718,107 @@ def test_stop_primal_violation_active_convergence(
         stress_compressive,
     )
     assert actual_converge == expected_converge
+    assert np.all(active_load_cases) is np.bool_(
+        True
+    )  # checks that violating inactive load cases added
+
+
+@pytest.mark.parametrize(
+    (
+        "structure_fixture",
+        "stress_tensile",
+        "stress_compressive",
+        "deflections",
+        "expected_num_added",
+    ),
+    [
+        pytest.param(
+            "input_one_by_one",
+            1,  # stress_tensile
+            1,  # stress_compressive
+            [np.zeros(8)],  # zero deflections
+            0,  # expected_num_added
+            id="none_added",
+        ),
+        pytest.param(
+            "input_two_by_two",
+            1,  # stress_tensile
+            1,  # stress_compressive
+            [np.ones(18) * 100],  # large deflections
+            2,  # expected_num_added
+            id="large_deflections_added",
+        ),
+    ],
+)
+def test_stop_violation(
+    structure_fixture: str,
+    request,
+    stress_tensile: float,
+    stress_compressive: float,
+    deflections: list[npt.NDArray],
+    expected_num_added: int,
+):
+    """Test that the function sets members active correctly and returns non-negative integer."""
+    structure = request.getfixturevalue(structure_fixture)
+    actual_num_added = layopt.stop_violation(
+        nodal_coords=structure["nodal_coords"],
+        potential_members=structure["c_n"],
+        dof=structure["dof"],
+        stress_tensile=stress_tensile,
+        stress_compressive=stress_compressive,
+        deflections=deflections,
+        joint_cost=0.0,
+    )
+    assert isinstance(actual_num_added, int)
+    assert actual_num_added >= 0
+    assert actual_num_added == expected_num_added
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        pytest.param(
+            "results_2026-04-16-123456.csv",
+            id="new_csv_file",
+        ),
+    ],
+)
+def test_save_results_to_csv_new(
+    sample_csv_results: dict[str, Any],
+    tmp_path: Path,
+    filename: str,
+    snapshot,
+):
+    """Test that a new file is created with correct header row and one data row."""
+    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
+    assert Path(tmp_path / filename).is_file()
+    with Path(tmp_path / filename).open(newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+    assert reader.fieldnames == snapshot
+    assert rows == snapshot
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        pytest.param(
+            "results_2026-04-16-654321.csv",
+            id="append_to_csv_file",
+        ),
+    ],
+)
+def test_save_results_to_csv_appends(
+    sample_csv_results: dict[str, Any],
+    tmp_path: Path,
+    filename: str,
+    snapshot,
+):
+    """Test that calling function twice produces two data rows."""
+    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
+    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
+    assert Path(tmp_path / filename).is_file()
+    with Path(tmp_path / filename).open(newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+    assert rows == snapshot

@@ -94,6 +94,96 @@
     81,
   )
 # ---
+# name: test_save_results_to_csv_appends[append_to_csv_file]
+  list([
+    dict({
+      'cpu_time_setup': '0.234',
+      'cpu_time_solve': '12.456',
+      'final_volume': '123.456',
+      'height': '8',
+      'iterations': '12',
+      'load_large': '50',
+      'load_small': '5',
+      'n_ground_structure': '1234',
+      'n_load_points': '2',
+      'n_members_final': '87',
+      'n_nodes': '81',
+      'n_patterns_active': '3',
+      'n_patterns_total': '4',
+      'notes': 'Test run',
+      'primal_method': 'True',
+      'problem_name': 'test_problem',
+      'timestamp': '2026-03-04 15:30:00',
+      'width': '8',
+    }),
+    dict({
+      'cpu_time_setup': '0.234',
+      'cpu_time_solve': '12.456',
+      'final_volume': '123.456',
+      'height': '8',
+      'iterations': '12',
+      'load_large': '50',
+      'load_small': '5',
+      'n_ground_structure': '1234',
+      'n_load_points': '2',
+      'n_members_final': '87',
+      'n_nodes': '81',
+      'n_patterns_active': '3',
+      'n_patterns_total': '4',
+      'notes': 'Test run',
+      'primal_method': 'True',
+      'problem_name': 'test_problem',
+      'timestamp': '2026-03-04 15:30:00',
+      'width': '8',
+    }),
+  ])
+# ---
+# name: test_save_results_to_csv_new[new_csv_file]
+  list([
+    'timestamp',
+    'problem_name',
+    'width',
+    'height',
+    'n_load_points',
+    'n_patterns_total',
+    'n_patterns_active',
+    'load_large',
+    'load_small',
+    'iterations',
+    'final_volume',
+    'n_members_final',
+    'n_nodes',
+    'n_ground_structure',
+    'cpu_time_setup',
+    'cpu_time_solve',
+    'primal_method',
+    'notes',
+  ])
+# ---
+# name: test_save_results_to_csv_new[new_csv_file].1
+  list([
+    dict({
+      'cpu_time_setup': '0.234',
+      'cpu_time_solve': '12.456',
+      'final_volume': '123.456',
+      'height': '8',
+      'iterations': '12',
+      'load_large': '50',
+      'load_small': '5',
+      'n_ground_structure': '1234',
+      'n_load_points': '2',
+      'n_members_final': '87',
+      'n_nodes': '81',
+      'n_patterns_active': '3',
+      'n_patterns_total': '4',
+      'notes': 'Test run',
+      'primal_method': 'True',
+      'problem_name': 'test_problem',
+      'timestamp': '2026-03-04 15:30:00',
+      'width': '8',
+    }),
+  ])
+# ---
 # name: test_trussopt[parallel forces]
   tuple(
     np.float64(1500.0),
