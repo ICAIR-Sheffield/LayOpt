@@ -575,8 +575,14 @@ def stop_primal_violation_pattern(
         ``True`` if converged and no load cases added.
     """
     tol = 0.99  # lambda must be >= 1 to be considered feasible
+    area_tol = 1e-8 # members with area below this are treated as having zero area
+    
+    # Filter out zero area members
+    nonzero_areas_bool = np.asarray(areas) > area_tol
+    c_n_nonzero = c_n[nonzero_areas_bool]
+    areas_nonzero = np.asarray(areas)[nonzero_areas_bool]
 
-    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)
+    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n_nonzero, dof)
     load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
 
     # loop through all (active and inactive) pattern load cases
@@ -589,7 +595,7 @@ def stop_primal_violation_pattern(
         # Solve LP: maximize lambda subject to B*q = lambda*f, -sigma*a <= q <= sigma*a
         with mosek.Model() as model:
             # Variables
-            q_var = model.variable("q", len(c_n))
+            q_var = model.variable("q", len(c_n_nonzero))
             lambda_var = model.variable("lambda", 1, mosek.Domain.greaterThan(0.0))
 
             # Objective: maximize lambda
@@ -613,12 +619,12 @@ def stop_primal_violation_pattern(
 
             # Constraint 2: q <= sigma_t * a (tension limit)
             model.constraint(
-                mosek.Expr.sub(q_var, stress_tensile * areas), mosek.Domain.lessThan(0)
+                mosek.Expr.sub(q_var, stress_tensile * areas_nonzero), mosek.Domain.lessThan(0)
             )
 
             # Constraint 3: q >= -sigma_c * a (compression limit)
             model.constraint(
-                mosek.Expr.sub(q_var, -stress_compressive * areas),
+                mosek.Expr.sub(q_var, -stress_compressive * areas_nonzero),
                 mosek.Domain.greaterThan(0),
             )
 
