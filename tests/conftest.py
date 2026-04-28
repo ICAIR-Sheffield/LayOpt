@@ -457,7 +457,6 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
 
 
 @pytest.fixture
-<<<<<<< ns-rse/42-unit-tests-plot-truss
 def plotting_data_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
     """Relevant plotting data for 1x1 example."""
     return {
@@ -594,7 +593,9 @@ def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.fl
             ]
         ),
         "threshold": 0.035355339059325294,
-=======
+    }
+
+
 def sample_csv_results() -> dict[str, Any]:
     """Sample results for testing csv output."""
     return {
@@ -616,5 +617,4 @@ def sample_csv_results() -> dict[str, Any]:
         "cpu_time_solve": 12.456,
         "primal_method": True,
         "notes": "Test run",
->>>>>>> main
     }
