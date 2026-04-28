@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from layopt import plotting  # type: ignore[import-not-found]
+from layopt import plotting
 
 
 @pytest.mark.mpl_image_compare(baseline_dir="__mpl_snapshots__")
@@ -40,10 +40,7 @@ from layopt import plotting  # type: ignore[import-not-found]
             "svg",
             "3x6 test",
             "another_plot.svg",
-            id="3x6 plot outfile = another_plot.svg",
-            marks=pytest.mark.skip(
-                reason="Awaiting update/simplification of 3x6 cantilever see #61"
-            ),
+            id="3x6 plot outfile = another_plot.png",
         ),
     ],
 )
