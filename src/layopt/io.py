@@ -8,7 +8,9 @@ from pathlib import Path
 from pkgutil import get_data
 from typing import Any
 
+import numpy as np
 import pandas as pd
+import ruamel.yaml
 import yaml
 from loguru import logger
 from yaml import YAMLError
@@ -32,6 +34,11 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
     if isinstance(args, Namespace):
         output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)
         filename = "default_config.yaml" if args.filename is None else args.filename
+        try:
+            config = get_data(package="layopt", resource="default_config.yaml")
+        except FileNotFoundError as exc:
+            msg = "There was a problem loading 'default_config.yaml' try reinstalling LayOpt."
+            raise (FileNotFoundError(msg)) from exc
     # Otherwise we are writing after 'layopt optimise' and config is a dictionary, this won't have a 'filename'
     # key/value pair
     elif isinstance(args, dict):
@@ -40,6 +47,7 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
         )
         # Add missing 'filename' key/value pair
         filename = f"config_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml"
+        config = args
     else:
         msg = f"args is neither 'Namespace' or 'dict' : {type(args)}"
         raise TypeError(msg)
@@ -48,21 +56,56 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
     else:
         config_path = output_dir / filename
     logger_msg = "A sample configuration has been written to"
-    try:
-        config = get_data(package="layopt", resource="default_config.yaml")
-    except FileNotFoundError as exc:
-        msg = (
-            "There was a problem loading 'default_config.yaml' try reinstalling LayOpt."
-        )
-        raise (FileNotFoundError(msg)) from exc
     with config_path.open("w", encoding="utf-8") as f:
         try:
             f.write(f"# Config generated {get_date_time()}\n")
             f.write(f"{CONFIG_DOCUMENTATION_REFERENCE}")
-            f.write(config.decode("utf-8"))
+            yaml_out = ruamel.yaml.YAML()
+            yaml_out.indent(sequence=4, offset=2)
+            yaml_out.dump(dict_to_yaml(config), f)
         except:  # noqa: E722, pylint: disable=W0702
             logger.error(f"Failed to write config to : {config_path}")
     logger.info(f"{logger_msg} : {config_path!s}")
+
+
+def dict_to_yaml(obj: Any) -> Any:
+    """
+    Clean a dictionary to basic data types for writing to YAML.
+
+    Parameters
+    ----------
+    obj : Any
+        An object for converting to basic data types.
+
+    Returns
+    -------
+    Any
+        ``obj`` as ``str``, ``int``, ``float``, ``bool``, ``list`` or ``dict``.
+    """
+    # Recurse on dictionaries
+    if isinstance(obj, dict):
+        new = {}
+        for k, v in obj.items():
+            key = k if isinstance(k, str) else str(k)
+            new[key] = dict_to_yaml(v)
+        return new
+    # Recurse on lists and tuples
+    if isinstance(obj, (list, tuple)):
+        return [dict_to_yaml(x) for x in obj]
+    # Safe types return as is
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+    # Convert Path -> string
+    if isinstance(obj, Path):
+        return str(obj)
+    # Convert numpy array -> nested lists
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    # Convert numpy scalar -> native Python scalar
+    if isinstance(obj, np.generic):
+        return obj.item()
+    # If nothing else is matched use string representation
+    return str(obj)
 
 
 def read_yaml(filename: str | Path) -> dict[str, Any]:
