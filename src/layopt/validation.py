@@ -29,7 +29,7 @@ def validate_config(config: dict[str, Any], schema: Schema, config_type: str) ->
     """
     try:
         schema.validate(config)
-        logger.info(f"✅ The {config_type} configuration is valid.")
+        logger.info(f"✅ The {config_type} is valid.")
     except SchemaWrongKeyError:
         raise
     except SchemaError as schema_error:

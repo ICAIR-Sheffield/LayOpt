@@ -618,6 +618,7 @@ def trussopt(
     # save_to_csv: bool = True,
     # csv_filename: str = "pattern_loading_results.csv",
     notes: str = "",
+    output_dir: str | Path = Path("./"),
     plot: bool = False,
     bar_thickness: float = 0.3,
     dpi: int = 1200,
@@ -657,6 +658,8 @@ def trussopt(
         Name of problem to solve (default=``None``).
     notes : str
         Notes (default='').
+    output_dir : str | Path
+        Directory to save plots to.
     plot : bool
         Whether to plot the trusses.
     bar_thickness : float
@@ -689,7 +692,7 @@ def trussopt(
     # Default load point
     if loaded_points is None:
         loaded_points = [[width, height // 2]]
-        logger.info("Loaded points not provided, calculated as : {loaded_points=}")
+        logger.info(f"Loaded points not provided, calculated as : {loaded_points=}")
     # support conditions
     for i, node in enumerate(nodal_coords):
         if support_points.size == 0:
@@ -772,7 +775,7 @@ def trussopt(
         ]
 
         # solve current reduced problem
-        vol, a, q, u = solve(
+        vol, filter_areas, filter_forces, u = solve(
             nodal_coords,
             c_n,
             f_active,
@@ -830,14 +833,19 @@ def trussopt(
             if primal_method == "residual":
                 # Use equilibrium residual check
                 converged = stop_primal_violation_residual(
-                    nodal_coords, c_n, q, all_patterns, active_load_cases, dof
+                    nodal_coords,
+                    c_n,
+                    filter_forces,
+                    all_patterns,
+                    active_load_cases,
+                    dof,
                 )
             elif primal_method == "load_factor":
                 # Use load factor LP
                 converged = stop_primal_violation_pattern(
                     nodal_coords,
                     c_n,
-                    a,
+                    filter_areas,
                     all_patterns,
                     active_load_cases,
                     dof,
@@ -888,16 +896,9 @@ def trussopt(
     # Plot results
     if plot:
         multiplier = 1.0 if filter_level is None else filter_level
-        keep = [a_value > (multiplier * max(a)) for a_value in a]
-        kept = c_n[keep]
-        vol, filer_a, filter_q, u = solve(
-            nodal_coords,
-            kept,
-            f_active,
-            dof,
-            stress_tensile,
-            stress_compressive,
-            joint_cost,
+        outfile = Path(output_dir) / (
+            problem_name.replace(" ", "_")
+            + f"_w{width}_h{height}_n{len(loaded_points)}_filter{int(multiplier * 100)}"
         )
         if vol > 0:
             logger.info(
@@ -905,17 +906,19 @@ def trussopt(
             )
             _, _ = plot_truss(
                 nodal_coords=nodal_coords,
-                c_n=kept,
-                areas=filer_a,
-                forces=filter_q,
-                threshold=max(a) * 1e-3,
+                c_n=c_n,
+                areas=filter_areas,
+                forces=filter_forces,
+                threshold=max(filter_areas) * 1e-3,
                 title="Filtered " + str(100 * multiplier) + "%",
                 bar_thickness=bar_thickness,
                 dpi=dpi,
+                outfile=outfile,
             )
-
+        else:
+            logger.warning("No plot generated as volume <= 0.0")
     logger.info(f"Plotting took {time.process_time() - solve_end!s}")
-    return vol, a, dict_to_df(results), filter_level
+    return vol, filter_areas, dict_to_df(results), filter_level
 
 
 def save_results_to_csv(

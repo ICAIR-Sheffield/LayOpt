@@ -134,6 +134,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         primal_method=_config["primal_method"],
         problem_name=_config["problem_name"],
         notes=_config["notes"],
+        output_dir=_config["output_dir"],
         plot=_config["plotting"]["run"],
         bar_thickness=_config["plotting"]["bar_thickness"],
         dpi=_config["plotting"]["dpi"],
