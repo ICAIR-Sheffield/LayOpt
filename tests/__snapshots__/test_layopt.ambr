@@ -94,71 +94,6 @@
     81,
   )
 # ---
-<<<<<<< ns-rse/42-unit-tests-plot-truss
-# name: test_testname[1x1]
-  tuple(
-    np.float64(150.0),
-    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
-         50.        ]),
-  )
-# ---
-# name: test_testname[1x1].1
-  '''
-         problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
-  0  short cantilever      1       1              1                 2                  1          50           5           2         150.0                6        4                   6   load_factor  short cantliever test
-  '''
-# ---
-# name: test_testname[2x2]
-  tuple(
-    np.float64(150.0),
-    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
-         50.        ]),
-  )
-# ---
-# name: test_testname[2x2].1
-  '''
-         problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
-  0  short cantilever      1       1              1                 2                  1          50           5           2         150.0                6        4                   6   load_factor  short cantliever test
-  '''
-# ---
-# name: test_testname[parallel forces]
-  tuple(
-    np.float64(1500.0),
-    array([250.        ,   0.        ,  70.71067812, 150.        ,
-          70.71067812,   0.        ,  70.71067812,  50.        ,
-          70.71067812,   0.        ,  70.71067812,  70.71067812,
-           0.        , 250.        , 150.        ,  50.        ]),
-    None,
-  )
-# ---
-# name: test_trussopt[1x1]
-  tuple(
-    np.float64(150.0),
-    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
-         50.        ]),
-    None,
-  )
-# ---
-# name: test_trussopt[1x1].1
-  '''
-         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  short cantilever         None     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
-  '''
-# ---
-# name: test_trussopt[2x2]
-  tuple(
-    np.float64(150.0),
-    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
-         50.        ]),
-    None,
-  )
-# ---
-# name: test_trussopt[2x2].1
-  '''
-         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  short cantilever         None     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
-  '''
-=======
 # name: test_save_results_to_csv_appends[append_to_csv_file]
   list([
     dict({
@@ -248,7 +183,68 @@
       'width': '8',
     }),
   ])
->>>>>>> main
+# ---
+# name: test_testname[1x1]
+  tuple(
+    np.float64(150.0),
+    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
+         50.        ]),
+  )
+# ---
+# name: test_testname[1x1].1
+  '''
+         problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
+  0  short cantilever      1       1              1                 2                  1          50           5           2         150.0                6        4                   6   load_factor  short cantliever test
+  '''
+# ---
+# name: test_testname[2x2]
+  tuple(
+    np.float64(150.0),
+    array([ 0.        ,  0.        , 70.71067812,  0.        ,  0.        ,
+         50.        ]),
+  )
+# ---
+# name: test_testname[2x2].1
+  '''
+         problem_name  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
+  0  short cantilever      1       1              1                 2                  1          50           5           2         150.0                6        4                   6   load_factor  short cantliever test
+  '''
+# ---
+# name: test_testname[parallel forces]
+  tuple(
+    np.float64(1500.0),
+    array([250.        ,   0.        ,  70.71067812, 150.        ,
+          70.71067812,   0.        ,  70.71067812,  50.        ,
+          70.71067812,   0.        ,  70.71067812,  70.71067812,
+           0.        , 250.        , 150.        ,  50.        ]),
+    None,
+  )
+# ---
+# name: test_trussopt[1x1]
+  tuple(
+    np.float64(150.0),
+    array([ 0.      ,  0.      , 70.710678,  0.      ,  0.      , 50.      ]),
+    None,
+  )
+# ---
+# name: test_trussopt[1x1].1
+  '''
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  short cantilever         None     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
+  '''
+# ---
+# name: test_trussopt[2x2]
+  tuple(
+    np.float64(150.0),
+    array([ 0.      ,  0.      , 70.710678,  0.      ,  0.      , 50.      ]),
+    None,
+  )
+# ---
+# name: test_trussopt[2x2].1
+  '''
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  short cantilever         None     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
+  '''
 # ---
 # name: test_trussopt[parallel forces]
   tuple(
@@ -294,10 +290,10 @@
 # ---
 # name: test_trussopt[spanning example]
   tuple(
-    np.float64(319.170901),
-    array([0.      , 0.      , 0.      , 5.868764, 0.      , 0.      ,
-         0.      , 0.      , 0.      , 4.135522, 0.      , 0.932571,
-         0.      , 2.52196 , 1.884622, 0.812564, 0.      , 0.      ,
+    np.float64(319.170902),
+    array([0.      , 0.      , 0.      , 5.581546, 0.      , 0.      ,
+         0.      , 0.      , 3.672398, 0.      , 0.932571, 0.      ,
+         3.270932, 1.884622, 0.812564, 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
@@ -324,18 +320,15 @@
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         5.995386, 0.      , 0.      , 0.932571, 0.      , 4.339695,
-         0.      , 0.812564, 1.884622, 2.191768, 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 5.868764, 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 5.662358, 0.      , 0.      , 0.932571, 0.      ,
+         3.802703, 0.      , 0.      , 0.812564, 1.884622, 3.060199,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         5.581546, 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
@@ -350,50 +343,59 @@
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         5.995386, 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 4.135522, 0.      , 0.      , 0.      , 0.      ,
-         0.      , 5.868764, 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.164975,
-         0.      , 0.146743, 0.      , 0.      , 0.      , 0.222514,
-         0.624998, 0.115483, 0.163317, 0.115483, 0.      , 0.      ,
+         5.662358, 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 3.672398, 0.      ,
+         0.      , 0.      , 0.      , 0.      , 5.581546, 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.164975, 0.      , 0.143921,
+         0.      , 0.      , 0.      , 0.223652, 0.626697, 0.115483,
+         0.      , 0.163317, 0.115483, 0.      , 0.      , 0.      ,
          0.115483, 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.115483, 0.163317, 0.      , 0.      ,
-         0.      , 0.137386, 0.      , 0.164975, 0.      , 0.630631,
-         0.226286, 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 5.995386, 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 4.339695, 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.137318, 0.      , 0.164975, 0.      , 0.630672,
+         0.226314, 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 0.      , 0.      , 1.22333 , 1.367725,
-         0.      , 0.      , 0.      , 0.      , 0.      , 5.868764,
-         0.      , 0.      , 0.163317, 0.      , 0.      , 0.      ,
-         1.825943, 0.421172, 0.470885, 0.      , 0.421172, 0.      ,
-         0.850631, 0.      , 0.      , 0.421172, 0.097147, 0.      ,
-         0.043445, 0.      , 0.046404, 0.      , 0.103763, 0.      ,
-         0.850631, 0.      , 0.421172, 0.      , 0.470885, 0.      ,
-         1.825943, 0.      , 0.      , 0.      , 0.163317, 0.      ,
-         0.      , 5.995386, 0.      , 0.      , 0.      , 0.      ,
-         0.      , 1.188653, 0.      , 1.063164, 0.      , 0.      ,
+         0.      , 5.662358, 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 3.802703,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
-         0.      , 0.      , 3.091645, 3.091645, 6.926293, 6.926293,
-         3.147226, 3.147226, 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 1.586635, 0.      , 1.773912, 0.      ,
+         0.      , 0.      , 0.      , 0.      , 5.581546, 0.      ,
+         0.      , 0.163317, 0.      , 0.      , 0.      , 1.825943,
+         0.421172, 0.470885, 0.      , 0.421172, 0.      , 0.850631,
+         0.421172, 0.097098, 0.      , 0.043424, 0.      , 0.045512,
+         0.      , 0.101767, 0.      , 0.      , 0.      , 0.850631,
+         0.      , 0.421172, 0.      , 0.470885, 0.      , 1.825943,
+         0.      , 0.      , 0.      , 0.163317, 0.      , 0.      ,
+         5.662358, 0.      , 0.      , 0.      , 0.      , 0.      ,
+         1.659626, 0.      , 1.484415, 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 0.      , 0.      , 0.      , 0.      ,
+         0.      , 0.      , 2.963204, 2.963204, 6.926293, 6.926293,
+         2.998607, 2.998607, 0.      , 0.      , 0.      , 0.      ,
          0.      , 0.      ]),
     None,
   )
@@ -401,7 +403,7 @@
 # name: test_trussopt[spanning example].1
   '''
          problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  spanning example         None    18      4             4               16                 9       3.75      0.204         15   319.170901             596      95               2734   load_factor  spanning example test
+  0  spanning example         None    18      4             4               16                10       3.75      0.204         15   319.170902             632      95               2734   load_factor  spanning example test
   '''
 # ---
 # name: test_trussopt[square cantilever]
@@ -445,19 +447,19 @@
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      ,  0.      ,  0.      ,  9.221564,  0.      ,
-          9.008387,  3.10565 ,  0.      ,  0.      ,  0.      ,  0.      ,
-          0.      ,  0.      , 36.03355 ,  0.      , 11.785113, 32.339016,
+          9.008388,  3.10565 ,  0.      ,  0.      ,  0.      ,  0.      ,
+          0.      ,  0.      , 36.033551,  0.      , 11.785113, 32.339015,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      , 35.355339,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      ,  9.221564,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
-          0.      ,  0.      ,  0.      , 37.142533,  0.      ,  0.      ,
+          0.      ,  0.      ,  0.      , 37.142534,  0.      ,  0.      ,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      , 37.2678  ,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
           0.      ,  9.221564,  0.      ,  0.      ,  0.      ,  0.      ,
-          0.      ,  0.      , 32.339016,  0.      ,  0.      ,  0.      ,
+          0.      ,  0.      , 32.339015,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      , 37.396978,  0.      ,  0.      ,  0.      ,
           0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,

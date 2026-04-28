@@ -596,6 +596,7 @@ def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.fl
     }
 
 
+@pytest.fixture
 def sample_csv_results() -> dict[str, Any]:
     """Sample results for testing csv output."""
     return {
