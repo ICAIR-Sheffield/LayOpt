@@ -593,4 +593,28 @@ def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.fl
             ]
         ),
         "threshold": 0.035355339059325294,
+
+
+@pytest.fixture
+def sample_csv_results() -> dict[str, Any]:
+    """Sample results for testing csv output."""
+    return {
+        "timestamp": "2026-03-04 15:30:00",
+        "problem_name": "test_problem",
+        "width": 8,
+        "height": 8,
+        "n_load_points": 2,
+        "n_patterns_total": 4,
+        "n_patterns_active": 3,
+        "load_large": 50,
+        "load_small": 5,
+        "iterations": 12,
+        "final_volume": 123.456,
+        "n_members_final": 87,
+        "n_nodes": 81,
+        "n_ground_structure": 1234,
+        "cpu_time_setup": 0.234,
+        "cpu_time_solve": 12.456,
+        "primal_method": True,
+        "notes": "Test run",
     }
