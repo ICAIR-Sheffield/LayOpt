@@ -61,17 +61,17 @@ LAYOPT_CONFIG_SCHEMA = Schema(
         "width": lambda n: n >= 1,
         "height": lambda n: n >= 1,
         "stress_tensile": Or(
-            And(int, lambda n: n >= 0.0),
+            And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
             error="❌ Invalid value in config for 'stress_tensile', valid values are >= 0.0.",
         ),
         "stress_compressive": Or(
-            And(int, lambda n: n >= 0.0),
+            And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
             error="❌ Invalid value in config for 'stress_compressive', valid values are >= 0.0.",
         ),
         "joint_cost": Or(
-            And(int, lambda n: n >= 0.0),
+            And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
             error="❌ Invalid value in config for 'joint_cost', valid values are >= 0.0",
         ),
@@ -86,17 +86,17 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             error="❌ Invalid value in config for 'load_direction', should be a tuple of length 2.",
         ),
         "load_large": Or(
-            And(int, lambda n: n >= 0.0),
+            And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
             error="❌ Invalid value in config for 'load_large', valid values are >= 0.0.",
         ),
         "load_small": Or(
-            And(int, lambda n: n >= 0.0),
+            And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
             error="❌ Invalid value in config for 'load_small', valid values are >= 0.0.",
         ),
         "max_length": Or(
-            And(int, lambda n: n >= 0.0),
+            And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
             error="❌ Invalid value in config for 'max_length', valid values are >= 0.0.",
         ),
