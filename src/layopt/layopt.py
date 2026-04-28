@@ -94,15 +94,23 @@ def calc_eq_matrix_b(
     return sparse.coo_matrix((s, (row_id, col_id)), shape=(len(nodal_coords) * 2, m))
 
 
-def solve(nodal_coords, c_n, f, dof, stress_tensile, stress_compressive, joint_cost):
+def solve(
+    nodal_coords: npt.NDArray[np.float64],
+    c_n: npt.NDArray[np.float64],
+    f,
+    dof: npt.NDArray[np.float64],
+    stress_tensile: float,
+    stress_compressive: float,
+    joint_cost: float,
+) -> tuple[float, npt.NDArray, list, list]:
     """
     Solve linear programming problem with given connections and pattern load cases.
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray
+    nodal_coords : npt.NDArray[np.float64]
         Nodal coordinates.
-    c_n : npt.NDArray
+    c_n : npt.NDArray[np.float64]
         Active members.
     f : list
         Load cases.
@@ -169,30 +177,30 @@ def solve(nodal_coords, c_n, f, dof, stress_tensile, stress_compressive, joint_c
 
 
 def stop_violation(
-    nodal_coords: npt.NDArray,
-    potential_members: npt.NDArray,
-    dof: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float64],
+    potential_members: npt.NDArray[np.float64],
+    dof: npt.NDArray[np.float64],
     stress_tensile: float,
     stress_compressive: float,
-    deflections: list,
+    deflections: list[npt.NDArray[np.float64]],
     joint_cost: float,
-):
+) -> int:
     """
     Check for dual violation and add new members.
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray
+    nodal_coords : npt.NDArray[np.float64]
         Nodal coordinates.
-    potential_members : npt.NDArray
+    potential_members : npt.NDArray[np.float64]
         A list of all possible members.
-    dof : npt.NDArray
+    dof : npt.NDArray[np.float64]
         Degrees of freedom.
     stress_tensile : float
         Tensile stress limit.
     stress_compressive : float
         Compressive stress limit.
-    deflections : list
+    deflections : list[npt.NDArray[np.float64]]
         Virtual deflections at degrees of freedom.
     joint_cost : float
         Joint cost.
@@ -222,20 +230,20 @@ def stop_violation(
 
 
 def make_pattern_loads(
-    nodal_coords: npt.NDArray,
-    loaded_points: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float64],
+    loaded_points: npt.NDArray[np.int64],
     load_large: float = 50.0,
     load_small: float = 5.0,
     load_direction: tuple[float, float] = (0.0, -1.0),
-):
+) -> tuple[list[npt.NDArray[np.float64]], list, list]:
     """
     Generate all 2^n combinations of large/small loads at each load point.
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray
+    nodal_coords : npt.NDArray[np.float64]
         Nodal coordinates.
-    loaded_points : npt.NDArray
+    loaded_points : npt.NDArray[np.int64]
         Load points.
     load_large : float
         Large load to apply at each load point (default=``50``).
@@ -246,7 +254,7 @@ def make_pattern_loads(
 
     Returns
     -------
-    tuple[list, list, list]
+    tuple[list[npt.NDArray[np.float64]], list, list]
         A tuple consisting of ``all_patterns`` (all load cases), ``base_load``
         (base load case) and ``pattern_descriptions`` (description of each load
         case using ``L`` for large or ``S`` for small at each load point).
@@ -304,11 +312,11 @@ def make_pattern_loads(
 # q[j] already satisfies equilibrium for that load pattern. if not, pattern
 # is violated and is added
 def stop_primal_violation_residual(
-    nodal_coords: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float64],
     c_n: npt.NDArray,
     forces: npt.NDArray,
-    all_patterns: list,
-    active_load_cases: list,
+    all_patterns: list[npt.NDArray[np.float64]],
+    active_load_cases: npt.NDArray[np.int64],
     dof: npt.NDArray,
 ) -> bool:
     """
@@ -322,9 +330,9 @@ def stop_primal_violation_residual(
         Active members.
     forces : list
         Member forces.
-    all_patterns : list
+    all_patterns : list[npt.NDArray[np.float64]]
         All load cases.
-    active_load_cases : list
+    active_load_cases : npt.NDArray[np.int64]
         For each load case, bool set to ``True`` if active, ``False`` otherwise.
     dof : npt.NDArray
         Degrees of freedom.
@@ -418,8 +426,8 @@ def stop_primal_violation_pattern(
     nodal_coords: npt.NDArray,
     c_n: npt.NDArray,
     areas: list[float],
-    all_patterns: list,
-    active_load_cases: list,
+    all_patterns: list[npt.NDArray[np.float64]],
+    active_load_cases: npt.NDArray[np.int64],
     dof: npt.NDArray,
     stress_tensile: float,
     stress_compressive: float,
@@ -435,9 +443,9 @@ def stop_primal_violation_pattern(
         Active members.
     areas : list[float]
         Member areas.
-    all_patterns : list
+    all_patterns : list[npt.NDArray[np.float64]]
         All load cases.
-    active_load_cases : list
+    active_load_cases : npt.NDArray[np.int64]
         For each load case, bool set to True if active, False otherwise.
     dof : npt.NDArray
         Degrees of freedom.
@@ -590,7 +598,7 @@ def trussopt(
     stress_tensile: float = 1.0,
     stress_compressive: float = 1.0,
     joint_cost: float = 0.0,
-    loaded_points: list | None = None,
+    loaded_points: list[npt.NDArray[np.int64]] | None = None,
     # ns-rse 2026-03-17 : val implies single value but its a list, perhaps load_range? dict perhaps
     load_direction: tuple[float, float] = (0.0, -1.0),
     load_large: float = 50.0,
@@ -624,7 +632,7 @@ def trussopt(
         Compressive stress limit.
     joint_cost : float
         Joint cost.
-    loaded_points : list
+    loaded_points : list[npt.NDArray[np.int64]]
         Load points (default=[]).
     load_direction : list
         Load direction (default=``(0,-1)``).
@@ -872,9 +880,7 @@ def trussopt(
 
     # Plot results
     if plot:
-        # filter_level set to 1.0 if no value is set, otherwise we ensure we take the first element of filter_level
-        # (which should be a float but in some instances is being passed as a list?)
-        multiplier = 1.0 if len(filter_level) == 0 else filter_level[0]
+        multiplier = 1.0 if filter_level is None else filter_level
         keep = [a_value > (multiplier * max(a)) for a_value in a]
         kept = c_n[keep]
         vol, filter_areas, filter_forces, u = solve(
@@ -902,8 +908,8 @@ def trussopt(
 
 
 def save_results_to_csv(
-    results: dict[str, str | int | float], filename="pattern_loading_results.csv"
-):
+    results: dict[str, str | int | float], filename: str = "pattern_loading_results.csv"
+) -> None:
     """
     Save optimization results to CSV file.
 
