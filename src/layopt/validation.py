@@ -58,8 +58,16 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             error="❌ Invalid value in config for 'log_level', valid values are 'info' (default), 'debug', 'error' or 'warning",
         ),
         "cores": lambda n: 1 <= n <= os.cpu_count(),
-        "width": lambda n: n >= 1,
-        "height": lambda n: n >= 1,
+        "width": And(
+            int,
+            lambda n: n >= 1,
+            error="❌ Invalid value in config for 'width', valid values are int >= 1.",
+        ),
+        "height": And(
+            int,
+            lambda n: n >= 1,
+            error="❌ Invalid value in config for 'height', valid values are int >= 1.",
+        ),
         "stress_tensile": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
