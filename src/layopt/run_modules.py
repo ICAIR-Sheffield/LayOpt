@@ -86,7 +86,8 @@ def _parse_configuration(args: argparse.Namespace | None = None) -> dict[str, An
         default_config = yaml.full_load(default_config)
     else:
         logger.info(f"Loading configuration from : {args.config_file!s}")
-        default_config = yaml.full_load(args.config_file)
+        with args.config_file.open(encoding="utf-8") as conf:
+            default_config = yaml.full_load(conf)
     _config = config.reconcile_config_args(args=args, default_config=default_config)
     # Validate configuration
     logger.debug(f"Configuration prior to validation :\n{pformat(_config, indent=4)}")
@@ -141,7 +142,10 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     filter_levels = (
         [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
     )
-    # Run processing in parallel
+    # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value
+    filter_levels = (
+        [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
+    )  # Run processing in parallel
     with Pool(processes=_config["cores"]) as pool:
         all_results = defaultdict()
         with tqdm(
