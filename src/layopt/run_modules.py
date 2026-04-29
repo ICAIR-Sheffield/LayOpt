@@ -119,7 +119,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     _set_logging(log_level=_config["log_level"])
     processing_function = partial(
         layopt.trussopt,
-        # Placeholder,  # filter_levels
+        # filter_levels is the value substituted by partial when called within for ... pool.imap_unordrered():
         width=_config["width"],
         height=_config["height"],
         stress_tensile=_config["stress_tensile"],
@@ -131,11 +131,17 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         load_small=_config["load_small"],
         max_length=_config["max_length"],
         support_points=_config["support_points"],
-        # filter_levels=_config["filter_levels"],
         primal_method=_config["primal_method"],
         problem_name=_config["problem_name"],
-        # save_to_csv=_config["save_to_csv"],
         notes=_config["notes"],
+        output_dir=_config["output_dir"],
+        plot=_config["plotting"]["run"],
+        bar_thickness=_config["plotting"]["bar_thickness"],
+        dpi=_config["plotting"]["dpi"],
+    )
+    # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value in a list
+    filter_levels = (
+        [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
     )
     # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value
     filter_levels = (
@@ -145,7 +151,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         all_results = defaultdict()
         with tqdm(
             total=len(filter_levels),
-            desc=f"Solving optimisation results are under '{_config['output_dir']}'.",
+            desc=f"Solving optimisation, results are under {_config['output_dir']}.",
         ) as pbar:
             for _, _, result, filter_level in pool.imap_unordered(
                 processing_function, filter_levels

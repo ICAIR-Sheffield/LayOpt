@@ -39,7 +39,9 @@ def test_reconcile_config_args_no_config(caplog) -> None:
 
     # Check that the config passes the schema
     with caplog.at_level(logging.INFO):
-        validate_config(config, schema=LAYOPT_CONFIG_SCHEMA, config_type="default")
+        validate_config(
+            config, schema=LAYOPT_CONFIG_SCHEMA, config_type="default configuration"
+        )
 
     assert "✅ The default configuration is valid." in caplog.text
 
@@ -137,16 +139,6 @@ def test_reconcile_config_args(
                 config_file=None, loaded_points=[1, 2], func=None, module=None
             ),
             id="loaded_points 1 dimension",
-        ),
-        pytest.param(
-            argparse.Namespace(
-                config_file=None, filter_levels="yes", func=None, module=None
-            ),
-            id="filter_levels str not bool",
-            marks=pytest.mark.skipif(
-                GITHUB_OSX,
-                reason="We get a numpy array of dtype='<U3' returned which doesn't raise an error on OSX?",
-            ),
         ),
         pytest.param(
             argparse.Namespace(

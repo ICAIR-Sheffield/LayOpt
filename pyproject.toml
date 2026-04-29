@@ -59,6 +59,7 @@ test = [
   "pytest>=9.0.3",
   "pytest-cov >=7",
   "pytest-loguru",
+  "pytest-mpl",
   "pytest-testmon",
   "pytest-xdist",
   "syrupy"
@@ -92,7 +93,7 @@ docs = [
 
 [tool.pytest]
 minversion = "9.0"
-addopts = ["-ra", "--showlocals"]
+addopts = ["-ra", "--showlocals", "--mpl"]
 strict = true
 filterwarnings = [
   "error",

@@ -189,6 +189,14 @@ def test_calc_eq_matrix_b_errors(
     ("trussopt_param_fixture"),
     [
         pytest.param(
+            "trussopt_param_one_by_one",
+            id="1x1",
+        ),
+        pytest.param(
+            "trussopt_param_two_by_two",
+            id="2x2",
+        ),
+        pytest.param(
             "trussopt_param_three_by_six_short_cantilever",
             id="short cantilever",
         ),
