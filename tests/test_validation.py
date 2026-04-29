@@ -75,6 +75,6 @@ def test_validate_default_config(caplog) -> None:
         validate_config(
             default_config,
             schema=LAYOPT_CONFIG_SCHEMA,
-            config_type="default",
+            config_type="default configuration",
         )
     assert "The default configuration is valid" in caplog.text
