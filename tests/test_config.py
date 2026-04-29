@@ -39,7 +39,9 @@ def test_reconcile_config_args_no_config(caplog) -> None:
 
     # Check that the config passes the schema
     with caplog.at_level(logging.INFO):
-        validate_config(config, schema=LAYOPT_CONFIG_SCHEMA, config_type="default configuration")
+        validate_config(
+            config, schema=LAYOPT_CONFIG_SCHEMA, config_type="default configuration"
+        )
 
     assert "✅ The default configuration is valid." in caplog.text
 
