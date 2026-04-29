@@ -891,7 +891,7 @@ def trussopt(
         multiplier = 1.0 if filter_level is None else filter_level
         outfile = Path(output_dir) / (
             problem_name.replace(" ", "_")
-            + f"_w{width}_h{height}_n{len(loaded_points)}"
+            + f"_w{width}_h{height}_n{len(loaded_points)}_filter{int(multiplier * 100)}"
         )
         if vol > 0:
             _, _ = plot_truss(
@@ -905,7 +905,8 @@ def trussopt(
                 dpi=dpi,
                 outfile=outfile,
             )
-        logger.warning("No plot generated as volume <= 0.0")
+        else:
+            logger.warning("No plot generated as volume <= 0.0")
     logger.info(f"Plotting took {time.process_time() - solve_end!s}")
     return vol, filter_areas, dict_to_df(results), filter_level
 

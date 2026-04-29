@@ -15,10 +15,10 @@ plt.rcParams["figure.max_open_warning"] = 0
 
 
 def plot_truss(
-    nodal_coords: npt.NDArray[np.float32],
-    c_n: npt.NDArray[np.float32],
-    areas: npt.NDArray[np.float32],
-    forces: list,
+    nodal_coords: npt.NDArray[np.float64],
+    c_n: npt.NDArray[np.float64],
+    areas: npt.NDArray[np.float64],
+    forces: list[npt.NDArray[np.float64]],
     threshold: float,
     title: str,
     outfile: str | Path | None = "truss",
@@ -33,11 +33,11 @@ def plot_truss(
     ----------
     nodal_coords : npt.NDArray
         Nodal coordinates.
-    c_n : npt.NDArray[np.float32]
+    c_n : npt.NDArray[np.float64]
         Active members.
-    areas : npt.NDArray
+    areas : npt.NDArray[np.float64]
         Member areas.
-    forces : list
+    forces : list[npt.NDArray[np.float64]]
         Member forces.
     threshold : float
         Minimum allowable member area.
