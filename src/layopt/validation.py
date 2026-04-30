@@ -89,9 +89,9 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             error="❌ Invalid value in config for 'loaded_points', should be a 2-dimensional array.",
         ),
         "load_direction": And(
-            tuple,
+            Or(list, tuple),
             lambda n: len(n) == 2,
-            error="❌ Invalid value in config for 'load_direction', should be a tuple of length 2.",
+            error="❌ Invalid value in config for 'load_direction', should be a list|tuple of length 2.",
         ),
         "load_large": Or(
             And(int, lambda n: n >= 0),
@@ -117,14 +117,16 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             np.ndarray,
             error="❌ Invalid value for 'filter_levels', this should be an array of floats.",
         ),
-        "primal_method": And(
-            str,
-            Or(
-                "residual",
-                "load_factor",
-                None,
+        "primal_method": Or(
+            And(
+                str,
+                Or(
+                    "residual",
+                    "load_factor",
+                ),
             ),
-            error="❌ Invalid value in config for 'primal_methods', this should be a list of coordinates.",
+            None,
+            error="❌ Invalid value in config for 'primal_methods', this should be 'residual', 'load_factor' or missing.",
         ),
         "problem_name": Use(
             str, error="❌ Invalid value for 'problem_name', should be a string."

@@ -52,6 +52,11 @@ def reconcile_config_args(
     # If no args we use the default_config
     else:
         config = default_config
+        # Convert fields to numpy arrays
+        for to_convert in ["loaded_points", "support_points", "filter_levels"]:
+            if to_convert in config:
+                config = _convert_to_numpy_array(config=config, to_convert=to_convert)
+
     # Override the config with command line arguments
     if args is not None:
         _args = vars(args)
@@ -111,14 +116,34 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
             map1["load_direction"][1],
         )
     # Convert to numpy arrays
-    if "loaded_points" in map1:
-        map1["loaded_points"] = np.asarray(map1["loaded_points"])
-    if "support_points" in map1:
-        map1["support_points"] = np.asarray(map1["support_points"])
-    if "filter_levels" in map1:
-        map1["filter_levels"] = np.asarray(map1["filter_levels"])
+    for to_convert in ["loaded_points", "support_points", "filter_levels"]:
+        if to_convert in map1:
+            map1 = _convert_to_numpy_array(config=map1, to_convert=to_convert)
     if "csv_filename" in map1 and map1["csv_filename"] == "results.csv":
         map1["csv_filename"] = (
             f"results_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.csv"
         )
     return dict(map1)
+
+
+def _convert_to_numpy_array(config: dict[str, Any], to_convert: str) -> dict[str, Any]:
+    """
+    Convert the specified dictionary key to ``np.asarray()``.
+
+    Parameters
+    ----------
+    config : dict[str, Any]
+        Dictionary with field to be converted.
+    to_convert : str
+        Key for value that is to be converted to numpy array. If key doesn't exist the ``config`` is returned as is.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary with noted variable converted to numpy array.
+    """
+    try:
+        config[to_convert] = np.asarray(config[to_convert])
+    except KeyError:
+        return config
+    return config

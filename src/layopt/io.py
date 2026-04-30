@@ -35,7 +35,8 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
         output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)
         filename = "default_config.yaml" if args.filename is None else args.filename
         try:
-            config = get_data(package="layopt", resource="default_config.yaml")
+            default_config = get_data(package="layopt", resource="default_config.yaml")
+            config = yaml.full_load(default_config)
         except FileNotFoundError as exc:
             msg = "There was a problem loading 'default_config.yaml' try reinstalling LayOpt."
             raise (FileNotFoundError(msg)) from exc
@@ -63,9 +64,9 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
             yaml_out = ruamel.yaml.YAML()
             yaml_out.indent(sequence=4, offset=2)
             yaml_out.dump(dict_to_yaml(config), f)
+            logger.info(f"{logger_msg} : {config_path!s}")
         except:  # noqa: E722, pylint: disable=W0702
             logger.error(f"Failed to write config to : {config_path}")
-    logger.info(f"{logger_msg} : {config_path!s}")
 
 
 def dict_to_yaml(obj: Any) -> Any:
@@ -108,7 +109,7 @@ def dict_to_yaml(obj: Any) -> Any:
     return str(obj)
 
 
-def read_yaml(filename: str | Path) -> dict[str, Any]:
+def read_yaml(filename: str | Path) -> Any:
     """
     Read a YAML file.
 
@@ -119,7 +120,7 @@ def read_yaml(filename: str | Path) -> dict[str, Any]:
 
     Returns
     -------
-    Dict
+    Any
         Dictionary of the file.
     """
     with Path(filename).open(encoding="utf-8") as f:
