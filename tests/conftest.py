@@ -307,7 +307,7 @@ def input_three_by_six() -> dict[str, npt.NDArray[np.float32]]:
 def trussopt_param_one_by_one() -> dict[str, Any]:
     """Input parameters for 1x1 structure for ``layopt.trussopt()``."""
     return {
-        "filter_level": None,
+        "filter_level": 1.0,
         "width": 1,
         "height": 1,
         "st": 1,
@@ -332,7 +332,7 @@ def trussopt_param_one_by_one() -> dict[str, Any]:
 def trussopt_param_two_by_two() -> dict[str, Any]:
     """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
     return {
-        "filter_level": None,
+        "filter_level": 1.0,
         "width": 1,
         "height": 1,
         "st": 1,
@@ -357,6 +357,7 @@ def trussopt_param_two_by_two() -> dict[str, Any]:
 def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
     """Input parameters for 3x6 structure for ``layopt.trussopt()``."""
     return {
+        "filter_level": 1.0,
         "width": 3,
         "height": 6,
         "st": 1,
@@ -368,7 +369,6 @@ def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
         "load_small": 5,
         "max_length": 18,
         "support_points": np.asarray([[]]),
-        "filter_level": None,
         "primal_method": "load_factor",
         "problem_name": "short cantilever",
         "save_to_csv": True,
@@ -381,6 +381,7 @@ def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
 def trussopt_param_eight_by_eight_square_cantilever() -> dict[str, Any]:
     """Input parameters for 8x8 structure for ``layopt.trussopt()``."""
     return {
+        "filter_level": 1.0,
         "width": 8,
         "height": 8,
         "st": 1,
@@ -392,7 +393,6 @@ def trussopt_param_eight_by_eight_square_cantilever() -> dict[str, Any]:
         "load_small": 5,
         "max_length": 15,
         "support_points": np.asarray([[]]),
-        "filter_level": None,
         "primal_method": "load_factor",
         "problem_name": "square cantilever",
         "save_to_csv": True,
@@ -405,6 +405,7 @@ def trussopt_param_eight_by_eight_square_cantilever() -> dict[str, Any]:
 def trussopt_param_three_by_one_parallel_forces() -> dict[str, Any]:
     """Input parameters for 3x1 (parallel) structure for ``layopt.trussopt()``."""
     return {
+        "filter_level": 1.0,
         "width": 3,
         "height": 1,
         "st": 1,
@@ -416,7 +417,6 @@ def trussopt_param_three_by_one_parallel_forces() -> dict[str, Any]:
         "load_small": 5,
         "max_length": 2.5,
         "support_points": np.asarray([[]]),
-        "filter_level": None,
         "primal_method": "load_factor",
         "problem_name": "parallel forces",
         "save_to_csv": True,
@@ -429,6 +429,7 @@ def trussopt_param_three_by_one_parallel_forces() -> dict[str, Any]:
 def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
     """Input parameters for 18x4 (spanning) structure for ``layopt.trussopt()``."""
     return {
+        "filter_level": 1.0,
         "width": 18,
         "height": 4,
         "st": 1,
@@ -447,7 +448,6 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
         "load_small": 0.204,
         "max_length": 36,
         "support_points": np.asarray([[0, 0], [18, 0]]),
-        "filter_level": None,
         "primal_method": "load_factor",
         "problem_name": "spanning example",
         "save_to_csv": True,

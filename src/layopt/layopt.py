@@ -210,7 +210,7 @@ def stop_violation(
     int
         Number of members added.
     """
-    lst = np.where(potential_members[:, 3] == False)[0]  # pylint: disable=singleton-comparison
+    lst = np.where(potential_members[:, 3] == False)[0]  # noqa: E712, pylint: disable=singleton-comparison
     c_n = potential_members[lst]
     member_cost = c_n[:, 2] + joint_cost
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
@@ -765,7 +765,7 @@ def trussopt(
     for itr in range(1, 100):
         last_volume = vol
         # Get active members/parts of matrices
-        c_n = potential_members[potential_members[:, 3] == True]  # pylint: disable=singleton-comparison
+        c_n = potential_members[potential_members[:, 3] == True]  # noqa: E712, pylint: disable=singleton-comparison
 
         # Get active pattern loads
         f_active = [
@@ -784,21 +784,14 @@ def trussopt(
             stress_compressive,
             joint_cost,
         )
-        # We need to solve once so that we have valid values for `a` which we then filter based on `fitler_level[s]`
+        # We need to solve once so that we have valid values for `filter_areas ` which we then filter based on `fitler_level[s]`
         # (rename to `filter_level` but need to check first if that is what we want to parallelise on or if it is
         # `primal_method`).
-        # if filter_level != 1.0:
-        #     # max_a = max(a)
-        #     # filter_val = filter_level * max_a
-        #     # keep = [a_value > filter_val for a_value in a]
-        #     keep = [_a > (filter_level * max(a)) for _a in a]
-        #     kept = c_n[keep]
-        # c_n = [_a for _a in a if _a > filter_level * max(a)]
 
         # output
         if isinf(vol):
             logger.error("Infeasible problem detected")
-            return [], [], []
+            return [], [], [], []
         n_active = int(np.sum(active_load_cases))
         # ns-rse 2026-03-23 : Could this perhaps be debugging?
         logger.info(
@@ -864,12 +857,27 @@ def trussopt(
             break  # Converged
 
     final_vol = vol
-    logger.info(f"Volume: {final_vol}")
+    logger.info(f"Volume (filter_level = 1.0): {final_vol}")
     solve_end = time.process_time()
     logger.info("Solve took " + str(solve_end - setup_end))
     logger.info(
         f"Active patterns: {int(np.sum(active_load_cases))}/{len(all_patterns)}"
     )
+    # If we want to filter (i.e. filter_level != 1.0) then we must solve again using the reduced subset.
+    if filter_level != 1.0:
+        logger.info(f"Solving for filter level : {filter_level}")
+        keep = [area > (filter_level * max(filter_areas)) for area in filter_areas]
+        c_n = c_n[keep]
+        final_vol, filter_areas, filter_forces, u = solve(
+            nodal_coords,
+            c_n,
+            f_active,
+            dof,
+            stress_tensile,
+            stress_compressive,
+            joint_cost,
+        )
+        logger.info(f"Volume (filter_level = {filter_level}): {final_vol}")
     # Build dictionary of results
     results = {
         "timestamp": get_date_time(),
