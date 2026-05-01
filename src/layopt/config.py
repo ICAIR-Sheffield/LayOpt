@@ -119,9 +119,11 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
     for to_convert in ["loaded_points", "support_points", "filter_levels"]:
         if to_convert in map1:
             map1 = _convert_to_numpy_array(config=map1, to_convert=to_convert)
-    if "csv_filename" in map1 and map1["csv_filename"] == "results.csv":
+    if "csv_filename" in map1:
         map1["csv_filename"] = (
-            f"results_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.csv"
+            (f"results_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.csv")
+            if map1["csv_filename"] == "results.csv"
+            else map1["csv_filename"]
         )
     return dict(map1)
 

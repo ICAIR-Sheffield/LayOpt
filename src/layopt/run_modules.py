@@ -9,6 +9,7 @@ from pkgutil import get_data
 from pprint import pformat
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import yaml
 from art import tprint
@@ -139,14 +140,15 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         bar_thickness=_config["plotting"]["bar_thickness"],
         dpi=_config["plotting"]["dpi"],
     )
-    # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value in a list
-    filter_levels = (
-        [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
-    )
     # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value
     filter_levels = (
         [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
-    )  # Run processing in parallel
+    )
+    # ns-rse 2026-04-30 : if 1.0 isn't in filter_levels we add it so we always have unfiltered results
+    if 1.0 not in filter_levels:
+        # if 1.0 not in filter_levels:
+        filter_levels = np.append(filter_levels, 1.0)
+    # Run processing in parallel
     with Pool(processes=_config["cores"]) as pool:
         all_results = defaultdict()
         with tqdm(
