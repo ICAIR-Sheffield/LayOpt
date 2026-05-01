@@ -171,9 +171,9 @@ def test_calc_eq_matrix_b(
     ],
 )
 def test_calc_eq_matrix_b_errors(
-    nodal_coords: npt.NDArray[np.float32],
-    c_n: npt.NDArray[np.float32],
-    dof: npt.NDArray[np.float32],
+    nodal_coords: npt.NDArray[np.float64],
+    c_n: npt.NDArray[np.float64],
+    dof: npt.NDArray[np.float64],
     expected,
 ) -> None:
     """Test for calc_eq_matrix_b()."""
@@ -281,11 +281,11 @@ def test_trussopt(
     ids=["1_point", "2_points", "3_points"],
 )
 def test_make_pattern_loads_num_load_patterns(
-    nodal_coords: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float64],
     load_large: float,
     load_small: float,
     load_direction_default: tuple[float, float],
-    loaded_points: npt.NDArray,
+    loaded_points: npt.NDArray[np.float64],
     expected_pattern_count: int,
 ):
     all_patterns, _, _ = layopt.make_pattern_loads(
@@ -503,13 +503,13 @@ def test_make_pattern_loads_num_load_patterns(
     ],
 )
 def test_make_pattern_loads_load_directions_and_node_snapping(
-    nodal_coords: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float64],
     load_large: float,
     load_small: float,
-    loaded_points: npt.NDArray[np.float32],
-    direction,
+    loaded_points: npt.NDArray[np.float64],
+    direction: tuple[float, float],
     expected_pattern_count: int,
-    expected_patterns: npt.NDArray[np.float32],
+    expected_patterns: npt.NDArray[np.float64],
     expected_pattern_description: list[str],
 ):
     """Test vertical loads, horizontal loads, and snapping to nearest nodes."""
@@ -543,9 +543,9 @@ def test_make_pattern_loads_load_directions_and_node_snapping(
     ],
 )
 def test_make_pattern_loads_zero_load_points_error(
-    nodal_coords: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float64],
     loaded_points: Any,
-    error,
+    error: str,
     msg: str,
 ):
     """Test that 0 load points raises AssertionError from ``layopt.make_pattern_loads()``."""
@@ -559,11 +559,11 @@ def test_make_pattern_loads_zero_load_points_error(
         )
 
 
+# pylint: disable=duplicate-code
 @pytest.mark.skipif(
     GITHUB_ACTIONS,
     reason="mosek library requires license so test will always fail in continuous integration",
 )
-# pylint: disable=duplicate-code
 @pytest.mark.parametrize(
     (
         "all_patterns",
@@ -704,14 +704,14 @@ def test_make_pattern_loads_zero_load_points_error(
     ],
 )
 def test_stop_primal_violation(
-    nodal_coords: npt.NDArray,
-    c_n: npt.NDArray,
-    all_patterns: npt.NDArray,
-    active_load_cases: npt.NDArray,
-    areas: npt.NDArray,
+    nodal_coords: npt.NDArray[np.float64],
+    c_n: npt.NDArray[np.float64],
+    all_patterns: npt.NDArray[np.float64],
+    active_load_cases: npt.NDArray[np.float64],
+    areas: npt.NDArray[np.float64],
     stress_tensile: int,
     stress_compressive: int,
-    dof: npt.NDArray,
+    dof: npt.NDArray[np.float64],
     expected_converge: bool,
 ) -> None:
     """Test for convergence based on whether all load cases active."""
@@ -763,7 +763,7 @@ def test_stop_violation(
     request,
     stress_tensile: float,
     stress_compressive: float,
-    deflections: list[npt.NDArray],
+    deflections: list[npt.NDArray[np.float64]],
     expected_num_added: int,
 ):
     """Test that the function sets members active correctly and returns non-negative integer."""

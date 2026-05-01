@@ -4,6 +4,7 @@ import contextlib
 import os
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -100,7 +101,7 @@ def test_entry_point_subprocess_help(capsys, argument: str, option: str) -> None
     ],
 )
 def test_entry_points(
-    options: list, expected_function: Callable, expected_args: dict
+    options: list[str], expected_function: Callable, expected_args: dict[str, Any]
 ) -> None:
     """Ensure the correct function is called for each program, and arguments are carried through correctly."""
     returned_args = entry_point(options, testing=True)

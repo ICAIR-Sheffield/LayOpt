@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
+from matplotlib import figure
 
 if TYPE_CHECKING:
     import numpy as np
@@ -21,11 +22,11 @@ def plot_truss(
     forces: list[npt.NDArray[np.float64]],
     threshold: float,
     title: str,
-    outfile: str | Path | None = "truss",
+    outfile: str | Path = "truss",
     img_ext: str = ".png",
     bar_thickness: float = 0.3,
     dpi: int = 1200,
-) -> tuple[plt.Figure, plt.Axes]:
+) -> tuple[figure.Figure, figure.Axes]:
     """
     Visualise truss.
 
@@ -88,21 +89,17 @@ def plot_truss(
     if outfile is not None:
         # Strip any extension from outfile and replace with img_ext when saving the file
         img_ext = "." + img_ext if img_ext[0] != "." else img_ext
-        outfile = (
-            Path(outfile).parent / Path(outfile).stem
-            if outfile is not None
-            else "truss"
-        )
+        outfile = Path(outfile).parent / Path(outfile).stem
         fig.savefig(Path(outfile).with_suffix(img_ext), dpi=dpi)
 
     return fig, ax
 
 
 def plot_all_cases(
-    nodal_coords: npt.NDArray[np.float32],
-    c_n: npt.NDArray[np.float32],
-    areas: npt.NDArray[np.float32],
-    forces: list,
+    nodal_coords: npt.NDArray[np.float64],
+    c_n: npt.NDArray[np.float64],
+    areas: npt.NDArray[np.float64],
+    forces: list[npt.NDArray[np.float64]],
     threshold: float,
     stress_tensile: str,
 ) -> None:
