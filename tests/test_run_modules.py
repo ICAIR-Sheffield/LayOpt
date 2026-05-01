@@ -3,6 +3,7 @@
 import argparse
 import os
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -78,7 +79,7 @@ def test_optimise(
         )
     ],
 )
-def test_completion_message(_config: dict, check: str, caplog) -> None:
+def test_completion_message(_config: dict[str, Any], check: str, caplog) -> None:
     """Test the ``completion_message()`` correctly parses the ``_config()`` argument."""
     run_modules.completion_message(_config=_config)
     assert check in caplog.text
