@@ -6,7 +6,7 @@ from pkgutil import get_data
 from typing import Any
 
 import pytest
-import yaml
+from ruamel.yaml import YAML
 from schema import Or, Schema, SchemaError
 
 from layopt import config
@@ -73,7 +73,8 @@ def test_validate_config_exceptions(
     """Test various configurations."""
     if "primal_method" in new_config:
         default_config = get_data(package="layopt", resource="default_config.yaml")
-        default_config = yaml.full_load(default_config)
+        yaml = YAML(typ="safe")
+        default_config = yaml.load(default_config)
         for key, value in new_config.items():
             default_config[key] = value
         # Have to convert to numpy arrays
@@ -111,7 +112,8 @@ def test_validate_config_valid(
 ) -> None:
     """Test that the ``default_config.yaml`` with variations validates against the ``LAYOPT_CONFIG_SCHEMA``."""
     default_config = get_data(package="layopt", resource="default_config.yaml")
-    default_config = yaml.full_load(default_config)
+    yaml = YAML(typ="safe")
+    default_config = yaml.load(default_config)
     if options is not None:
         for key, value in options.items():
             default_config[key] = value

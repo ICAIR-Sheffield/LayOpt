@@ -10,10 +10,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-import ruamel.yaml
-import yaml
 from loguru import logger
-from yaml import YAMLError
+from ruamel.yaml import YAML
 
 from layopt import CONFIG_DOCUMENTATION_REFERENCE
 
@@ -36,7 +34,8 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
         filename = "default_config.yaml" if args.filename is None else args.filename
         try:
             default_config = get_data(package="layopt", resource="default_config.yaml")
-            config = yaml.full_load(default_config)
+            yaml = YAML(typ="safe")
+            config = yaml.load(default_config)
         except FileNotFoundError as exc:
             msg = "There was a problem loading 'default_config.yaml' try reinstalling LayOpt."
             raise (FileNotFoundError(msg)) from exc
@@ -61,7 +60,7 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
         try:
             f.write(f"# Config generated {get_date_time()}\n")
             f.write(f"{CONFIG_DOCUMENTATION_REFERENCE}")
-            yaml_out = ruamel.yaml.YAML()
+            yaml_out = YAML()
             yaml_out.indent(sequence=4, offset=2)
             yaml_out.dump(dict_to_yaml(config), f)
             logger.info(f"{logger_msg} : {config_path!s}")
@@ -124,11 +123,8 @@ def read_yaml(filename: str | Path) -> Any:
         Dictionary of the file.
     """
     with Path(filename).open(encoding="utf-8") as f:
-        try:
-            return yaml.full_load(f)
-        except YAMLError as exception:
-            logger.error(exception)
-            return {}
+        yaml = YAML(typ="safe")
+        return yaml.load(f)
 
 
 def convert_path(path: str | Path) -> Path:
