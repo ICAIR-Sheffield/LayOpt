@@ -4,6 +4,7 @@ import contextlib
 import os
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -92,17 +93,15 @@ def test_entry_point_subprocess_help(capsys, argument: str, option: str) -> None
                 "create-config",
                 "-f",
                 "dummy_config_file.yaml",
-                "--module",
-                "afmslicer",
             ],
             io.write_config,
-            {"filename": Path("dummy_config_file.yaml"), "module": "afmslicer"},
+            {"filename": Path("dummy_config_file.yaml")},
             id="Create config with custom filename (short), custom module (long)",
         ),
     ],
 )
 def test_entry_points(
-    options: list, expected_function: Callable, expected_args: dict
+    options: list[str], expected_function: Callable, expected_args: dict[str, Any]
 ) -> None:
     """Ensure the correct function is called for each program, and arguments are carried through correctly."""
     returned_args = entry_point(options, testing=True)

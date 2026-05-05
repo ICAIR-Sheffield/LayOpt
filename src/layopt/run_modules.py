@@ -9,6 +9,7 @@ from pkgutil import get_data
 from pprint import pformat
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import yaml
 from art import tprint
@@ -28,7 +29,7 @@ from layopt import (
 HEADER_MESSAGE = f"# Configuration from LayOpt run complete : {io.get_date_time()}\n{CONFIG_DOCUMENTATION_REFERENCE}"
 
 
-def _log_setup(_config: dict) -> None:
+def _log_setup(_config: dict[str, Any]) -> None:
     """
     Log the current configuration.
 
@@ -50,7 +51,7 @@ def _log_setup(_config: dict) -> None:
     logger.info(f"Cores for parallel processing       : {_config['cores']}")
 
 
-def _set_logging(log_level: str | None) -> None:
+def _set_logging(log_level: str) -> None:
     """
     Set up loguru logging.
 
@@ -69,7 +70,7 @@ def _parse_configuration(args: argparse.Namespace | None = None) -> dict[str, An
 
     Parameters
     ----------
-    args : argparse.Namespace | None
+    args : argparse.Namespace, optional
         Arguments.
 
     Returns
@@ -79,14 +80,14 @@ def _parse_configuration(args: argparse.Namespace | None = None) -> dict[str, An
         options taking precedence.
     """
     # Parse command line options, load config (or default) and update with command line options
-    if args.config_file is None:
+    if args.config_file is None:  # type: ignore[union-attr]
         default_config = get_data(
             package=layopt.__package__, resource="default_config.yaml"
         )
         default_config = yaml.full_load(default_config)
     else:
-        logger.info(f"Loading configuration from : {args.config_file!s}")
-        with args.config_file.open(encoding="utf-8") as conf:
+        logger.info(f"Loading configuration from : {args.config_file!s}")  # type: ignore[union-attr]
+        with args.config_file.open(encoding="utf-8") as conf:  # type: ignore[union-attr]
             default_config = yaml.full_load(conf)
     _config = config.reconcile_config_args(args=args, default_config=default_config)
     # Validate configuration
@@ -113,7 +114,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     args : argparse.Namespace | None
         Command line arguments for modifying configuration.
     """
-    _set_logging(log_level=args.log_level)
+    _set_logging(log_level=args.log_level)  # type: ignore[union-attr]
     logger.debug(f"\n{pformat(vars(args))}\n")
     _config = _parse_configuration(args)
     _set_logging(log_level=_config["log_level"])
@@ -139,16 +140,17 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         bar_thickness=_config["plotting"]["bar_thickness"],
         dpi=_config["plotting"]["dpi"],
     )
-    # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value in a list
-    filter_levels = (
-        [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
-    )
     # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value
     filter_levels = (
         [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
-    )  # Run processing in parallel
+    )
+    # ns-rse 2026-04-30 : if 1.0 isn't in filter_levels we add it so we always have unfiltered results
+    if 1.0 not in filter_levels:
+        # if 1.0 not in filter_levels:
+        filter_levels = np.append(filter_levels, 1.0)
+    # Run processing in parallel
     with Pool(processes=_config["cores"]) as pool:
-        all_results = defaultdict()
+        all_results: dict[float, Any] = defaultdict()
         with tqdm(
             total=len(filter_levels),
             desc=f"Solving optimisation, results are under {_config['output_dir']}.",
@@ -170,7 +172,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     # ToDo - Add an output message summarising what has been run using art()
 
 
-def completion_message(_config: dict) -> None:
+def completion_message(_config: dict[str, Any]) -> None:
     """
     Print a completion message summarising images processed.
 

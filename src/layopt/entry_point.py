@@ -199,13 +199,6 @@ def layopt_parser() -> arg.ArgumentParser:
         help="Path to where the YAML file should be saved (default './' the current directory).",
     )
     create_config_parser.add_argument(
-        "-m",
-        "--module",
-        dest="module",
-        default="afmslicer",
-        help="The AFM module to use, currently `afmslicer` (default).",
-    )
-    create_config_parser.add_argument(
         "-c",
         "--config",
         dest="config",
