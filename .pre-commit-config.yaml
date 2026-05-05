@@ -24,6 +24,7 @@ repos:
       - id: check-symlinks
       - id: check-yaml
         args: ["--unsafe"] # Required because of line 57 in mkdocs.yml which enables mermaid diagrams
+        exclude: ^(tests/resources)/.*$
       - id: debug-statements
       - id: end-of-file-fixer
         types: [python, yaml, markdown]
@@ -52,6 +53,7 @@ repos:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always]
+        exclude: ^(tests/resources)/.*$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.15.12"

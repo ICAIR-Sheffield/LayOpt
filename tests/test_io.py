@@ -7,15 +7,19 @@ from typing import Any
 
 import pandas as pd
 import pytest
-import yaml
+from ruamel.yaml import YAML, YAMLError
+from ruamel.yaml.scanner import ScannerError
 
 from layopt import io
+
+# pylint: disable=duplicate-code
 
 BASE_DIR = Path.cwd()
 RESOURCES = BASE_DIR / "tests" / "resources"
 
 default_config = get_data(package="layopt", resource="default_config.yaml")
-DEFAULT_CONFIG = yaml.full_load(default_config)
+yaml = YAML(typ="safe")
+DEFAULT_CONFIG = yaml.load(default_config)
 
 CONFIG = {
     "this": "is",
@@ -42,6 +46,31 @@ def test_read_yaml() -> None:
     # Dummy config for testing 'read_yaml()'
     sample_config = io.read_yaml(RESOURCES / "test.yaml")
     assert sample_config == CONFIG
+
+
+@pytest.mark.parametrize(
+    ("filename", "expected_error"),
+    [
+        pytest.param(
+            RESOURCES / "does_not_exist.yaml", FileNotFoundError, id="FileNotFoundError"
+        ),
+        pytest.param(RESOURCES / "not.yaml", ScannerError, id="ScannerError"),
+        pytest.param(
+            RESOURCES / "duplicate_keys.yaml",
+            YAMLError,
+            id="YAMLError (duplicate keys)",
+        ),
+        pytest.param(
+            RESOURCES / "mixed_indentation.yaml",
+            YAMLError,
+            id="YAMLError (mixed indentation)",
+        ),
+    ],
+)
+def test_read_yaml_exceptions(filename: Path, expected_error: Any) -> None:
+    """Test ``read_yaml()`` raises different exceptions."""
+    with pytest.raises(expected_error):
+        io.read_yaml(filename=filename)
 
 
 @pytest.mark.parametrize(

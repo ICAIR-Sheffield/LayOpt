@@ -11,9 +11,9 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-import yaml
 from art import tprint
 from loguru import logger
+from ruamel.yaml import YAML
 from tqdm import tqdm
 
 from layopt import (
@@ -84,7 +84,8 @@ def _parse_configuration(args: argparse.Namespace | None = None) -> dict[str, An
         default_config = get_data(
             package=layopt.__package__, resource="default_config.yaml"
         )
-        default_config = yaml.full_load(default_config)
+        yaml = YAML(typ="safe")
+        default_config = yaml.load(default_config)
     else:
         logger.info(f"Loading configuration from : {args.config_file!s}")  # type: ignore[union-attr]
         with args.config_file.open(encoding="utf-8") as conf:  # type: ignore[union-attr]
