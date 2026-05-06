@@ -304,6 +304,54 @@ def input_three_by_six() -> dict[str, npt.NDArray[np.float32]]:
 
 
 @pytest.fixture
+def trussopt_param_one_by_one() -> dict[str, Any]:
+    """Input parameters for 1x1 structure for ``layopt.trussopt()``."""
+    return {
+        "width": 1,
+        "height": 1,
+        "st": 1,
+        "sc": 1,
+        "jc": 0,
+        "loaded_points": [[3, 3]],
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 18,
+        "support_points": [],
+        "member_area_filtering": True,
+        "primal_method": "load_factor",
+        "problem_name": "short cantilever",
+        "save_to_csv": True,
+        "csv_filename": "short_cantilever.csv",
+        "notes": "short cantliever test",
+    }
+
+
+@pytest.fixture
+def trussopt_param_two_by_two() -> dict[str, Any]:
+    """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
+    return {
+        "width": 1,
+        "height": 1,
+        "st": 1,
+        "sc": 1,
+        "jc": 0,
+        "loaded_points": [[3, 3]],
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 18,
+        "support_points": [],
+        "member_area_filtering": False,
+        "primal_method": "load_factor",
+        "problem_name": "short cantilever",
+        "save_to_csv": True,
+        "csv_filename": "short_cantilever.csv",
+        "notes": "short cantliever test",
+    }
+
+
+@pytest.fixture
 def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
     """Input parameters for 3x6 structure for ``layopt.trussopt()``."""
     return {
@@ -407,25 +455,50 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
 
 
 @pytest.fixture
-def sample_csv_results() -> dict[str, Any]:
-    """Sample results for testing csv output."""
+def plotting_data_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
+    """Relevant plotting data for 1x1 example."""
     return {
-        "timestamp": "2026-03-04 15:30:00",
-        "problem_name": "test_problem",
-        "width": 8,
-        "height": 8,
-        "n_load_points": 2,
-        "n_patterns_total": 4,
-        "n_patterns_active": 3,
-        "load_large": 50,
-        "load_small": 5,
-        "iterations": 12,
-        "final_volume": 123.456,
-        "n_members_final": 87,
-        "n_nodes": 81,
-        "n_ground_structure": 1234,
-        "cpu_time_setup": 0.234,
-        "cpu_time_solve": 12.456,
-        "primal_method": True,
-        "notes": "Test run",
+        "areas": np.asarray([70.71067812, 50.0]),
+        "forces": [np.asarray([-70.71067812, 50.0])],
+        "threshold": 0.07071067811522617,
+    }
+
+
+@pytest.fixture
+def plotting_data_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
+    """Relevant plotting data for 1x1 example."""
+    return {
+        "areas": np.asarray([70.71067812, 50.0]),
+        "forces": [np.asarray([-70.71067812, 50.0])],
+        "threshold": 0.07071067811522617,
+    }
+
+
+@pytest.fixture
+def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.float32]]:
+    """Relevant plotting data for 1x1 example."""
+    return {
+        "areas": np.asarray(
+            [
+                35.35533906,
+                35.35533906,
+                35.35533906,
+                35.35533906,
+                35.35533906,
+                35.35533906,
+            ]
+        ),
+        "forces": [
+            np.asarray(
+                [
+                    -35.35533906,
+                    -35.35533906,
+                    -35.35533906,
+                    35.35533906,
+                    35.35533906,
+                    35.35533906,
+                ]
+            )
+        ],
+        "threshold": 0.035355339059325294,
     }

@@ -59,6 +59,7 @@ test = [
   "pytest>=9.0.3",
   "pytest-cov >=7",
   "pytest-loguru",
+  "pytest-mpl",
   "pytest-testmon",
   "pytest-xdist",
   "syrupy"
