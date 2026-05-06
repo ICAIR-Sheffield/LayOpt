@@ -683,7 +683,7 @@ def trussopt(
     nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
     dof = np.ones((len(nodal_coords), 2))
-    
+
     # Default load point
     if loaded_points is None:
         loaded_points = np.asarray([[width, height // 2]])
