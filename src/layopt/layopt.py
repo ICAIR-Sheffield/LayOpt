@@ -683,8 +683,7 @@ def trussopt(
     nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
     dof = np.ones((len(nodal_coords), 2))
-    logger.debug(f"Degrees of Freedom : {dof=}")
-
+    
     # Default load point
     if loaded_points is None:
         loaded_points = np.asarray([[width, height // 2]])
@@ -700,6 +699,7 @@ def trussopt(
                 if any((node == point).all() for point in support_points)
                 else [1, 1]
             )
+    logger.debug(f"Degrees of Freedom : {dof=}")
     dof = np.array(dof).flatten()
 
     # Generate all pattern loads
