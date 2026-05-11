@@ -5,6 +5,7 @@ import sys
 from collections import defaultdict
 from functools import partial
 from multiprocessing import Pool
+from pathlib import Path
 from pkgutil import get_data
 from pprint import pformat
 from typing import Any
@@ -20,6 +21,7 @@ from layopt import (
     CONFIG_DOCUMENTATION_REFERENCE,
     LAYOPT_BASE_VERSION,
     LAYOPT_COMMIT,
+    classes,
     config,
     io,
     layopt,
@@ -64,7 +66,7 @@ def _set_logging(log_level: str) -> None:
     logger.add(sys.stderr, level=log_level.upper())
 
 
-def _parse_configuration(args: argparse.Namespace | None = None) -> dict[str, Any]:
+def _parse_configuration(args: argparse.Namespace | None = None) -> classes.Parameters:
     """
     Load configurations, validate and check run steps are consistent.
 
@@ -104,7 +106,7 @@ def _parse_configuration(args: argparse.Namespace | None = None) -> dict[str, An
     # Create base output directory
     _config["output_dir"].mkdir(parents=True, exist_ok=True)
     _log_setup(_config=_config)
-    return _config
+    return classes.Parameters(**_config)
 
 
 def optimise(args: argparse.Namespace | None = None) -> None:
@@ -119,44 +121,47 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     _set_logging(log_level=args.log_level)  # type: ignore[union-attr]
     logger.debug(f"\n{pformat(vars(args))}\n")
     _config = _parse_configuration(args)
-    _set_logging(log_level=_config["log_level"])
+    _set_logging(log_level=_config.log_level)
     processing_function = partial(
         layopt.trussopt,
         # filter_levels is the value substituted by partial when called within for ... pool.imap_unordrered():
-        width=_config["width"],
-        height=_config["height"],
-        stress_tensile=_config["stress_tensile"],
-        stress_compressive=_config["stress_compressive"],
-        joint_cost=_config["joint_cost"],
-        loaded_points=_config["loaded_points"],
-        load_direction=_config["load_direction"],
-        load_large=_config["load_large"],
-        load_small=_config["load_small"],
-        max_length=_config["max_length"],
-        support_points=_config["support_points"],
-        member_area_filtering=_config["member_area_filtering"],
-        primal_method=_config["primal_method"],
-        problem_name=_config["problem_name"],
-        notes=_config["notes"],
-        output_dir=_config["output_dir"],
-        plot=_config["plotting"]["run"],
-        bar_thickness=_config["plotting"]["bar_thickness"],
-        dpi=_config["plotting"]["dpi"],
+        width=_config.width,
+        height=_config.height,
+        stress_tensile=_config.stress_tensile,
+        stress_compressive=_config.stress_compressive,
+        joint_cost=_config.joint_cost,
+        loaded_points=_config.loaded_points,
+        load_direction=_config.load_direction,
+        load_large=_config.load_large,
+        load_small=_config.load_small,
+        max_length=_config.max_length,
+        support_points=_config.support_points,
+        member_area_filtering=_config.member_area_filtering,
+        primal_method=_config.primal_method,
+        problem_name=_config.problem_name,
+        notes=_config.notes,
+        output_dir=_config.output_dir,
+        plot=_config.plotting["run"],
+        bar_thickness=_config.plotting["bar_thickness"],
+        dpi=_config.plotting["dpi"],
     )
     # ns-rse 2026-04-24 : currently run in parallel over filter_levels so need at least one value
     filter_levels = (
-        [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
+        # [1.0] if len(_config["filter_levels"]) == 0 else _config["filter_levels"]
+        [1.0] if len(_config.filter_levels) == 0 else _config.filter_levels
     )
     # ns-rse 2026-04-30 : if 1.0 isn't in filter_levels we add it so we always have unfiltered results
     if 1.0 not in filter_levels:
         # if 1.0 not in filter_levels:
         filter_levels = np.append(filter_levels, 1.0)
     # Run processing in parallel
-    with Pool(processes=_config["cores"]) as pool:
+    # with Pool(processes=_config["cores"]) as pool:
+    with Pool(processes=_config.cores) as pool:
         all_results: dict[float, Any] = defaultdict()
         with tqdm(
             total=len(filter_levels),
-            desc=f"Solving optimisation, results are under {_config['output_dir']}.",
+            # desc=f"Solving optimisation, results are under {_config['output_dir']}.",
+            desc=f"Solving optimisation, results are under {_config.output_dir}.",
         ) as pbar:
             for _, _, result, filter_level in pool.imap_unordered(
                 processing_function, filter_levels
@@ -168,22 +173,34 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     # Aggregate results into a single data frame and write output
     all_results_df = pd.concat(all_results.values())
     all_results_df = all_results_df.sort_values(["filter_level"])
-    all_results_df.to_csv(_config["output_dir"] / _config["csv_filename"], index=False)
+    # ns-rse 2026-05-11 - For now we handle both dictionaries and Parameters class
+    output_dir = (
+        _config["output_dir"] if isinstance(_config, dict) else _config.output_dir
+    )
+    csv_filename = (
+        _config["csv_filename"] if isinstance(_config, dict) else _config.csv_filename
+    )
+    all_results_df.to_csv(Path(output_dir) / csv_filename, index=False)
     io.write_config(_config)
-    logger.info(f"Results saved to {_config['output_dir'] / _config['csv_filename']}")
+    logger.info(f"Results saved to {Path(output_dir) / csv_filename}")
     completion_message(_config=_config)
-    # ToDo - Add an output message summarising what has been run using art()
 
 
-def completion_message(_config: dict[str, Any]) -> None:
+def completion_message(_config: dict[str, Any] | classes.Parameters) -> None:
     """
     Print a completion message summarising images processed.
 
     Parameters
     ----------
-    _config : dict
+    _config : dict[str, Any] | classes.Parameters
         Configuration dictionary.
     """
+    output_dir = (
+        _config["output_dir"] if isinstance(_config, dict) else _config.output_dir
+    )
+    csv_filename = (
+        _config["csv_filename"] if isinstance(_config, dict) else _config.csv_filename
+    )
     logger.info(
         "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"
     )
@@ -192,8 +209,8 @@ def completion_message(_config: dict[str, Any]) -> None:
         f"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ COMPLETE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"
         f"  LayOpt Version              : {LAYOPT_BASE_VERSION}\n"
         f"  LayOpt Commit               : {LAYOPT_COMMIT}\n"
-        f"  All statistics              : {_config['output_dir']!s}/{_config['csv_filename']}\n"
-        f"  Configuration               : {_config['output_dir']}/"
+        f"  All statistics              : {output_dir!s}/{csv_filename}\n"
+        f"  Configuration               : {output_dir!s}/"
         f"config_{io.get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml\n\n"
         # f"  Email                       : layopt@sheffield.ac.uk\n"
         f"  Documentation               : https://ICAIR-Sheffield.github.io/LayOpt/\n"

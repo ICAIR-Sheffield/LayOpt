@@ -11,12 +11,14 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from loguru import logger
+from pydantic import RootModel
 from ruamel.yaml import YAML
 
 from layopt import CONFIG_DOCUMENTATION_REFERENCE
+from layopt.classes import Parameters
 
 
-def write_config(args: Namespace | dict[str, Any] | None) -> None:
+def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
     """
     Write a configuration file to YAML.
 
@@ -41,13 +43,18 @@ def write_config(args: Namespace | dict[str, Any] | None) -> None:
             raise (FileNotFoundError(msg)) from exc
     # Otherwise we are writing after 'layopt optimise' and config is a dictionary, this won't have a 'filename'
     # key/value pair
+    # ns-rse 2026-05-11 - This will be obsolete once we fully switch to the Parameters dataclass for holding configuration
     elif isinstance(args, dict):
         output_dir = (
             Path("./") if args["output_dir"] is None else Path(args["output_dir"])
         )
-        # Add missing 'filename' key/value pair
         filename = f"config_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml"
         config = args
+    # If we have 'Parameters' then configuration is stored as a dataclass and we again don't have 'filename' key/value pair
+    elif isinstance(args, Parameters):
+        output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)
+        filename = f"config_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml"
+        config = RootModel[Parameters](args).model_dump()
     else:
         msg = f"args is neither 'Namespace' or 'dict' : {type(args)}"
         raise TypeError(msg)
