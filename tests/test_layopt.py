@@ -216,23 +216,7 @@ def test_trussopt(
 ) -> None:
     """Regression test for layopt.trussopt()."""
     params = request.getfixturevalue(trussopt_param_fixture)
-    results = layopt.trussopt(
-        width=params["width"],
-        height=params["height"],
-        stress_tensile=params["st"],
-        stress_compressive=params["sc"],
-        joint_cost=params["jc"],
-        loaded_points=params["loaded_points"],
-        load_direction=params["load_direction"],
-        load_large=params["load_large"],
-        load_small=params["load_small"],
-        max_length=params["max_length"],
-        support_points=params["support_points"],
-        filter_level=params["filter_level"],
-        primal_method=params["primal_method"],
-        problem_name=params["problem_name"],
-        notes=params["notes"],
-    )
+    results = layopt.trussopt(**params)
     # ns-rse 2026-04-15 - results is currently a tuple, the third item of which is now a dataframe rather than
     # dictionary of results, we therefore split these to facilitate taking snapshots
     df = results[2]
