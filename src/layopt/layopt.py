@@ -465,12 +465,7 @@ def stop_primal_violation_pattern(
         ``True`` if converged and no load cases added.
     """
     tol = 0.99  # lambda must be >= 1 to be considered feasible
-    area_tol = 1e-8 # members with area below this are treated as having zero area
-    
-    # Filter out zero area members
-    nonzero_areas_bool = np.asarray(areas) > area_tol
-    c_n_nonzero = c_n[nonzero_areas_bool]
-    areas_nonzero = np.asarray(areas)[nonzero_areas_bool]
+    area_tol = 1e-8  # members with area below this are treated as having zero area
 
     # Filter out zero area members
     nonzero_areas_bool = np.asarray(areas) > area_tol
@@ -695,7 +690,6 @@ def trussopt(
     nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
     dof = np.ones((len(nodal_coords), 2))
-    logger.debug(f"Degrees of Freedom : {dof=}")
 
     # Default load point
     if loaded_points is None:
@@ -712,6 +706,7 @@ def trussopt(
                 if any((node == point).all() for point in support_points)
                 else [1, 1]
             )
+    logger.debug(f"Degrees of Freedom : {dof=}")
     dof = np.array(dof).flatten()
 
     # Generate all pattern loads
@@ -917,9 +912,6 @@ def trussopt(
             + f"_w{width}_h{height}_n{len(loaded_points)}_filter{int(multiplier * 100)}"
         )
         if vol > 0:
-            logger.info(
-                f"filtered volume {vol} with filter at {100 * multiplier}% gives {len(filer_a)!s} members"
-            )
             _, _ = plot_truss(
                 nodal_coords=nodal_coords,
                 c_n=c_n,

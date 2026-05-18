@@ -354,66 +354,15 @@ def trussopt_param_two_by_two() -> dict[str, Any]:
 
 
 @pytest.fixture
-||||||| parent of 41b9e35 (refactor(plotting): plotting submodule and tests)
-=======
-def trussopt_param_one_by_one() -> dict[str, Any]:
-    """Input parameters for 1x1 structure for ``layopt.trussopt()``."""
-    return {
-        "width": 1,
-        "height": 1,
-        "st": 1,
-        "sc": 1,
-        "jc": 0,
-        "loaded_points": [[3, 3]],
-        "load_direction": (0, -1),
-        "load_large": 50,
-        "load_small": 5,
-        "max_length": 18,
-        "support_points": [],
-        "member_area_filtering": True,
-        "primal_method": "load_factor",
-        "problem_name": "short cantilever",
-        "save_to_csv": True,
-        "csv_filename": "short_cantilever.csv",
-        "notes": "short cantliever test",
-    }
-
-
-@pytest.fixture
-def trussopt_param_two_by_two() -> dict[str, Any]:
-    """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
-    return {
-        "width": 1,
-        "height": 1,
-        "st": 1,
-        "sc": 1,
-        "jc": 0,
-        "loaded_points": [[3, 3]],
-        "load_direction": (0, -1),
-        "load_large": 50,
-        "load_small": 5,
-        "max_length": 18,
-        "support_points": [],
-        "member_area_filtering": False,
-        "primal_method": "load_factor",
-        "problem_name": "short cantilever",
-        "save_to_csv": True,
-        "csv_filename": "short_cantilever.csv",
-        "notes": "short cantliever test",
-    }
-
-
-@pytest.fixture
->>>>>>> 41b9e35 (refactor(plotting): plotting submodule and tests)
 def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
     """Input parameters for 3x6 structure for ``layopt.trussopt()``."""
     return {
         "filter_level": 1.0,
-        "width": 3,
-        "height": 6,
-        "st": 1,
-        "sc": 1,
-        "jc": 0,
+        "width": 1,
+        "height": 1,
+        "stress_tensile": 1,
+        "stress_compressive": 1,
+        "joint_cost": 0,
         "loaded_points": np.asarray([[3, 3]]),
         "load_direction": (0, -1),
         "load_large": 50,
@@ -422,8 +371,50 @@ def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
         "support_points": np.asarray([[]]),
         "primal_method": "load_factor",
         "problem_name": "short cantilever",
-        "save_to_csv": True,
-        "csv_filename": "short_cantilever.csv",
+        "notes": "short cantliever test",
+    }
+
+
+@pytest.fixture
+def trussopt_param_two_by_two() -> dict[str, Any]:
+    """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
+    return {
+        "filter_level": 1.0,
+        "width": 1,
+        "height": 1,
+        "stress_tensile": 1,
+        "stress_compressive": 1,
+        "joint_cost": 0,
+        "loaded_points": np.asarray([[3, 3]]),
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 18,
+        "support_points": np.asarray([[]]),
+        "primal_method": "load_factor",
+        "problem_name": "short cantilever",
+        "notes": "short cantliever test",
+    }
+
+
+@pytest.fixture
+def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
+    """Input parameters for 3x6 structure for ``layopt.trussopt()``."""
+    return {
+        "filter_level": 1.0,
+        "width": 3,
+        "height": 6,
+        "stress_tensile": 1,
+        "stress_compressive": 1,
+        "joint_cost": 0,
+        "loaded_points": np.asarray([[3, 3]]),
+        "load_direction": (0, -1),
+        "load_large": 50,
+        "load_small": 5,
+        "max_length": 18,
+        "support_points": np.asarray([[]]),
+        "primal_method": "load_factor",
+        "problem_name": "short cantilever",
         "notes": "short cantliever test",
     }
 
@@ -435,9 +426,9 @@ def trussopt_param_eight_by_eight_square_cantilever() -> dict[str, Any]:
         "filter_level": 1.0,
         "width": 8,
         "height": 8,
-        "st": 1,
-        "sc": 1,
-        "jc": 0,
+        "stress_tensile": 1,
+        "stress_compressive": 1,
+        "joint_cost": 0,
         "loaded_points": np.asarray([[8, 0], [8, 4]]),
         "load_direction": (0, -1),
         "load_large": 50,
@@ -446,8 +437,6 @@ def trussopt_param_eight_by_eight_square_cantilever() -> dict[str, Any]:
         "support_points": np.asarray([[]]),
         "primal_method": "load_factor",
         "problem_name": "square cantilever",
-        "save_to_csv": True,
-        "csv_filename": "square_cantilever.csv",
         "notes": "square cantliever test",
     }
 
@@ -459,9 +448,9 @@ def trussopt_param_three_by_one_parallel_forces() -> dict[str, Any]:
         "filter_level": 1.0,
         "width": 3,
         "height": 1,
-        "st": 1,
-        "sc": 1,
-        "jc": 0,
+        "stress_tensile": 1,
+        "stress_compressive": 1,
+        "joint_cost": 0,
         "loaded_points": np.asarray([[3, 0], [3, 1]]),
         "load_direction": (0, -1),
         "load_large": 50,
@@ -470,8 +459,6 @@ def trussopt_param_three_by_one_parallel_forces() -> dict[str, Any]:
         "support_points": np.asarray([[]]),
         "primal_method": "load_factor",
         "problem_name": "parallel forces",
-        "save_to_csv": True,
-        "csv_filename": "parallel_forces.csv",
         "notes": "parallel forces test",
     }
 
@@ -483,9 +470,9 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
         "filter_level": 1.0,
         "width": 18,
         "height": 4,
-        "st": 1,
-        "sc": 1,
-        "jc": 0,
+        "stress_tensile": 1,
+        "stress_compressive": 1,
+        "joint_cost": 0,
         "loaded_points": np.asarray(
             [
                 [6.0, 4],
@@ -501,11 +488,8 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
         "support_points": np.asarray([[0, 0], [18, 0]]),
         "primal_method": "load_factor",
         "problem_name": "spanning example",
-        "save_to_csv": True,
-        "csv_filename": "spanning_example.csv",
         "notes": "spanning example test",
     }
-<<<<<<< HEAD
 
 
 @pytest.fixture
@@ -645,6 +629,31 @@ def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.fl
             ]
         ),
         "threshold": 0.035355339059325294,
+
+
+@pytest.fixture
+def sample_csv_results() -> dict[str, Any]:
+    """Sample results for testing csv output."""
+    return {
+        "timestamp": "2026-03-04 15:30:00",
+        "problem_name": "test_problem",
+        "width": 8,
+        "height": 8,
+        "n_load_points": 2,
+        "n_patterns_total": 4,
+        "n_patterns_active": 3,
+        "load_large": 50,
+        "load_small": 5,
+        "iterations": 12,
+        "final_volume": 123.456,
+        "n_members_final": 87,
+        "n_nodes": 81,
+        "n_ground_structure": 1234,
+        "cpu_time_setup": 0.234,
+        "cpu_time_solve": 12.456,
+        "primal_method": True,
+        "notes": "Test run",
+    }
 
 
 @pytest.fixture

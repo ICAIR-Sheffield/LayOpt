@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 import pytest
-import yaml
+from ruamel.yaml import YAML
 from schema import SchemaError
 
 from layopt.config import (
@@ -25,7 +25,8 @@ RESOURCES = BASE_DIR / "tests" / "resources"
 
 # Load the 'default_config.yaml' to dictionary.
 default_config = get_data(package="layopt", resource="default_config.yaml")
-DEFAULT_CONFIG = yaml.full_load(default_config)
+yaml = YAML(typ="safe")
+DEFAULT_CONFIG = yaml.load(default_config)
 
 
 # Are we on GitHub and OSX?

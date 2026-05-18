@@ -213,6 +213,42 @@
 # name: test_testname[parallel forces]
   tuple(
     np.float64(1500.0),
+    array([250.      ,   0.      ,  70.710678, 150.      ,  70.710678,
+           0.      ,  70.710678,  50.      ,  70.710678,   0.      ,
+          70.710678,  70.710678,   0.      , 250.      , 150.      ,
+          50.      ]),
+    1.0,
+  )
+# ---
+# name: test_trussopt[1x1]
+  tuple(
+    np.float64(150.0),
+    array([ 0.      ,  0.      , 70.710678,  0.      ,  0.      , 50.      ]),
+    1.0,
+  )
+# ---
+# name: test_trussopt[1x1].1
+  '''
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  short cantilever          1.0     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
+  '''
+# ---
+# name: test_trussopt[2x2]
+  tuple(
+    np.float64(150.0),
+    array([ 0.      ,  0.      , 70.710678,  0.      ,  0.      , 50.      ]),
+    1.0,
+  )
+# ---
+# name: test_trussopt[2x2].1
+  '''
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  short cantilever          1.0     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
+  '''
+# ---
+# name: test_trussopt[parallel forces]
+  tuple(
+    np.float64(1500.0),
     array([250.        ,   0.        ,  70.71067812, 150.        ,
           70.71067812,   0.        ,  70.71067812,  50.        ,
           70.71067812,   0.        ,  70.71067812,  70.71067812,
@@ -280,7 +316,7 @@
            0.      ,  70.710678,  50.      ,  70.710678,   0.      ,
           70.710678,  70.710678,   0.      , 250.      , 150.      ,
           50.      ]),
-    1.0,
+    None,
   )
 # ---
 # name: test_trussopt[1x1]
@@ -324,7 +360,7 @@
 # name: test_trussopt[parallel forces].1
   '''
         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                 notes
-  0  parallel forces          1.0     3      1             2                4                 1         50          5          2       1500.0              16       8                 20   load_factor  parallel forces test
+  0  parallel forces         None     3      1             2                4                 1         50          5          2       1500.0              16       8                 20   load_factor  parallel forces test
   '''
 # ---
 # name: test_trussopt[short cantilever]
