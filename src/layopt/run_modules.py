@@ -134,6 +134,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         load_small=_config["load_small"],
         max_length=_config["max_length"],
         support_points=_config["support_points"],
+        member_area_filtering=_config["member_area_filtering"],
         primal_method=_config["primal_method"],
         problem_name=_config["problem_name"],
         notes=_config["notes"],

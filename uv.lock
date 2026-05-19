@@ -723,7 +723,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "art" },
-    { name = "click" },
     { name = "loguru" },
     { name = "matplotlib" },
     { name = "mosek" },
@@ -774,7 +773,6 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python" },
-    { name = "pyyaml" },
 ]
 test = [
     { name = "pytest" },
@@ -789,7 +787,6 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "art" },
-    { name = "click", specifier = "==8.3.2" },
     { name = "loguru" },
     { name = "matplotlib" },
     { name = "mosek" },
@@ -840,7 +837,6 @@ docs = [
     { name = "mkdocs-material", specifier = ">=9.7.6" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python", specifier = ">=2.0.3" },
-    { name = "pyyaml", specifier = ">=6.0.1" },
 ]
 test = [
     { name = "pytest", specifier = ">=9.0.3" },

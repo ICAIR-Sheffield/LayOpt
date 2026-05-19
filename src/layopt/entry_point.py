@@ -141,12 +141,19 @@ def layopt_parser() -> arg.ArgumentParser:
         help="Maximum member length.",
     )
     optimise_parser.add_argument(
+        "--member-area-filtering",
+        dest="member_area_filtering",
+        type=float,
+        required=False,
+        help="Fraction of maximum member area for output threshold.",
+    )
+    optimise_parser.add_argument(
         "--filter-levels",
         dest="filter_levels",
         nargs="+",
         type=float,
         required=False,
-        help="Member area filtering levels.",
+        help="Postprocessing filtering levels.",
     )
     optimise_parser.add_argument(
         "--primal-method",

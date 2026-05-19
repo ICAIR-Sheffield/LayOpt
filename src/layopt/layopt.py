@@ -617,6 +617,7 @@ def trussopt(
     max_length: float = 1000.0,
     # ns-rse 2026-03-17 : Set type hint and default to None
     support_points: npt.NDArray[np.float64] | None = None,
+    member_area_filtering: float = 0.001,
     primal_method: str = "load_factor",
     problem_name: str = "None",
     # save_to_csv: bool = True,
@@ -626,7 +627,7 @@ def trussopt(
     plot: bool = False,
     bar_thickness: float = 0.3,
     dpi: int = 1200,
-) -> tuple[float, npt.NDArray[np.float64], pd.DataFrame, float]:
+) -> tuple[float, dict[int, float], pd.DataFrame, float]:
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
 
@@ -656,6 +657,8 @@ def trussopt(
         Maximum member length.
     support_points : npt.NDArray[np.float64]
         Support points (default=[]).
+    member_area_filtering : float
+        Fraction of maximum member area for output threshold.
     primal_method : str
         Primal violation method (default='load_factor').
     problem_name : str
@@ -673,9 +676,11 @@ def trussopt(
 
     Returns
     -------
-    tuple[float, npt.NDArray[np.float64], pd.DataFrame, float]
-        A tuple consisting of ``volume`` (the final volume of the solved problem)
-        and ``area`` (final member areas of the solved problem), a dataframe of results and the ``filter_level``.
+    tuple[float, dict[int, float], pd.DataFrame, float]
+        A tuple consisting of ``volume`` (the final volume of the solved problem) and ``filter_areas_dict`` 
+        (dict with keys ground structure member indices and values corresponding 
+         final member areas of the solved problem),
+        a dataframe of results and the ``filter_level``.
     """
     setup_start = time.process_time()
     # Make domain
@@ -917,7 +922,7 @@ def trussopt(
                 c_n=c_n,
                 areas=filter_areas,
                 forces=filter_forces,
-                threshold=max(filter_areas) * 1e-3,
+                threshold=max(filter_areas) * member_area_filtering,
                 title="Filtered " + str(100 * multiplier) + "%",
                 bar_thickness=bar_thickness,
                 dpi=dpi,
@@ -926,7 +931,24 @@ def trussopt(
         else:
             logger.warning("No plot generated as volume <= 0.0")
     logger.info(f"Plotting took {time.process_time() - solve_end!s}")
-    return vol, filter_areas, dict_to_df(results), filter_level
+
+    # Filter output members by area threshold
+    # Build area dict where keys are ground structure member indices
+    active_indices = np.where(potential_members[:, 3])[0]
+    threshold = max(filter_areas) * member_area_filtering
+    keep = filter_areas >= threshold
+    kept_indices = active_indices[keep]
+    c_n = c_n[keep]
+    filter_areas_dict: dict[int, float] = {
+        int(idx): float(area)
+        for idx, area in zip(kept_indices, filter_areas[keep], strict=True)
+    }
+    logger.info(
+        f"Area filtering at {member_area_filtering} ({100 * member_area_filtering}% of max): "
+        f"{int(np.sum(keep))} members retained"
+    )
+
+    return vol, filter_areas_dict, dict_to_df(results), filter_level
 
 
 def save_results_to_csv(
