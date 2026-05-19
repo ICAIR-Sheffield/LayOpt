@@ -202,6 +202,7 @@
 # name: test_trussopt[2x2]
   tuple(
     np.float64(300.0),
+
     dict({
       2: 30.394442,
       3: 31.872783,

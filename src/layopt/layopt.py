@@ -21,7 +21,6 @@ import time
 from math import ceil, gcd, isinf
 from pathlib import Path
 
-# import mosek.fusion as mosek
 import cvxpy as cvx
 import numpy as np
 import numpy.typing as npt
@@ -179,7 +178,7 @@ def solve(
         dual = eq_con.dual_value
         if dual is None:
             dual = np.zeros(eq_matrix_b.shape[0])
-        u.append(np.array(dual))
+        u.append(-np.array(dual))
 
     if vol == 0:
         u = [ui * 10000 for ui in u]
@@ -507,6 +506,16 @@ def stop_primal_violation_pattern(
 
         fk_dof_param.value = pattern * dof
 
+        # uses CVXPY preference order of solvers, MOSEK first if installed
+        problem.solve()
+
+        constraints = [
+            eq_matrix_b @ q_var == lambda_var * fk_dof_param,  # equilibrium
+            q_var >= -stress_compressive * areas_nonzero,  # compression limit
+            q_var <= stress_tensile * areas_nonzero,  # tension limit
+        ]
+        objective = cvx.Maximize(lambda_var)
+        problem = cvx.Problem(objective, constraints)
         # uses CVXPY preference order of solvers, MOSEK first if installed
         problem.solve()
 
@@ -902,3 +911,138 @@ def trussopt(
         f"{int(np.sum(keep))} members retained"
     )
     return (vol, member_areas_filtered, dict_to_df(results))
+
+
+def save_results_to_csv(
+    results: dict[str, str | int | float], filename: str = "pattern_loading_results.csv"
+) -> None:
+    """
+    Save optimization results to CSV file.
+
+    Creates file with header if it doesn't exist, otherwise appends.
+
+    Parameters
+    ----------
+    results : dict
+        Dictionary containing results to save. Should include keys:
+        - timestamp
+        - problem_name
+        - width, height
+        - n_load_points
+        - n_patterns_total
+        - n_patterns_active
+        - load_large
+        - load_small
+        - iterations
+        - final_volume
+        - n_members_final
+        - n_nodes
+        - n_ground_structure
+        - cpu_time_setup
+        - cpu_time_solve
+        - primal_method
+        - notes
+    filename : str
+        CSV filename (default=``pattern_loading_results.csv``).
+    """
+    file_exists = Path(filename).is_file()
+
+    # Define column order
+    fieldnames = [
+        "timestamp",
+        "problem_name",
+        "width",
+        "height",
+        "n_load_points",
+        "n_patterns_total",
+        "n_patterns_active",
+        "load_large",
+        "load_small",
+        "iterations",
+        "final_volume",
+        "n_members_final",
+        "n_nodes",
+        "n_ground_structure",
+        "cpu_time_setup",
+        "cpu_time_solve",
+        # 'cpu_time_total',
+        # 'wall_time_total',
+        "primal_method",
+        "notes",
+    ]
+
+    with Path(filename).open("a", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        # Write header if new file
+        if not file_exists:
+            writer.writeheader()
+
+        # Write data
+        writer.writerow(results)
+
+    logger.info(f"\nResults saved to {filename}")
+
+
+# # Example usage:
+# if __name__ == "__main__":
+#     # Test the function
+#     test_results = {
+#         'timestamp': '2026-03-04 15:30:00',
+#         'problem_name': 'test_problem',
+#         'width': 8,
+#         'height': 8,
+#         'n_load_points': 2,
+#         'n_patterns_total': 4,
+#         'n_patterns_active': 3,
+#         'load_large': 50,
+#         'load_small': 5,
+#         'iterations': 12,
+#         'final_volume': 123.456,
+#         'n_members_final': 87,
+#         'n_nodes': 81,
+#         'n_ground_structure': 1234,
+#         'cpu_time_setup': 0.234,
+#         'cpu_time_solve': 12.456,
+#         'cpu_time_total': 15.813,
+#         'wall_time_total': 17.509,
+#         'primal_adaptive': True,
+#         'notes': 'Test run'
+#     }
+
+#     save_results_to_csv(test_results, 'test_results.csv')
+#     print("Test completed - check test_results.csv")
+=======
+
+    return vol, member_areas_filtered, dict_to_df(results), filter_level
+
+
+# # Example usage:
+# if __name__ == "__main__":
+#     # Test the function
+#     test_results = {
+#         'timestamp': '2026-03-04 15:30:00',
+#         'problem_name': 'test_problem',
+#         'width': 8,
+#         'height': 8,
+#         'n_load_points': 2,
+#         'n_patterns_total': 4,
+#         'n_patterns_active': 3,
+#         'load_large': 50,
+#         'load_small': 5,
+#         'iterations': 12,
+#         'final_volume': 123.456,
+#         'n_members_final': 87,
+#         'n_nodes': 81,
+#         'n_ground_structure': 1234,
+#         'cpu_time_setup': 0.234,
+#         'cpu_time_solve': 12.456,
+#         'cpu_time_total': 15.813,
+#         'wall_time_total': 17.509,
+#         'primal_adaptive': True,
+#         'notes': 'Test run'
+#     }
+
+#     save_results_to_csv(test_results, 'test_results.csv')
+#     print("Test completed - check test_results.csv")
+>>>>>>> 0be23eb (Rebase from `main`)
