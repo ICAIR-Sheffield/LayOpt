@@ -156,7 +156,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
         all_results: dict[float, Any] = defaultdict()
         with tqdm(
             total=len(filter_levels),
-            desc=f"Solving optimisation results are under '{_config['output_dir']}'.",
+            desc=f"Solving optimisation, results are under {_config['output_dir']}.",
         ) as pbar:
             for _, _, result, filter_level in pool.imap_unordered(
                 processing_function, filter_levels

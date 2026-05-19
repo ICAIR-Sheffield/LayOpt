@@ -677,8 +677,8 @@ def trussopt(
     Returns
     -------
     tuple[float, dict[int, float], pd.DataFrame, float]
-        A tuple consisting of ``volume`` (the final volume of the solved problem) and ``filter_areas_dict`` 
-        (dict with keys ground structure member indices and values corresponding 
+        A tuple consisting of ``volume`` (the final volume of the solved problem) and ``filter_areas_dict``
+        (dict with keys ground structure member indices and values corresponding
          final member areas of the solved problem),
         a dataframe of results and the ``filter_level``.
     """

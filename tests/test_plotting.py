@@ -66,5 +66,4 @@ def test_plot_truss(
         img_ext=img_ext,
     )
     assert Path(tmp_path / expected_file).is_file()
-    # assert False
     return fig
