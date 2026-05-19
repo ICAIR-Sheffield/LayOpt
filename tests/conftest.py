@@ -320,8 +320,8 @@ def trussopt_param_one_by_one() -> dict[str, Any]:
         "max_length": 18,
         "support_points": np.asarray([[]]),
         "primal_method": "load_factor",
-        "problem_name": "short cantilever",
-        "notes": "short cantliever test",
+        "problem_name": "1x1 structure",
+        "notes": "1x1 structure test",
     }
 
 
@@ -330,8 +330,8 @@ def trussopt_param_two_by_two() -> dict[str, Any]:
     """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
     return {
         "filter_level": 1.0,
-        "width": 1,
-        "height": 1,
+        "width": 2,
+        "height": 2,
         "stress_tensile": 1,
         "stress_compressive": 1,
         "joint_cost": 0,
@@ -342,8 +342,8 @@ def trussopt_param_two_by_two() -> dict[str, Any]:
         "max_length": 18,
         "support_points": np.asarray([[]]),
         "primal_method": "load_factor",
-        "problem_name": "short cantilever",
-        "notes": "short cantliever test",
+        "problem_name": "2x2 structure",
+        "notes": "2x2 structure test",
     }
 
 
