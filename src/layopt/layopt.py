@@ -184,7 +184,7 @@ def solve(
         dual = eq_con.dual_value
         if dual is None:
             dual = np.zeros(eq_matrix_b.shape[0])
-        u.append(-np.array(dual))
+        u.append(np.array(dual))
 
     if vol == 0:
         u = [ui * 10000 for ui in u]
@@ -504,8 +504,8 @@ def stop_primal_violation_pattern(
 
         constraints = [
             eq_matrix_b @ q_var == lambda_var * fk_dof,            # equilibrium
-            q_var >= -stress_compressive * areas_nonzero, # compression limit
-            q_var <= stress_tensile * areas_nonzero,      # tension limit
+            q_var <= stress_compressive * areas_nonzero, # compression limit
+            q_var >= -stress_tensile * areas_nonzero,      # tension limit
         ]
         objective = cvx.Maximize(lambda_var)
         problem = cvx.Problem(objective, constraints)
