@@ -22,7 +22,8 @@ import time
 from math import ceil, gcd, isinf
 from pathlib import Path
 
-import mosek.fusion as mosek
+# import mosek.fusion as mosek
+import cvxpy as cvx
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -138,49 +139,58 @@ def solve(
         (virtual deflections at degrees of freedom).
     """
     member_cost = [col[2] + joint_cost for col in c_n]
-    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)
-    q, eqn = [], []
-    k = 0  # (damage+load) case number
-    with mosek.Model() as model:
-        a = model.variable("a", len(c_n), mosek.Domain.greaterThan(0.0))
-        eq_matrix_b = mosek.Matrix.sparse(
-            eq_matrix_b.shape[0],
-            eq_matrix_b.shape[1],
-            eq_matrix_b.row,
-            eq_matrix_b.col,
-            eq_matrix_b.data,
-        )
-        model.objective(mosek.ObjectiveSense.Minimize, mosek.Expr.dot(member_cost, a))
-        for fk in f:
-            qi = model.variable(len(c_n))
-            q.append(qi)
-            eqni = model.constraint(
-                mosek.Expr.sub(mosek.Expr.mul(eq_matrix_b, q[k]), fk * dof),
-                mosek.Domain.equalsTo(0),
-            )
-            eqn.append(eqni)
-            model.constraint(
-                mosek.Expr.sub(mosek.Expr.mul(stress_compressive, a), q[k]),
-                mosek.Domain.greaterThan(0),
-            )
-            model.constraint(
-                mosek.Expr.sub(mosek.Expr.mul(-stress_tensile, a), q[k]),
-                mosek.Domain.lessThan(0),
-            )
-            k += 1
-        model.setSolverParam("optimizer", "intpnt")
-        model.setSolverParam("intpntBasis", "never")
-        model.acceptedSolutionStatus(mosek.AccSolutionStatus.Anything)
-        # M.setLogHandler(stdout)
-        model.solve()
-        vol = model.primalObjValue()
-        q = [np.array(qi.level()) for qi in q]
-        a = a.level()
-        u = [-np.array(eqnk.dual()) for eqnk in eqn]
-        if vol == 0:
-            u = [ui * 10000 for ui in u]
-    return vol, a, q, u
+    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)   
+    eq_matrix_b = sparse.coo_matrix(
+        (eq_matrix_b.data, (eq_matrix_b.row, eq_matrix_b.col)),
+        shape=eq_matrix_b.shape,
+    )
+    
+    n_members = len(c_n)
+    a = cvx.Variable(n_members, nonneg=True, name="a")
+    
+    q_vars = []
+    eq_constraints = []
+    other_constraints = []
+    for fk in f:
+        qi = cvx.Variable(n_members, name="q")
+        q_vars.append(qi)
+        eq_con = eq_matrix_b @ qi == fk * dof
+        eq_constraints.append(eq_con)
+        other_constraints += [
+            # eq_matrix_b @ qi == fk * dof,                          # equilibrium
+            qi <= stress_compressive * a,                 # compression limit
+            qi >= -stress_tensile * a,                    # tension limit
+        ]
 
+    objective = cvx.Minimize(member_cost @ a)
+    problem = cvx.Problem(objective, eq_constraints + other_constraints)
+    problem.solve(
+        solver=cvx.MOSEK,
+        mosek_params={
+            "MSK_IPAR_INTPNT_BASIS": 0, 
+            "MSK_IPAR_OPTIMIZER": 4,  # 4 = interior point
+        }
+        # solver=cvx.CLARABEL,
+        # verbose=True
+    )
+
+    vol = problem.value if problem.value is not None else 0.0
+    a_val = a.value if a.value is not None else np.zeros(n_members)
+    q_vals = [qi.value if qi.value is not None else np.zeros(n_members) for qi in q_vars]
+
+    # eq_constraints = constraints[::3]  # every third constraint is the equilibrium one
+    u = []
+    for eq_con in eq_constraints:
+        dual = eq_con.dual_value
+        if dual is None:
+            dual = np.zeros(eq_matrix_b.shape[0])
+        u.append(-np.array(dual))
+
+    if vol == 0:
+        u = [ui * 10000 for ui in u]
+
+    return vol, a_val, q_vals, u
+    
 
 def stop_violation(
     nodal_coords: npt.NDArray[np.float64],
@@ -473,7 +483,14 @@ def stop_primal_violation_pattern(
     areas_nonzero = np.asarray(areas)[nonzero_areas_bool]
 
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n_nonzero, dof)
+    eq_matrix_b = sparse.coo_matrix(
+        (eq_matrix_b.data, (eq_matrix_b.row, eq_matrix_b.col)),
+        shape=eq_matrix_b.shape,
+    )
+    
+    n_members = len(c_n_nonzero)
     load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
+    
     # loop through all (active and inactive) pattern load cases
     for k, _ in enumerate(all_patterns):
         if active_load_cases[k] == 1:
@@ -481,48 +498,27 @@ def stop_primal_violation_pattern(
 
         fk_dof = all_patterns[k] * dof
 
-        # Solve LP: maximize lambda subject to B*q = lambda*f, -sigma*a <= q <= sigma*a
-        with mosek.Model() as model:
-            # Variables
-            q_var = model.variable("q", len(c_n_nonzero))
-            lambda_var = model.variable("lambda", 1, mosek.Domain.greaterThan(0.0))
+        # Solve LP: maximise lambda subject to B*q = lambda*f, -sigma*a <= q <= sigma*a
+        q_var = cvx.Variable(n_members, name="q")
+        lambda_var = cvx.Variable(nonneg=True, name="lambda")
 
-            # Objective: maximize lambda
-            model.objective(mosek.ObjectiveSense.Maximize, lambda_var)
+        constraints = [
+            eq_matrix_b @ q_var == lambda_var * fk_dof,            # equilibrium
+            q_var >= -stress_compressive * areas_nonzero, # compression limit
+            q_var <= stress_tensile * areas_nonzero,      # tension limit
+        ]
+        objective = cvx.Maximize(lambda_var)
+        problem = cvx.Problem(objective, constraints)
+        problem.solve(
+            solver=cvx.MOSEK,
+            mosek_params={
+                "MSK_IPAR_INTPNT_BASIS": 0, 
+                "MSK_IPAR_OPTIMIZER": 4,  # 4 = interior point
+            }
+            # solver=cvx.CLARABEL,
+        )
 
-            # Constraint 1: B*q = lambda*f
-            b_mosek = mosek.Matrix.sparse(
-                eq_matrix_b.shape[0],
-                eq_matrix_b.shape[1],
-                eq_matrix_b.row,
-                eq_matrix_b.col,
-                eq_matrix_b.data,
-            )
-            model.constraint(
-                mosek.Expr.sub(
-                    mosek.Expr.mul(b_mosek, q_var),
-                    mosek.Expr.mul(fk_dof, lambda_var.index(0)),
-                ),
-                mosek.Domain.equalsTo(0),
-            )
-
-            # Constraint 2: q <= sigma_t * a (tension limit)
-            model.constraint(
-                mosek.Expr.sub(q_var, stress_tensile * areas_nonzero),
-                mosek.Domain.lessThan(0),
-            )
-
-            # Constraint 3: q >= -sigma_c * a (compression limit)
-            model.constraint(
-                mosek.Expr.sub(q_var, -stress_compressive * areas_nonzero),
-                mosek.Domain.greaterThan(0),
-            )
-
-            # Solve
-            model.setSolverParam("optimizer", "intpnt")
-            model.acceptedSolutionStatus(mosek.AccSolutionStatus.Anything)
-            model.solve()
-            load_factors[k] = lambda_var.level()[0]
+        load_factors[k] = lambda_var.value if lambda_var.value is not None else 0.0
 
     # Violation: load factor < 1 (with tolerance)
     violated = load_factors < tol
