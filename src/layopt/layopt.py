@@ -489,26 +489,29 @@ def stop_primal_violation_pattern(
     )
     
     n_members = len(c_n_nonzero)
+    n_dof = eq_matrix_b.shape[0]
     load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
     
+    q_var = cvx.Variable(n_members, name="q")
+    lambda_var = cvx.Variable(nonneg=True, name="lambda")
+    
+    fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
+    
+    constraints = [
+        eq_matrix_b @ q_var == lambda_var * fk_dof_param,            # equilibrium
+        q_var <= stress_compressive * areas_nonzero, # compression limit
+        q_var >= -stress_tensile * areas_nonzero,      # tension limit
+    ]
+    objective = cvx.Maximize(lambda_var)
+    problem = cvx.Problem(objective, constraints)
+    
     # loop through all (active and inactive) pattern load cases
-    for k, _ in enumerate(all_patterns):
+    for k, pattern in enumerate(all_patterns):
         if active_load_cases[k] == 1:
             continue  # skip active cases
 
-        fk_dof = all_patterns[k] * dof
+        fk_dof_param.value = pattern * dof
 
-        # Solve LP: maximise lambda subject to B*q = lambda*f, -sigma*a <= q <= sigma*a
-        q_var = cvx.Variable(n_members, name="q")
-        lambda_var = cvx.Variable(nonneg=True, name="lambda")
-
-        constraints = [
-            eq_matrix_b @ q_var == lambda_var * fk_dof,            # equilibrium
-            q_var <= stress_compressive * areas_nonzero, # compression limit
-            q_var >= -stress_tensile * areas_nonzero,      # tension limit
-        ]
-        objective = cvx.Maximize(lambda_var)
-        problem = cvx.Problem(objective, constraints)
         problem.solve(
             solver=cvx.MOSEK,
             mosek_params={
