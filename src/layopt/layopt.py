@@ -139,15 +139,15 @@ def solve(
         (virtual deflections at degrees of freedom).
     """
     member_cost = [col[2] + joint_cost for col in c_n]
-    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)   
+    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)
     eq_matrix_b = sparse.coo_matrix(
         (eq_matrix_b.data, (eq_matrix_b.row, eq_matrix_b.col)),
         shape=eq_matrix_b.shape,
     )
-    
+
     n_members = len(c_n)
     a = cvx.Variable(n_members, nonneg=True, name="a")
-    
+
     q_vars = []
     eq_constraints = []
     other_constraints = []
@@ -158,25 +158,20 @@ def solve(
         eq_constraints.append(eq_con)
         other_constraints += [
             # eq_matrix_b @ qi == fk * dof,                          # equilibrium
-            qi <= stress_compressive * a,                 # compression limit
-            qi >= -stress_tensile * a,                    # tension limit
+            qi <= stress_compressive * a,  # compression limit
+            qi >= -stress_tensile * a,  # tension limit
         ]
 
     objective = cvx.Minimize(member_cost @ a)
     problem = cvx.Problem(objective, eq_constraints + other_constraints)
-    problem.solve(
-        solver=cvx.MOSEK,
-        mosek_params={
-            "MSK_IPAR_INTPNT_BASIS": 0, 
-            "MSK_IPAR_OPTIMIZER": 4,  # 4 = interior point
-        }
-        # solver=cvx.CLARABEL,
-        # verbose=True
-    )
+    # uses CVXPY preference order of solvers, MOSEK first if installed
+    problem.solve()
 
     vol = problem.value if problem.value is not None else 0.0
     a_val = a.value if a.value is not None else np.zeros(n_members)
-    q_vals = [qi.value if qi.value is not None else np.zeros(n_members) for qi in q_vars]
+    q_vals = [
+        qi.value if qi.value is not None else np.zeros(n_members) for qi in q_vars
+    ]
 
     # eq_constraints = constraints[::3]  # every third constraint is the equilibrium one
     u = []
@@ -190,7 +185,7 @@ def solve(
         u = [ui * 10000 for ui in u]
 
     return vol, a_val, q_vals, u
-    
+
 
 def stop_violation(
     nodal_coords: npt.NDArray[np.float64],
@@ -487,24 +482,24 @@ def stop_primal_violation_pattern(
         (eq_matrix_b.data, (eq_matrix_b.row, eq_matrix_b.col)),
         shape=eq_matrix_b.shape,
     )
-    
+
     n_members = len(c_n_nonzero)
     n_dof = eq_matrix_b.shape[0]
     load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
-    
+
     q_var = cvx.Variable(n_members, name="q")
     lambda_var = cvx.Variable(nonneg=True, name="lambda")
-    
+
     fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
-    
+
     constraints = [
-        eq_matrix_b @ q_var == lambda_var * fk_dof_param,            # equilibrium
-        q_var <= stress_compressive * areas_nonzero, # compression limit
-        q_var >= -stress_tensile * areas_nonzero,      # tension limit
+        eq_matrix_b @ q_var == lambda_var * fk_dof_param,  # equilibrium
+        q_var <= stress_compressive * areas_nonzero,  # compression limit
+        q_var >= -stress_tensile * areas_nonzero,  # tension limit
     ]
     objective = cvx.Maximize(lambda_var)
     problem = cvx.Problem(objective, constraints)
-    
+
     # loop through all (active and inactive) pattern load cases
     for k, pattern in enumerate(all_patterns):
         if active_load_cases[k] == 1:
@@ -512,14 +507,8 @@ def stop_primal_violation_pattern(
 
         fk_dof_param.value = pattern * dof
 
-        problem.solve(
-            solver=cvx.MOSEK,
-            mosek_params={
-                "MSK_IPAR_INTPNT_BASIS": 0, 
-                "MSK_IPAR_OPTIMIZER": 4,  # 4 = interior point
-            }
-            # solver=cvx.CLARABEL,
-        )
+        # uses CVXPY preference order of solvers, MOSEK first if installed
+        problem.solve()
 
         load_factors[k] = lambda_var.value if lambda_var.value is not None else 0.0
 
