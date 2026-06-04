@@ -1,8 +1,6 @@
 """Tests for the layopt module."""
 
-import csv
 import os
-from pathlib import Path
 from typing import Any
 
 import numpy as np
