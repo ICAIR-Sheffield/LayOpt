@@ -1,6 +1,7 @@
 """Tests for dataclasses."""
 
 from contextlib import nullcontext as does_not_raise
+from typing import Any
 
 import numpy as np
 import pytest
@@ -10,27 +11,152 @@ from layopt import classes
 
 
 @pytest.mark.parametrize(
-    ("config_str"),
+    ("config"),
     [
-        pytest.param("trussopt_param_one_by_one", id="1x1"),
-        pytest.param("trussopt_param_two_by_two", id="2x2"),
         pytest.param(
-            "trussopt_param_three_by_six_short_cantilever", id="3x6 cantilever"
+            {
+                "filter_level": 1.0,
+                "width": 1,
+                "height": 1,
+                "stress_tensile": 1,
+                "stress_compressive": 1,
+                "joint_cost": 0,
+                "loaded_points": np.asarray([[3, 3]]),
+                "load_direction": (0, -1),
+                "load_large": 50,
+                "load_small": 5,
+                "max_length": 18,
+                "support_points": np.asarray([[]]),
+                "member_area_filtering": True,
+                "primal_method": "load_factor",
+                "problem_name": "short cantilever",
+                "save_to_csv": True,
+                "csv_filename": "short_cantilever.csv",
+                "notes": "short cantliever test",
+            },
+            id="1x1",
         ),
         pytest.param(
-            "trussopt_param_eight_by_eight_square_cantilever",
+            {
+                "filter_level": 1.0,
+                "width": 1,
+                "height": 1,
+                "stress_tensile": 1,
+                "stress_compressive": 1,
+                "joint_cost": 0,
+                "loaded_points": np.asarray([[3, 3]]),
+                "load_direction": (0, -1),
+                "load_large": 50,
+                "load_small": 5,
+                "max_length": 18,
+                "support_points": np.asarray([[]]),
+                "member_area_filtering": False,
+                "primal_method": "load_factor",
+                "problem_name": "short cantilever",
+                "save_to_csv": True,
+                "csv_filename": "short_cantilever.csv",
+                "notes": "short cantliever test",
+            },
+            id="2x2",
+        ),
+        pytest.param(
+            {
+                "filter_level": 1.0,
+                "width": 3,
+                "height": 6,
+                "stress_tensile": 1,
+                "stress_compressive": 1,
+                "joint_cost": 0,
+                "loaded_points": np.asarray([[3, 3]]),
+                "load_direction": (0, -1),
+                "load_large": 50,
+                "load_small": 5,
+                "max_length": 18,
+                "support_points": np.asarray([[]]),
+                "primal_method": "load_factor",
+                "problem_name": "short cantilever",
+                "save_to_csv": True,
+                "csv_filename": "short_cantilever.csv",
+                "notes": "short cantliever test",
+            },
+            id="3x6 cantilever",
+        ),
+        pytest.param(
+            {
+                "filter_level": 1.0,
+                "width": 8,
+                "height": 8,
+                "stress_tensile": 1,
+                "stress_compressive": 1,
+                "joint_cost": 0,
+                "loaded_points": np.asarray([[8, 0], [8, 4]]),
+                "load_direction": (0, -1),
+                "load_large": 50,
+                "load_small": 5,
+                "max_length": 15,
+                "support_points": np.asarray([[]]),
+                "primal_method": "load_factor",
+                "problem_name": "square cantilever",
+                "save_to_csv": True,
+                "csv_filename": "square_cantilever.csv",
+                "notes": "square cantliever test",
+            },
             id="8x8 square cantilever",
         ),
         pytest.param(
-            "trussopt_param_three_by_one_parallel_forces", id="3x1 parallel forces"
+            {
+                "filter_level": 1.0,
+                "width": 3,
+                "height": 1,
+                "stress_tensile": 1,
+                "stress_compressive": 1,
+                "joint_cost": 0,
+                "loaded_points": np.asarray([[3, 0], [3, 1]]),
+                "load_direction": (0, -1),
+                "load_large": 50,
+                "load_small": 5,
+                "max_length": 2.5,
+                "support_points": np.asarray([[]]),
+                "primal_method": "load_factor",
+                "problem_name": "parallel forces",
+                "save_to_csv": True,
+                "csv_filename": "parallel_forces.csv",
+                "notes": "parallel forces test",
+            },
+            id="3x1 parallel forces",
         ),
-        pytest.param("trussopt_param_eighteen_by_four_spanning", id="18x4 spanning"),
+        pytest.param(
+            {
+                "filter_level": 1.0,
+                "width": 18,
+                "height": 4,
+                "stress_tensile": 1,
+                "stress_compressive": 1,
+                "joint_cost": 0,
+                "loaded_points": np.asarray(
+                    [
+                        [6.0, 4],
+                        [8.0, 4],
+                        [12.0, 4],
+                    ]
+                ),
+                "load_direction": (0, -1),
+                "load_large": 3.75,
+                "load_small": 0.204,
+                "max_length": 36,
+                "support_points": np.asarray([[0, 0], [18, 0]]),
+                "primal_method": "load_factor",
+                "problem_name": "spanning example",
+                "save_to_csv": True,
+                "csv_filename": "spanning_example.csv",
+                "notes": "spanning example test",
+            },
+            id="18x4 spanning",
+        ),
     ],
 )
-def test_parameters(config_str: str, request) -> None:
+def test_parameters(config: dict[str:Any]) -> None:
     """Test instantiation of ``Parameters`` data class with test configurations."""
-    # Load config and tidy (normally done via config.reconcile_config_args() but want this test to remain independent
-    config = request.getfixturevalue(config_str)
     for to_convert in ["loaded_points", "support_points", "load_direction"]:
         config[to_convert] = np.asarray(config[to_convert])
     with does_not_raise():

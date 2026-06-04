@@ -214,11 +214,10 @@ def test_trussopt(
 ) -> None:
     """Regression test for layopt.trussopt()."""
     params = request.getfixturevalue(trussopt_param_fixture)
-    results = layopt.trussopt(**params)
-    # ns-rse 2026-04-15 - results is currently a tuple, the third item of which is now a dataframe rather than
-    # dictionary of results, we therefore split these to facilitate taking snapshots
+    results = layopt.trussopt(parameters=params)
+    # ns-rse 2026-04-15 - results is currently a tuple, the third item of which is now a dictionary of dataframe
     df = results[2]
-    results = (results[0], results[1], results[3])
+    results = (results[0], results[1])
     assert results == snapshot(
         matcher=path_type(
             types=(float, np.ndarray),
@@ -226,7 +225,9 @@ def test_trussopt(
         ),
     )
     assert (
-        df.drop(["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1).to_string()
+        df.T.reset_index(drop=True)
+        .drop(["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1)
+        .to_string()
         == snapshot
     )
 

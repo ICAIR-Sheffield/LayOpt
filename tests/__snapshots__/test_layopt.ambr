@@ -196,8 +196,8 @@
 # ---
 # name: test_trussopt[1x1].1
   '''
-      problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
-  0  1x1 structure          1.0     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  1x1 structure test
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  short cantilever          1.0     1      1             1                2                 1       50.0        5.0          2        150.0               6       4                  6   load_factor  1x1 structure test
   '''
 # ---
 # name: test_trussopt[2x2]
@@ -244,7 +244,7 @@
 # name: test_trussopt[parallel forces].1
   '''
         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                 notes
-  0  parallel forces          1.0     3      1             2                4                 1         50          5          2       1500.0              16       8                 20   load_factor  parallel forces test
+  0  parallel forces          1.0     3      1             2                4                 1       50.0        5.0          2       1500.0              16       8                 20   load_factor  parallel forces test
   '''
 # ---
 # name: test_trussopt[short cantilever]
@@ -264,7 +264,7 @@
 # name: test_trussopt[short cantilever].1
   '''
          problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  short cantilever          1.0     3      6             1                2                 1         50          5          2        300.0              81      28                251   load_factor  short cantliever test
+  0  short cantilever          1.0     3      6             1                2                 1       50.0        5.0          2        300.0              81      28                251   load_factor  short cantliever test
   '''
 # ---
 # name: test_trussopt[spanning example]
@@ -389,6 +389,6 @@
 # name: test_trussopt[square cantilever].1
   '''
           problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                   notes
-  0  square cantilever          1.0     8      8             2                4                 1         50          5          8   2070.37037             376      81               2040   load_factor  square cantliever test
+  0  square cantilever          1.0     8      8             2                4                 1       50.0        5.0          8   2070.37037             376      81               2040   load_factor  square cantliever test
   '''
 # ---
