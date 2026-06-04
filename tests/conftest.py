@@ -322,9 +322,9 @@ def trussopt_param_one_by_one() -> Parameters:
         max_length=18,
         support_points=np.asarray([[]]),
         primal_method="load_factor",
-        problem_name="short cantilever",
+        problem_name="1x1 structure",
         csv_filename="short_cantilever.csv",
-        notes="short cantliever test",
+        notes="1x1 structure test",
     )
 
 
@@ -333,8 +333,8 @@ def trussopt_param_two_by_two() -> Parameters:
     """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
     return Parameters(
         filter_levels=[1.0],
-        width=1,
-        height=1,
+        width=2,
+        height=2,
         stress_tensile=1,
         stress_compressive=1,
         joint_cost=0,
@@ -345,9 +345,8 @@ def trussopt_param_two_by_two() -> Parameters:
         max_length=18,
         support_points=np.asarray([[]]),
         primal_method="load_factor",
-        problem_name="short cantilever",
-        csv_filename="short_cantilever.csv",
-        notes="short cantliever test",
+        problem_name="2x2 structure",
+        notes="2x2 structure test",
     )
 
 
@@ -369,7 +368,6 @@ def trussopt_param_three_by_six_short_cantilever() -> Parameters:
         support_points=np.asarray([[]]),
         primal_method="load_factor",
         problem_name="short cantilever",
-        csv_filename="short_cantilever.csv",
         notes="short cantliever test",
     )
 
@@ -392,7 +390,6 @@ def trussopt_param_eight_by_eight_square_cantilever() -> Parameters:
         support_points=np.asarray([[]]),
         primal_method="load_factor",
         problem_name="square cantilever",
-        csv_filename="square_cantilever.csv",
         notes="square cantliever test",
     )
 
@@ -415,7 +412,6 @@ def trussopt_param_three_by_one_parallel_forces() -> Parameters:
         support_points=np.asarray([[]]),
         primal_method="load_factor",
         problem_name="parallel forces",
-        csv_filename="parallel_forces.csv",
         notes="parallel forces test",
     )
 
@@ -445,7 +441,6 @@ def trussopt_param_eighteen_by_four_spanning() -> Parameters:
         support_points=np.asarray([[0, 0], [18, 0]]),
         primal_method="load_factor",
         problem_name="spanning example",
-        csv_filename="spanning_example.csv",
         notes="spanning example test",
     )
 
