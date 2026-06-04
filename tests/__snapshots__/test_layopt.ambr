@@ -193,21 +193,24 @@
 # ---
 # name: test_trussopt[1x1].1
   '''
-         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  short cantilever          1.0     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
+      problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
+  0  1x1 structure          1.0     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  1x1 structure test
   '''
 # ---
 # name: test_trussopt[2x2]
   tuple(
-    np.float64(150.0),
-    array([ 0.      ,  0.      , 70.710678,  0.      ,  0.      , 50.      ]),
+    np.float64(300.0),
+    array([ 0.      ,  0.      , 44.686988, 20.573533,  0.      ,  0.      ,
+          0.      ,  0.      ,  0.      ,  0.      ,  0.      ,  0.      ,
+          0.      ,  0.      ,  0.      ,  0.      , 44.686988, 20.573533,
+          0.      , 18.401527, 31.598473, 31.598473]),
     1.0,
   )
 # ---
 # name: test_trussopt[2x2].1
   '''
-         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  short cantilever          1.0     1      1             1                2                 1         50          5          2        150.0               6       4                  6   load_factor  short cantliever test
+      problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
+  0  2x2 structure          1.0     2      2             1                2                 1         50          5          2        300.0              22       9                 28   load_factor  2x2 structure test
   '''
 # ---
 # name: test_trussopt[parallel forces]

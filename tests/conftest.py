@@ -320,8 +320,8 @@ def trussopt_param_one_by_one() -> dict[str, Any]:
         "max_length": 18,
         "support_points": np.asarray([[]]),
         "primal_method": "load_factor",
-        "problem_name": "short cantilever",
-        "notes": "short cantliever test",
+        "problem_name": "1x1 structure",
+        "notes": "1x1 structure test",
     }
 
 
@@ -330,8 +330,8 @@ def trussopt_param_two_by_two() -> dict[str, Any]:
     """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
     return {
         "filter_level": 1.0,
-        "width": 1,
-        "height": 1,
+        "width": 2,
+        "height": 2,
         "stress_tensile": 1,
         "stress_compressive": 1,
         "joint_cost": 0,
@@ -342,8 +342,8 @@ def trussopt_param_two_by_two() -> dict[str, Any]:
         "max_length": 18,
         "support_points": np.asarray([[]]),
         "primal_method": "load_factor",
-        "problem_name": "short cantilever",
-        "notes": "short cantliever test",
+        "problem_name": "2x2 structure",
+        "notes": "2x2 structure test",
     }
 
 
@@ -460,21 +460,21 @@ def plotting_data_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
     return {
         "areas": np.asarray(
             [
-                31.96344547,
-                30.63237705,
-                31.96344547,
-                30.63237705,
-                27.39843096,
-                22.60156904,
-                22.60156904,
+                44.687,
+                20.5735,
+                44.687,
+                20.5735,
+                18.4015,
+                31.5985,
+                31.5985,
             ]
         ),
         "c_n": np.asarray(
             [
-                [0.0, 4.0, 1.41421356, 1.0],
-                [0.0, 5.0, 2.23606798, 1.0],
-                [4.0, 8.0, 1.41421356, 1.0],
-                [5.0, 6.0, 2.23606798, 1.0],
+                [0.0, 4.0, 1.41421, 1.0],
+                [0.0, 5.0, 2.23607, 1.0],
+                [4.0, 8.0, 1.41421, 1.0],
+                [5.0, 6.0, 2.23607, 1.0],
                 [5.0, 8.0, 1.0, 1.0],
                 [6.0, 7.0, 1.0, 1.0],
                 [7.0, 8.0, 1.0, 1.0],
@@ -483,13 +483,13 @@ def plotting_data_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
         "forces": [
             np.asarray(
                 [
-                    -31.96344547,
-                    -30.63237705,
-                    -31.96344547,
-                    30.63237705,
-                    -27.39843096,
-                    22.60156904,
-                    22.60156904,
+                    -44.687,
+                    -20.5735,
+                    -44.687,
+                    20.5735,
+                    -18.4015,
+                    31.5985,
+                    31.5985,
                 ]
             )
         ],
@@ -506,7 +506,7 @@ def plotting_data_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
                 [2.0, 2.0],
             ]
         ),
-        "threshold": 0.04468698843790225,
+        "threshold": 0.044687,
     }
 
 
