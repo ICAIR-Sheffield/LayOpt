@@ -1,8 +1,6 @@
 """Tests for the layopt module."""
 
-import csv
 import os
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -764,53 +762,3 @@ def test_stop_violation(
     assert isinstance(actual_num_added, int)
     assert actual_num_added >= 0
     assert actual_num_added == expected_num_added
-
-
-@pytest.mark.parametrize(
-    "filename",
-    [
-        pytest.param(
-            "results_2026-04-16-123456.csv",
-            id="new_csv_file",
-        ),
-    ],
-)
-def test_save_results_to_csv_new(
-    sample_csv_results: dict[str, Any],
-    tmp_path: Path,
-    filename: str,
-    snapshot,
-):
-    """Test that a new file is created with correct header row and one data row."""
-    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
-    assert Path(tmp_path / filename).is_file()
-    with Path(tmp_path / filename).open(newline="", encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        rows = list(reader)
-    assert reader.fieldnames == snapshot
-    assert rows == snapshot
-
-
-@pytest.mark.parametrize(
-    "filename",
-    [
-        pytest.param(
-            "results_2026-04-16-654321.csv",
-            id="append_to_csv_file",
-        ),
-    ],
-)
-def test_save_results_to_csv_appends(
-    sample_csv_results: dict[str, Any],
-    tmp_path: Path,
-    filename: str,
-    snapshot,
-):
-    """Test that calling function twice produces two data rows."""
-    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
-    layopt.save_results_to_csv(sample_csv_results, tmp_path / filename)
-    assert Path(tmp_path / filename).is_file()
-    with Path(tmp_path / filename).open(newline="", encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        rows = list(reader)
-    assert rows == snapshot

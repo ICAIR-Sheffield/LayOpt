@@ -16,7 +16,6 @@
 ## https://doi.org/10.1007/s00158-019-02226-6
 # !pip install mosek
 
-import csv
 import itertools
 import time
 from math import ceil, gcd, isinf
@@ -920,77 +919,6 @@ def trussopt(
             logger.warning("No plot generated as volume <= 0.0")
     logger.info(f"Plotting took {time.process_time() - solve_end!s}")
     return vol, filter_areas, dict_to_df(results), filter_level
-
-
-def save_results_to_csv(
-    results: dict[str, str | int | float], filename: str = "pattern_loading_results.csv"
-) -> None:
-    """
-    Save optimization results to CSV file.
-
-    Creates file with header if it doesn't exist, otherwise appends.
-
-    Parameters
-    ----------
-    results : dict
-        Dictionary containing results to save. Should include keys:
-        - timestamp
-        - problem_name
-        - width, height
-        - n_load_points
-        - n_patterns_total
-        - n_patterns_active
-        - load_large
-        - load_small
-        - iterations
-        - final_volume
-        - n_members_final
-        - n_nodes
-        - n_ground_structure
-        - cpu_time_setup
-        - cpu_time_solve
-        - primal_method
-        - notes
-    filename : str
-        CSV filename (default=``pattern_loading_results.csv``).
-    """
-    file_exists = Path(filename).is_file()
-
-    # Define column order
-    fieldnames = [
-        "timestamp",
-        "problem_name",
-        "width",
-        "height",
-        "n_load_points",
-        "n_patterns_total",
-        "n_patterns_active",
-        "load_large",
-        "load_small",
-        "iterations",
-        "final_volume",
-        "n_members_final",
-        "n_nodes",
-        "n_ground_structure",
-        "cpu_time_setup",
-        "cpu_time_solve",
-        # 'cpu_time_total',
-        # 'wall_time_total',
-        "primal_method",
-        "notes",
-    ]
-
-    with Path(filename).open("a", newline="", encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        # Write header if new file
-        if not file_exists:
-            writer.writeheader()
-
-        # Write data
-        writer.writerow(results)
-
-    logger.info(f"\nResults saved to {filename}")
 
 
 # # Example usage:
