@@ -677,7 +677,7 @@ def trussopt(
     Returns
     -------
     tuple[float, dict[int, float], pd.DataFrame, float]
-        A tuple consisting of ``volume`` (the final volume of the solved problem) and ``filter_areas_dict``
+        A tuple consisting of ``volume`` (the final volume of the solved problem) and ``member_areas_filtered``
         (dict with keys ground structure member indices and values corresponding
          final member areas of the solved problem),
         a dataframe of results and the ``filter_level``.
@@ -939,7 +939,7 @@ def trussopt(
     keep = filter_areas >= threshold
     kept_indices = active_indices[keep]
     c_n = c_n[keep]
-    filter_areas_dict: dict[int, float] = {
+    member_areas_filtered: dict[int, float] = {
         int(idx): float(area)
         for idx, area in zip(kept_indices, filter_areas[keep], strict=True)
     }
@@ -948,7 +948,7 @@ def trussopt(
         f"{int(np.sum(keep))} members retained"
     )
 
-    return vol, filter_areas_dict, dict_to_df(results), filter_level
+    return vol, member_areas_filtered, dict_to_df(results), filter_level
 
 
 def save_results_to_csv(
