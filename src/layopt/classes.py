@@ -20,12 +20,8 @@ class Parameters:
 
     width: int = Field(default=3, title="Width of structure.", ge=1)
     height: int = Field(default=6, title="Height of structure.", ge=1)
-    stress_tensile: float = Field(
-        default=1.0, title="Tensile stress.", ge=0.0
-    )
-    stress_compressive: float = Field(
-        default=1.0, title="Compressive stress.", ge=0.0
-    )
+    stress_tensile: float = Field(default=1.0, title="Tensile stress.", ge=0.0)
+    stress_compressive: float = Field(default=1.0, title="Compressive stress.", ge=0.0)
     joint_cost: float = Field(default=0.0, title="Joint cost.", ge=0.0)
     loaded_points: npt.NDArray[np.int64] = Field(
         default=np.asarray([[3, 3]]), title="Loaded Points."

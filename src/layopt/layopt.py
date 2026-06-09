@@ -878,12 +878,9 @@ def trussopt(
 
         # Plot results
         if parameters.plotting["run"]:
-            multiplier = (
-                1.0 if parameters.filter_levels is None else parameters.filter_levels
-            )
             outfile = Path(parameters.output_dir) / (
                 parameters.problem_name.replace(" ", "_")
-                + f"_w{parameters.width}_h{parameters.height}_n{len(parameters.loaded_points)}_filter{int(multiplier * 100)}"
+                + f"_w{parameters.width}_h{parameters.height}_n{len(parameters.loaded_points)}_filter{int(filter_level * 100)}"
             )
             if vol > 0:
                 _, _ = plot_truss(
@@ -892,7 +889,7 @@ def trussopt(
                     areas=filter_areas,
                     forces=filter_forces,
                     threshold=max(filter_areas) * parameters.member_area_filtering,
-                    title="Filtered " + str(100 * multiplier) + "%",
+                    title="Filtered " + str(100 * filter_level) + "%",
                     bar_thickness=parameters.plotting["bar_thickness"],
                     dpi=parameters.plotting["dpi"],
                     outfile=outfile,
