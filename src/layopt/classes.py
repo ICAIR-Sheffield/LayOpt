@@ -21,21 +21,21 @@ class Parameters:
     width: int = Field(default=3, title="Width of structure.", ge=1)
     height: int = Field(default=6, title="Height of structure.", ge=1)
     stress_tensile: float = Field(
-        default=1.0, title="Tensile stress.", ge=0.0, le=1000.0
+        default=1.0, title="Tensile stress.", ge=0.0
     )
     stress_compressive: float = Field(
-        default=1.0, title="Compressive stress.", ge=0.0, le=1000.0
+        default=1.0, title="Compressive stress.", ge=0.0
     )
-    joint_cost: float = Field(default=0.0, title="Joint cost.", ge=0.0, le=1000.0)
+    joint_cost: float = Field(default=0.0, title="Joint cost.", ge=0.0)
     loaded_points: npt.NDArray[np.int64] = Field(
         default=np.asarray([[3, 3]]), title="Loaded Points."
     )
     load_direction: tuple[float, float] = Field(
         default=(0.0, -1.0), title="Loaded direction."
     )
-    load_large: float = Field(default=50.0, title="Maximum length.", ge=0.0, le=1000.0)
-    load_small: float = Field(default=5.0, title="Maximum length.", ge=0.0, le=1000.0)
-    max_length: float = Field(default=18.0, title="Maximum length.", ge=0.0, le=1000.0)
+    load_large: float = Field(default=50.0, title="Maximum length.", ge=0.0)
+    load_small: float = Field(default=5.0, title="Maximum length.", ge=0.0)
+    max_length: float = Field(default=18.0, title="Maximum length.", ge=0.0)
     support_points: npt.NDArray[np.float32] = Field(
         default=np.asarray([[3, 3]]), title="Support Points."
     )
@@ -143,63 +143,19 @@ class Node:
     Attributes
     ----------
     coordinate : npt.NDArray[np.float64]
-        The position of the node Euclidean space.
+        The position of the node in Euclidean space.
     supported_dof : npt.NDArray[np.bool]
         Supported degrees of freedom.
-    loading : dict[str, Case]
+    loading : dict[Case, list[float]]
         Loading of the node.
-    virtual_displacements : dict[str, Case]
+    virtual_displacements : dict[Case, list[float]]
         Displacements.
     """
 
     coordinate: npt.NDArray[np.float64]
     supported_dof: npt.NDArray[np.bool]
     loading: dict[Case, list[float]]
-    virtual_displacements: dict[Case, list[float | None]]
-
-
-@dataclass(
-    repr=True,
-    eq=True,
-    config=ConfigDict(arbitrary_types_allowed=True, validate_assignment=True),
-    validate_on_init=True,
-)
-class Structure:
-    """
-    Over-arching dataclass for the structure being modelled.
-
-    Attributes
-    ----------
-    elements : list
-        Definition required.
-    nodes : list[Node]
-        A list of ``Node`` within the structure.
-    cases : list[Case]
-        A list of ``Case`` within the structure.
-    joint_cost : float
-        Joint cost.
-    """
-
-    elements: list[Any]
-    nodes: list[Node]
-    cases: list[Case]
-    joint_cost: float
-
-    def __str__(self) -> str:
-        """
-        Representation function for class attributes.
-
-        Returns
-        -------
-        str
-            Formatted statistics on ``Structure``.
-        """
-        return (
-            f"Total elements : {len(self.elements)}"
-            f"Total nodes : {len(self.nodes)}"
-            f"Total cases : {len(self.cases)}"
-            f"Joint cost : {self.joint_cost}"
-        )
+    virtual_displacements: dict[Case, list[float]]
 
 
 @dataclass(
@@ -244,7 +200,7 @@ class TrussBar(Connection):
     ----------
     area : float, optional
         Definition required.
-    forces : dict[str, Optional[float]]
+    forces : dict[Case, float | None]
         Definition required.
     stress_tensile : float
         Definition required.
@@ -253,7 +209,7 @@ class TrussBar(Connection):
     """
 
     area: float | None
-    forces: dict[str, float | None]
+    forces: dict[Case, float | None]
     stress_tensile: float
     stress_compressive: float
 
@@ -276,9 +232,9 @@ class GrillageBeam(Connection):
         Definition required.
     flange_area : float, optional
         Definition required.
-    start_moments : dict[str, Optional[Case | float]]
+    start_moments : dict[Case, float], optional
         Definition required.
-    end_moments : dict[str, Optional[Case | float]]
+    end_moments : dict[str, float], optional
         Definition required.
     capacity_coeffiient_pos : float
         Definition required.
@@ -289,7 +245,51 @@ class GrillageBeam(Connection):
     start_web_area: float | None
     end_web_area: float | None
     flange_area: float | None
-    start_moments: dict[str, Case | float | None]
-    end_moments: dict[str, Case | float | None]
+    start_moments: dict[Case, float] | None
+    end_moments: dict[Case, float] | None
     capacity_coeffiient_pos: float
     capacity_coeffiient_neg: float
+
+
+@dataclass(
+    repr=True,
+    eq=True,
+    config=ConfigDict(arbitrary_types_allowed=True, validate_assignment=True),
+    validate_on_init=True,
+)
+class Structure:
+    """
+    Over-arching dataclass for the structure being modelled.
+
+    Attributes
+    ----------
+    elements : list[Connection]
+        Definition required.
+    nodes : list[Node]
+        A list of ``Node`` within the structure.
+    cases : list[Case]
+        A list of ``Case`` within the structure.
+    joint_cost : float
+        Joint cost.
+    """
+
+    elements: list[TrussBar | GrillageBeam]
+    nodes: list[Node]
+    cases: list[Case]
+    joint_cost: float
+
+    def __str__(self) -> str:
+        """
+        Representation function for class attributes.
+
+        Returns
+        -------
+        str
+            Formatted statistics on ``Structure``.
+        """
+        return (
+            f"Total elements : {len(self.elements)}"
+            f"Total nodes : {len(self.nodes)}"
+            f"Total cases : {len(self.cases)}"
+            f"Joint cost : {self.joint_cost}"
+        )

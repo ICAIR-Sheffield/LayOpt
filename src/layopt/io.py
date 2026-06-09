@@ -168,7 +168,7 @@ def get_date_time(strftime: str = "%Y-%m-%d %H:%M:%S") -> str:
     return datetime.now(tz=datetime.now().astimezone().tzinfo).strftime(strftime)
 
 
-def dict_to_df(results: dict[str, Any]) -> pd.DataFrame:
+def dict_to_df(results: dict[float, dict[str, Any]]) -> pd.DataFrame:
     """
     Convert a dictionary of LayOpt results to Pandas DataFrame.
 

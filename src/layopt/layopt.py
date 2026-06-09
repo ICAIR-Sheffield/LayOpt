@@ -604,7 +604,7 @@ def stop_primal_violation_pattern(
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
-) -> tuple[float, dict[int, float], pd.DataFrame]:
+) -> tuple[float, dict[int, float], pd.DataFrame] | None:
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
 
@@ -659,7 +659,7 @@ def trussopt(
         )
     # support conditions
     for i, node in enumerate(nodal_coords):
-        if parameters.support_points.size == 0:  # type: ignore[union-attr]
+        if parameters.support_points.size == 0:
             if node[0] == 0:
                 dof[i, :] = [0, 0]  # Support nodes with x=0
         else:
@@ -763,7 +763,7 @@ def trussopt(
         # output
         if isinf(vol):
             logger.error("Infeasible problem detected")
-            exit
+            return None
         n_active = int(np.sum(active_load_cases))
         # ns-rse 2026-03-23 : Could this perhaps be debugging?
         logger.info(
