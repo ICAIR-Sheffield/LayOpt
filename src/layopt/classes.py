@@ -39,6 +39,7 @@ class Parameters:
     support_points: npt.NDArray[np.float32] = Field(
         default=np.asarray([[3, 3]]), title="Support Points."
     )
+    member_area_filtering: float = 0.001
     primal_method: str = Field(default="load_factor", title="Primal method")
     problem_name: str = Field(
         default="", title="Description of the problem being solved."

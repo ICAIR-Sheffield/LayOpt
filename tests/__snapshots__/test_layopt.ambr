@@ -191,13 +191,12 @@
       2: 70.710678,
       5: 50.0,
     }),
-    1.0,
   )
 # ---
 # name: test_trussopt[1x1].1
   '''
-         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  short cantilever          1.0     1      1             1                2                 1       50.0        5.0          2        150.0               6       4                  6   load_factor  1x1 structure test
+      problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
+  0  1x1 structure          1.0     1      1             1                2                 1       50.0        5.0          2        150.0               6       4                  6   load_factor  1x1 structure test
   '''
 # ---
 # name: test_trussopt[2x2]
@@ -212,13 +211,12 @@
       26: 31.598473,
       27: 31.598473,
     }),
-    1.0,
   )
 # ---
 # name: test_trussopt[2x2].1
   '''
       problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
-  0  2x2 structure          1.0     2      2             1                2                 1         50          5          2        300.0              22       9                 28   load_factor  2x2 structure test
+  0  2x2 structure          1.0     2      2             1                2                 1       50.0        5.0          2        300.0              22       9                 28   load_factor  2x2 structure test
   '''
 # ---
 # name: test_trussopt[parallel forces]
@@ -238,7 +236,6 @@
       18: 150.0,
       19: 50.0,
     }),
-    1.0,
   )
 # ---
 # name: test_trussopt[parallel forces].1
@@ -258,7 +255,6 @@
       218: 35.355339,
       235: 35.355339,
     }),
-    1.0,
   )
 # ---
 # name: test_trussopt[short cantilever].1
@@ -315,7 +311,7 @@
       2517: 0.421172,
       2524: 0.104557,
       2526: 0.046759,
-      2528: 0.040054,
+      2528: 0.040053,
       2530: 0.089562,
       2546: 0.850631,
       2548: 0.421172,
@@ -332,7 +328,6 @@
       2726: 2.579838,
       2727: 2.579838,
     }),
-    1.0,
   )
 # ---
 # name: test_trussopt[spanning example].1
@@ -369,21 +364,20 @@
       1352: 66.782307,
       1354: 35.355339,
       1512: 9.221564,
-      1514: 9.008387,
+      1514: 9.008388,
       1520: 3.10565,
-      1564: 36.03355,
+      1564: 36.033551,
       1566: 11.785113,
-      1569: 32.339016,
+      1569: 32.339015,
       1615: 35.355339,
       1695: 9.221564,
-      1748: 37.142533,
+      1748: 37.142534,
       1780: 37.2678,
       1845: 9.221564,
-      1867: 32.339016,
+      1867: 32.339015,
       1896: 37.396978,
       1954: 9.221564,
     }),
-    1.0,
   )
 # ---
 # name: test_trussopt[square cantilever].1

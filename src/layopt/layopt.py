@@ -604,7 +604,7 @@ def stop_primal_violation_pattern(
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
-) -> tuple[float, npt.NDArray[np.float64], pd.DataFrame, float]:
+) -> tuple[float, dict[int, float], pd.DataFrame]:
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
 
@@ -618,9 +618,8 @@ def trussopt(
     -------
     tuple[float, dict[int, float], pd.DataFrame, float]
         A tuple consisting of ``volume`` (the final volume of the solved problem) and ``member_areas_filtered``
-        (dict with keys ground structure member indices and values corresponding
-         final member areas of the solved problem),
-        a dataframe of results and the ``filter_level``.
+        (dict with keys ground structure member indices and values corresponding to the final member areas of
+        the solved problem), and a data frame of results.
     """
     setup_start = time.process_time()
     # Make domain
@@ -764,7 +763,7 @@ def trussopt(
         # output
         if isinf(vol):
             logger.error("Infeasible problem detected")
-            return [], [], [], []
+            exit
         n_active = int(np.sum(active_load_cases))
         # ns-rse 2026-03-23 : Could this perhaps be debugging?
         logger.info(
@@ -880,7 +879,7 @@ def trussopt(
         # Plot results
         if parameters.plotting["run"]:
             multiplier = (
-                1.0 if parameters.filter_level is None else parameters.filter_level
+                1.0 if parameters.filter_levels is None else parameters.filter_levels
             )
             outfile = Path(parameters.output_dir) / (
                 parameters.problem_name.replace(" ", "_")
@@ -892,7 +891,7 @@ def trussopt(
                     c_n=c_n,
                     areas=filter_areas,
                     forces=filter_forces,
-                    threshold=max(filter_areas) * member_area_filtering,
+                    threshold=max(filter_areas) * parameters.member_area_filtering,
                     title="Filtered " + str(100 * multiplier) + "%",
                     bar_thickness=parameters.plotting["bar_thickness"],
                     dpi=parameters.plotting["dpi"],
@@ -901,12 +900,11 @@ def trussopt(
             else:
                 logger.warning("No plot generated as volume <= 0.0")
         logger.info(f"Plotting took {time.process_time() - solve_end!s}")
-    return vol, filter_areas, dict_to_df(results)
 
     # Filter output members by area threshold
     # Build area dict where keys are ground structure member indices
     active_indices = np.where(potential_members[:, 3])[0]
-    threshold = max(filter_areas) * member_area_filtering
+    threshold = max(filter_areas) * parameters.member_area_filtering
     keep = filter_areas >= threshold
     kept_indices = active_indices[keep]
     c_n = c_n[keep]
@@ -915,76 +913,7 @@ def trussopt(
         for idx, area in zip(kept_indices, filter_areas[keep], strict=True)
     }
     logger.info(
-        f"Area filtering at {member_area_filtering} ({100 * member_area_filtering}% of max): "
+        f"Area filtering at {parameters.member_area_filtering} ({100 * parameters.member_area_filtering}% of max): "
         f"{int(np.sum(keep))} members retained"
     )
-
-def save_results_to_csv(
-    results: dict[str, str | int | float], filename: str = "pattern_loading_results.csv"
-) -> None:
-    """
-    Save optimization results to CSV file.
-
-    Creates file with header if it doesn't exist, otherwise appends.
-
-    Parameters
-    ----------
-    results : dict
-        Dictionary containing results to save. Should include keys:
-        - timestamp
-        - problem_name
-        - width, height
-        - n_load_points
-        - n_patterns_total
-        - n_patterns_active
-        - load_large
-        - load_small
-        - iterations
-        - final_volume
-        - n_members_final
-        - n_nodes
-        - n_ground_structure
-        - cpu_time_setup
-        - cpu_time_solve
-        - primal_method
-        - notes
-    filename : str
-        CSV filename (default=``pattern_loading_results.csv``).
-    """
-    file_exists = Path(filename).is_file()
-
-    # Define column order
-    fieldnames = [
-        "timestamp",
-        "problem_name",
-        "width",
-        "height",
-        "n_load_points",
-        "n_patterns_total",
-        "n_patterns_active",
-        "load_large",
-        "load_small",
-        "iterations",
-        "final_volume",
-        "n_members_final",
-        "n_nodes",
-        "n_ground_structure",
-        "cpu_time_setup",
-        "cpu_time_solve",
-        # 'cpu_time_total',
-        # 'wall_time_total',
-        "primal_method",
-        "notes",
-    ]
-
-    with Path(filename).open("a", newline="", encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        # Write header if new file
-        if not file_exists:
-            writer.writeheader()
-
-        # Write data
-        writer.writerow(results)
-
-    logger.info(f"\nResults saved to {filename}")
+    return (vol, member_areas_filtered, dict_to_df(results))
