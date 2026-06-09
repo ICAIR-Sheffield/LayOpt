@@ -164,7 +164,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
                 if result is not None:
                     all_results[filter_level] = result
                 pbar.update()
-            logger.info("Optimisation complete.📈📉✅")
+            logger.info("Optimisation complete.")
     # Aggregate results into a single data frame and write output
     all_results_df = pd.concat(all_results.values())
     all_results_df = all_results_df.sort_values(["filter_level"])

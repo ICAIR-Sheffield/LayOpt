@@ -29,12 +29,12 @@ def validate_config(config: dict[str, Any], schema: Schema, config_type: str) ->
     """
     try:
         schema.validate(config)
-        logger.info(f"✅ The {config_type} is valid.")
+        logger.info(f"The {config_type} is valid.")
     except SchemaWrongKeyError:
         raise
     except SchemaError as schema_error:
         msg = (
-            f"❌ There is an error in your {config_type} configuration. "
+            f"There is an error in your {config_type} configuration. "
             "Please refer to the first error message above for details"
         )
         raise SchemaError(msg) from schema_error
@@ -44,74 +44,74 @@ LAYOPT_CONFIG_SCHEMA = Schema(
     {
         "base_dir": Use(
             Path,
-            error="❌ Invalid value in config for 'base_dir', value should be type 'Path'.",
+            error="Invalid value in config for 'base_dir', value should be type 'Path'.",
         ),
         "output_dir": Use(
             Path,
-            error="❌ Invalid value in config for 'output_dir', value should be type 'Path'.",
+            error="Invalid value in config for 'output_dir', value should be type 'Path'.",
         ),
         "log_level": Or(
             "debug",
             "info",
             "warning",
             "error",
-            error="❌ Invalid value in config for 'log_level', valid values are 'info' (default), 'debug', 'error' or 'warning",
+            error="Invalid value in config for 'log_level', valid values are 'info' (default), 'debug', 'error' or 'warning",
         ),
         "cores": lambda n: 1 <= n <= os.cpu_count(),
         "width": And(
             int,
             lambda n: n >= 1,
-            error="❌ Invalid value in config for 'width', valid values are int >= 1.",
+            error="Invalid value in config for 'width', valid values are int >= 1.",
         ),
         "height": And(
             int,
             lambda n: n >= 1,
-            error="❌ Invalid value in config for 'height', valid values are int >= 1.",
+            error="Invalid value in config for 'height', valid values are int >= 1.",
         ),
         "stress_tensile": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
-            error="❌ Invalid value in config for 'stress_tensile', valid values are >= 0.0.",
+            error="Invalid value in config for 'stress_tensile', valid values are >= 0.0.",
         ),
         "stress_compressive": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
-            error="❌ Invalid value in config for 'stress_compressive', valid values are >= 0.0.",
+            error="Invalid value in config for 'stress_compressive', valid values are >= 0.0.",
         ),
         "joint_cost": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
-            error="❌ Invalid value in config for 'joint_cost', valid values are >= 0.0",
+            error="Invalid value in config for 'joint_cost', valid values are >= 0.0",
         ),
         "loaded_points": And(
             np.ndarray,
             lambda n: len(n.shape) == 2,
-            error="❌ Invalid value in config for 'loaded_points', should be a 2-dimensional array.",
+            error="Invalid value in config for 'loaded_points', should be a 2-dimensional array.",
         ),
         "load_direction": And(
             Or(list, tuple),
             lambda n: len(n) == 2,
-            error="❌ Invalid value in config for 'load_direction', should be a list|tuple of length 2.",
+            error="Invalid value in config for 'load_direction', should be a list|tuple of length 2.",
         ),
         "load_large": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
-            error="❌ Invalid value in config for 'load_large', valid values are >= 0.0.",
+            error="Invalid value in config for 'load_large', valid values are >= 0.0.",
         ),
         "load_small": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
-            error="❌ Invalid value in config for 'load_small', valid values are >= 0.0.",
+            error="Invalid value in config for 'load_small', valid values are >= 0.0.",
         ),
         "max_length": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
-            error="❌ Invalid value in config for 'max_length', valid values are >= 0.0.",
+            error="Invalid value in config for 'max_length', valid values are >= 0.0.",
         ),
         "support_points": And(
             np.ndarray,
             lambda n: len(n.shape) == 2,
-            error="❌ Invalid value in config for 'support_points', this should be a list of coordinates.",
+            error="Invalid value in config for 'support_points', this should be a list of coordinates.",
         ),
         "member_area_filtering": Or(
             And(int, lambda n: 1 >= n >= 0),
@@ -120,7 +120,7 @@ LAYOPT_CONFIG_SCHEMA = Schema(
         ),
         "filter_levels": And(
             np.ndarray,
-            error="❌ Invalid value for 'filter_levels', this should be an array of floats.",
+            error="Invalid value for 'filter_levels', this should be an array of floats.",
         ),
         "primal_method": Or(
             And(
@@ -131,30 +131,30 @@ LAYOPT_CONFIG_SCHEMA = Schema(
                 ),
             ),
             None,
-            error="❌ Invalid value in config for 'primal_methods', this should be 'residual', 'load_factor' or missing.",
+            error="Invalid value in config for 'primal_methods', this should be 'residual', 'load_factor' or missing.",
         ),
         "problem_name": Use(
-            str, error="❌ Invalid value for 'problem_name', should be a string."
+            str, error="Invalid value for 'problem_name', should be a string."
         ),
         "csv_filename": Use(
-            str, error="❌ Invalid value for 'csv_filename', should be a string."
+            str, error="Invalid value for 'csv_filename', should be a string."
         ),
-        "notes": Use(str, error="❌ Invalid value for 'notes', should be a string."),
+        "notes": Use(str, error="Invalid value for 'notes', should be a string."),
         "plotting": {
             "run": And(
                 bool,
                 Or(True, False),
-                error="❌ Invalid value for 'plotting.run', should be a bool (True or False).",
+                error="Invalid value for 'plotting.run', should be a bool (True or False).",
             ),
             "bar_thickness": And(
                 float,
                 lambda n: n > 0.0,
-                error="❌ Invalid value for 'plotting.bar_thickness', should be a float > 0.0.",
+                error="Invalid value for 'plotting.bar_thickness', should be a float > 0.0.",
             ),
             "dpi": And(
                 int,
                 lambda n: n >= 100,
-                error="❌ Invalid value for 'plotting.dpi', should be an int >= 100.",
+                error="Invalid value for 'plotting.dpi', should be an int >= 100.",
             ),
         },
     }

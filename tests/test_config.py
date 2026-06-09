@@ -44,7 +44,7 @@ def test_reconcile_config_args_no_config(caplog) -> None:
             config, schema=LAYOPT_CONFIG_SCHEMA, config_type="default configuration"
         )
 
-    assert "✅ The default configuration is valid." in caplog.text
+    assert "The default configuration is valid." in caplog.text
 
 
 @pytest.mark.parametrize(
