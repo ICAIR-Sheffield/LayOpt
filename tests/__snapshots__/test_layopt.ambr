@@ -94,96 +94,6 @@
     81,
   )
 # ---
-# name: test_save_results_to_csv_appends[append_to_csv_file]
-  list([
-    dict({
-      'cpu_time_setup': '0.234',
-      'cpu_time_solve': '12.456',
-      'final_volume': '123.456',
-      'height': '8',
-      'iterations': '12',
-      'load_large': '50',
-      'load_small': '5',
-      'n_ground_structure': '1234',
-      'n_load_points': '2',
-      'n_members_final': '87',
-      'n_nodes': '81',
-      'n_patterns_active': '3',
-      'n_patterns_total': '4',
-      'notes': 'Test run',
-      'primal_method': 'True',
-      'problem_name': 'test_problem',
-      'timestamp': '2026-03-04 15:30:00',
-      'width': '8',
-    }),
-    dict({
-      'cpu_time_setup': '0.234',
-      'cpu_time_solve': '12.456',
-      'final_volume': '123.456',
-      'height': '8',
-      'iterations': '12',
-      'load_large': '50',
-      'load_small': '5',
-      'n_ground_structure': '1234',
-      'n_load_points': '2',
-      'n_members_final': '87',
-      'n_nodes': '81',
-      'n_patterns_active': '3',
-      'n_patterns_total': '4',
-      'notes': 'Test run',
-      'primal_method': 'True',
-      'problem_name': 'test_problem',
-      'timestamp': '2026-03-04 15:30:00',
-      'width': '8',
-    }),
-  ])
-# ---
-# name: test_save_results_to_csv_new[new_csv_file]
-  list([
-    'timestamp',
-    'problem_name',
-    'width',
-    'height',
-    'n_load_points',
-    'n_patterns_total',
-    'n_patterns_active',
-    'load_large',
-    'load_small',
-    'iterations',
-    'final_volume',
-    'n_members_final',
-    'n_nodes',
-    'n_ground_structure',
-    'cpu_time_setup',
-    'cpu_time_solve',
-    'primal_method',
-    'notes',
-  ])
-# ---
-# name: test_save_results_to_csv_new[new_csv_file].1
-  list([
-    dict({
-      'cpu_time_setup': '0.234',
-      'cpu_time_solve': '12.456',
-      'final_volume': '123.456',
-      'height': '8',
-      'iterations': '12',
-      'load_large': '50',
-      'load_small': '5',
-      'n_ground_structure': '1234',
-      'n_load_points': '2',
-      'n_members_final': '87',
-      'n_nodes': '81',
-      'n_patterns_active': '3',
-      'n_patterns_total': '4',
-      'notes': 'Test run',
-      'primal_method': 'True',
-      'problem_name': 'test_problem',
-      'timestamp': '2026-03-04 15:30:00',
-      'width': '8',
-    }),
-  ])
-# ---
 # name: test_trussopt[1x1]
   tuple(
     np.float64(150.0),
@@ -202,7 +112,6 @@
 # name: test_trussopt[2x2]
   tuple(
     np.float64(300.0),
-
     dict({
       2: 30.394442,
       3: 31.872783,
@@ -217,7 +126,7 @@
 # name: test_trussopt[2x2].1
   '''
       problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
-  0  2x2 structure          1.0     2      2             1                2                 1       50.0        5.0          2        300.0              22       9                 28   load_factor  2x2 structure test
+  0  2x2 structure          1.0     2      2             1                2                 1       50.0        5.0          3        300.0              22       9                 28   load_factor  2x2 structure test
   '''
 # ---
 # name: test_trussopt[parallel forces]
@@ -261,7 +170,7 @@
 # name: test_trussopt[short cantilever].1
   '''
          problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  short cantilever          1.0     3      6             1                2                 1       50.0        5.0          2        300.0              81      28                251   load_factor  short cantliever test
+  0  short cantilever          1.0     3      6             1                2                 1       50.0        5.0          2        300.0              83      28                251   load_factor  short cantliever test
   '''
 # ---
 # name: test_trussopt[spanning example]
@@ -384,6 +293,6 @@
 # name: test_trussopt[square cantilever].1
   '''
           problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                   notes
-  0  square cantilever          1.0     8      8             2                4                 1       50.0        5.0          8   2070.37037             376      81               2040   load_factor  square cantliever test
+  0  square cantilever          1.0     8      8             2                4                 1       50.0        5.0          6   2070.37037             377      81               2040   load_factor  square cantliever test
   '''
 # ---
