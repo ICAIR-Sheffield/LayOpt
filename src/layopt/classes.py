@@ -35,7 +35,9 @@ class Parameters:
     support_points: npt.NDArray[np.float32] = Field(
         default=np.asarray([[3, 3]]), title="Support Points."
     )
-    member_area_filtering: float = 0.001
+    member_area_filtering: float = Field(
+        default=0.001, title="Member Area Filtering", ge=0.0
+    )
     primal_method: str = Field(default="load_factor", title="Primal method")
     problem_name: str = Field(
         default="", title="Description of the problem being solved."
@@ -230,7 +232,7 @@ class GrillageBeam(Connection):
         Definition required.
     start_moments : dict[Case, float], optional
         Definition required.
-    end_moments : dict[str, float], optional
+    end_moments : dict[Case, float], optional
         Definition required.
     capacity_coeffiient_pos : float
         Definition required.
@@ -259,7 +261,7 @@ class Structure:
 
     Attributes
     ----------
-    elements : list[Connection]
+    elements : list[TrussBar | GrillageBeam]
         Definition required.
     nodes : list[Node]
         A list of ``Node`` within the structure.
