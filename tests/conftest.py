@@ -6,6 +6,8 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
+from layopt.classes import Parameters
+
 
 @pytest.fixture
 def nodal_coords() -> npt.NDArray[np.int32]:
@@ -304,126 +306,127 @@ def input_three_by_six() -> dict[str, npt.NDArray[np.float32]]:
 
 
 @pytest.fixture
-def trussopt_param_one_by_one() -> dict[str, Any]:
+def trussopt_param_one_by_one() -> Parameters:
     """Input parameters for 1x1 structure for ``layopt.trussopt()``."""
-    return {
-        "filter_level": 1.0,
-        "width": 1,
-        "height": 1,
-        "stress_tensile": 1,
-        "stress_compressive": 1,
-        "joint_cost": 0,
-        "loaded_points": np.asarray([[3, 3]]),
-        "load_direction": (0, -1),
-        "load_large": 50,
-        "load_small": 5,
-        "max_length": 18,
-        "support_points": np.asarray([[]]),
-        "primal_method": "load_factor",
-        "problem_name": "1x1 structure",
-        "notes": "1x1 structure test",
-    }
+    return Parameters(
+        filter_levels=[1.0],
+        width=1,
+        height=1,
+        stress_tensile=1,
+        stress_compressive=1,
+        joint_cost=0,
+        loaded_points=np.asarray([[3, 3]]),
+        load_direction=(0, -1),
+        load_large=50,
+        load_small=5,
+        max_length=18,
+        support_points=np.asarray([[]]),
+        primal_method="load_factor",
+        problem_name="1x1 structure",
+        csv_filename="short_cantilever.csv",
+        notes="1x1 structure test",
+    )
 
 
 @pytest.fixture
-def trussopt_param_two_by_two() -> dict[str, Any]:
+def trussopt_param_two_by_two() -> Parameters:
     """Input parameters for 2x2 structure for ``layopt.trussopt()``."""
-    return {
-        "filter_level": 1.0,
-        "width": 2,
-        "height": 2,
-        "stress_tensile": 1,
-        "stress_compressive": 1,
-        "joint_cost": 0,
-        "loaded_points": np.asarray([[3, 3]]),
-        "load_direction": (0, -1),
-        "load_large": 50,
-        "load_small": 5,
-        "max_length": 18,
-        "support_points": np.asarray([[]]),
-        "primal_method": "load_factor",
-        "problem_name": "2x2 structure",
-        "notes": "2x2 structure test",
-    }
+    return Parameters(
+        filter_levels=[1.0],
+        width=2,
+        height=2,
+        stress_tensile=1,
+        stress_compressive=1,
+        joint_cost=0,
+        loaded_points=np.asarray([[3, 3]]),
+        load_direction=(0, -1),
+        load_large=50,
+        load_small=5,
+        max_length=18,
+        support_points=np.asarray([[]]),
+        primal_method="load_factor",
+        problem_name="2x2 structure",
+        notes="2x2 structure test",
+    )
 
 
 @pytest.fixture
-def trussopt_param_three_by_six_short_cantilever() -> dict[str, Any]:
+def trussopt_param_three_by_six_short_cantilever() -> Parameters:
     """Input parameters for 3x6 structure for ``layopt.trussopt()``."""
-    return {
-        "filter_level": 1.0,
-        "width": 3,
-        "height": 6,
-        "stress_tensile": 1,
-        "stress_compressive": 1,
-        "joint_cost": 0,
-        "loaded_points": np.asarray([[3, 3]]),
-        "load_direction": (0, -1),
-        "load_large": 50,
-        "load_small": 5,
-        "max_length": 18,
-        "support_points": np.asarray([[]]),
-        "primal_method": "load_factor",
-        "problem_name": "short cantilever",
-        "notes": "short cantliever test",
-    }
+    return Parameters(
+        filter_levels=[1.0],
+        width=3,
+        height=6,
+        stress_tensile=1,
+        stress_compressive=1,
+        joint_cost=0,
+        loaded_points=np.asarray([[3, 3]]),
+        load_direction=(0, -1),
+        load_large=50,
+        load_small=5,
+        max_length=18,
+        support_points=np.asarray([[]]),
+        primal_method="load_factor",
+        problem_name="short cantilever",
+        notes="short cantliever test",
+    )
 
 
 @pytest.fixture
-def trussopt_param_eight_by_eight_square_cantilever() -> dict[str, Any]:
+def trussopt_param_eight_by_eight_square_cantilever() -> Parameters:
     """Input parameters for 8x8 structure for ``layopt.trussopt()``."""
-    return {
-        "filter_level": 1.0,
-        "width": 8,
-        "height": 8,
-        "stress_tensile": 1,
-        "stress_compressive": 1,
-        "joint_cost": 0,
-        "loaded_points": np.asarray([[8, 0], [8, 4]]),
-        "load_direction": (0, -1),
-        "load_large": 50,
-        "load_small": 5,
-        "max_length": 15,
-        "support_points": np.asarray([[]]),
-        "primal_method": "load_factor",
-        "problem_name": "square cantilever",
-        "notes": "square cantliever test",
-    }
+    return Parameters(
+        filter_levels=[1.0],
+        width=8,
+        height=8,
+        stress_tensile=1,
+        stress_compressive=1,
+        joint_cost=0,
+        loaded_points=np.asarray([[8, 0], [8, 4]]),
+        load_direction=(0, -1),
+        load_large=50,
+        load_small=5,
+        max_length=15,
+        support_points=np.asarray([[]]),
+        primal_method="load_factor",
+        problem_name="square cantilever",
+        notes="square cantliever test",
+    )
 
 
 @pytest.fixture
-def trussopt_param_three_by_one_parallel_forces() -> dict[str, Any]:
+def trussopt_param_three_by_one_parallel_forces() -> Parameters:
     """Input parameters for 3x1 (parallel) structure for ``layopt.trussopt()``."""
-    return {
-        "filter_level": 1.0,
-        "width": 3,
-        "height": 1,
-        "stress_tensile": 1,
-        "stress_compressive": 1,
-        "joint_cost": 0,
-        "loaded_points": np.asarray([[3, 0], [3, 1]]),
-        "load_direction": (0, -1),
-        "load_large": 50,
-        "load_small": 5,
-        "max_length": 2.5,
-        "support_points": np.asarray([[]]),
-        "primal_method": "load_factor",
-        "problem_name": "parallel forces",
-        "notes": "parallel forces test",
-    }
+    return Parameters(
+        filter_levels=[1.0],
+        width=3,
+        height=1,
+        stress_tensile=1,
+        stress_compressive=1,
+        joint_cost=0,
+        loaded_points=np.asarray([[3, 0], [3, 1]]),
+        load_direction=(0, -1),
+        load_large=50,
+        load_small=5,
+        max_length=2.5,
+        support_points=np.asarray([[]]),
+        primal_method="load_factor",
+        problem_name="parallel forces",
+        notes="parallel forces test",
+    )
 
 
 @pytest.fixture
-def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
+def trussopt_param_eighteen_by_four_spanning() -> Parameters:
     """Input parameters for 18x4 (spanning) structure for ``layopt.trussopt()``."""
-    return {
-        "filter_level": 1.0,
-        "width": 18,
-        "height": 4,
-        "stress_tensile": 1,
-        "stress_compressive": 1,
-        "joint_cost": 0,
-        "loaded_points": np.asarray(
+    return Parameters(
+        filter_levels=[1.0],
+        width=18,
+        height=4,
+        stress_tensile=1,
+        stress_compressive=1,
+        joint_cost=0,
+        loaded_points=np.asarray(
             [
                 [6.0, 4],
                 [8.0, 4],
@@ -431,15 +434,15 @@ def trussopt_param_eighteen_by_four_spanning() -> dict[str, Any]:
                 [12.0, 4],
             ]
         ),
-        "load_direction": (0, -1),
-        "load_large": 3.75,
-        "load_small": 0.204,
-        "max_length": 36,
-        "support_points": np.asarray([[0, 0], [18, 0]]),
-        "primal_method": "load_factor",
-        "problem_name": "spanning example",
-        "notes": "spanning example test",
-    }
+        load_direction=(0, -1),
+        load_large=3.75,
+        load_small=0.204,
+        max_length=36,
+        support_points=np.asarray([[0, 0], [18, 0]]),
+        primal_method="load_factor",
+        problem_name="spanning example",
+        notes="spanning example test",
+    )
 
 
 @pytest.fixture

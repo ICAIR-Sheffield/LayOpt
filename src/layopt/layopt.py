@@ -31,6 +31,7 @@ from scipy import sparse
 # from numpy.matlib import repmat
 from shapely.geometry import LineString, Point, Polygon
 
+from layopt.classes import Parameters
 from layopt.io import dict_to_df, get_date_time
 from layopt.plotting import plot_truss
 
@@ -602,122 +603,84 @@ def stop_primal_violation_pattern(
 
 # Main function - edited for pattern loading
 def trussopt(
-    filter_level: float | None = None,
-    width: float = 1.0,
-    height: float = 1.0,
-    stress_tensile: float = 1.0,
-    stress_compressive: float = 1.0,
-    joint_cost: float = 0.0,
-    loaded_points: npt.NDArray[np.int64] | None = None,
-    # ns-rse 2026-03-17 : val implies single value but its a list, perhaps load_range? dict perhaps
-    load_direction: tuple[float, float] = (0.0, -1.0),
-    load_large: float = 50.0,
-    load_small: float = 5.0,
-    max_length: float = 1000.0,
-    # ns-rse 2026-03-17 : Set type hint and default to None
-    support_points: npt.NDArray[np.float64] | None = None,
-    member_area_filtering: float = 0.001,
-    primal_method: str = "load_factor",
-    problem_name: str = "None",
-    # save_to_csv: bool = True,
-    # csv_filename: str = "pattern_loading_results.csv",
-    notes: str = "",
-    output_dir: str | Path = Path("./"),
-    plot: bool = False,
-    bar_thickness: float = 0.3,
-    dpi: int = 1200,
-) -> tuple[float, dict[int, float], pd.DataFrame, float]:
+    parameters: Parameters,
+) -> tuple[float, dict[int, float], pd.DataFrame] | None:
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
 
     Parameters
     ----------
-    filter_level : float
-        Levels to filter on.
-    width : float
-        Width of structure.
-    height : float
-        Height of structure.
-    stress_tensile : float
-        Tensile stress limit.
-    stress_compressive : float
-        Compressive stress limit.
-    joint_cost : float
-        Joint cost.
-    loaded_points : npt.NDArray[np.int64]
-        Load points (default=[]).
-    load_direction : list
-        Load direction (default=``(0,-1)``).
-    load_large : float
-        Large load to apply at each load point (default=50).
-    load_small : float
-        Small load to apply at each load point (default=5).
-    max_length : float
-        Maximum member length.
-    support_points : npt.NDArray[np.float64]
-        Support points (default=[]).
-    member_area_filtering : float
-        Fraction of maximum member area for output threshold.
-    primal_method : str
-        Primal violation method (default='load_factor').
-    problem_name : str
-        Name of problem to solve (default=``None``).
-    notes : str
-        Notes (default='').
-    output_dir : str | Path
-        Directory to save plots to.
-    plot : bool
-        Whether to plot the trusses.
-    bar_thickness : float
-        Bar thickness for plotting.
-    dpi : int
-        Dots per inch for plotting.
+    parameters : Parameters
+        Parameters class with all attributes for the modelling. If not already instantiated then you can pass
+        ``parameters = Parameters(**config)`` if you have a dictionary of parameters stored in ``config``.
 
     Returns
     -------
     tuple[float, dict[int, float], pd.DataFrame, float]
         A tuple consisting of ``volume`` (the final volume of the solved problem) and ``member_areas_filtered``
-        (dict with keys ground structure member indices and values corresponding
-         final member areas of the solved problem),
-        a dataframe of results and the ``filter_level``.
+        (dict with keys ground structure member indices and values corresponding to the final member areas of
+        the solved problem), and a data frame of results.
     """
     setup_start = time.process_time()
     # Make domain
-    poly = Polygon([(0, 0), (width, 0), (width, height), (0, height)])
+    poly = Polygon(
+        [
+            (0, 0),
+            (parameters.width, 0),
+            (parameters.width, parameters.height),
+            (0, parameters.height),
+        ]
+    )
+    # poly = Polygon([(0, 0), (parameters.width, 0), (parameters.width, parameters.height), (0, parameters.height)])
     convex = poly.convex_hull.area == poly.area
     logger.debug(f"Domain created, convex? : {convex=}")
 
     # Make nodes
-    xv, yv = np.meshgrid(range(width + 1), range(height + 1))
+    xv, yv = np.meshgrid(range(parameters.width + 1), range(parameters.height + 1))
+    # xv, yv = np.meshgrid(range(parameters.width + 1), range(parameters.height + 1))
     points = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
     logger.debug(f"Points created : {len(points)=}")
     nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
     dof = np.ones((len(nodal_coords), 2))
+    # ns-rse 2026-05-13 Build a list of nodes to be added to Structure where do loading and virtual_displacements come from?
+    # all_nodes = [
+    #     Node(coordinate=param[0], supported_dof=param[1])
+    #     for param in zip(nodal_coords, dof)
+    # ]
 
     # Default load point
-    if loaded_points is None:
-        loaded_points = np.asarray([[width, height // 2]])
-        logger.info(f"Loaded points not provided, calculated as : {loaded_points=}")
+    if parameters.loaded_points is None:
+        parameters.loaded_points = np.asarray(
+            [[parameters.width, parameters.height // 2]]
+        )
+        logger.info(
+            f"Loaded points not provided, calculated as : {parameters.loaded_points=}"
+        )
     # support conditions
     for i, node in enumerate(nodal_coords):
-        if support_points.size == 0:  # type: ignore[union-attr]
+        if parameters.support_points.size == 0:
             if node[0] == 0:
                 dof[i, :] = [0, 0]  # Support nodes with x=0
         else:
             dof[i, :] = (
                 [0, 0]
-                if any((node == point).all() for point in support_points)
+                if any((node == point).all() for point in parameters.support_points)
                 else [1, 1]
             )
     logger.debug(f"Degrees of Freedom : {dof=}")
     dof = np.array(dof).flatten()
 
     # Generate all pattern loads
-    # ns-rse 2026-03-17 : Unused arguments but may combine all_patterns and pattern_descriptions to dict
+    # ns-rse 2026-03-17 : Unused return arguments but may combine all_patterns and pattern_descriptions to dict
     # all_patterns, base_load, pattern_descriptions = make_pattern_loads(
+    # ns-rse 2026-05-13 - loaded_points and load_direction are proposed to be attributes of CaseFamily
     all_patterns, _, _ = make_pattern_loads(
-        nodal_coords, loaded_points, load_large, load_small, load_direction
+        nodal_coords,
+        parameters.loaded_points,
+        parameters.load_large,
+        parameters.load_small,
+        parameters.load_direction,
     )
 
     # Create the 'ground structure'
@@ -729,7 +692,9 @@ def trussopt(
         )
         length = np.sqrt(dx**2 + dy**2)
         # Remove overlapping members, or members longer than maxLength
-        if (length < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
+        if (
+            length < parameters.max_length and gcd(int(dx), int(dy)) == 1
+        ) or parameters.joint_cost != 0:
             seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
             if convex or poly.contains(seg) or poly.boundary.contains(seg):
                 _potential_members.append([i, j, length, False])
@@ -753,7 +718,7 @@ def trussopt(
     # # does below make sense here?
     # else:
     #     activeLoadCases = np.ones(len(allPatterns), dtype=int)
-    if primal_method in {"residual", "load_factor"}:
+    if parameters.primal_method in {"residual", "load_factor"}:
         primal_adaptivity = True
         active_load_cases = np.zeros(len(all_patterns), dtype=int)
         active_load_cases[0] = 1  # Base case = all large loads
@@ -787,9 +752,9 @@ def trussopt(
             c_n,
             f_active,
             dof,
-            stress_tensile,
-            stress_compressive,
-            joint_cost,
+            parameters.stress_tensile,
+            parameters.stress_compressive,
+            parameters.joint_cost,
         )
         # We need to solve once so that we have valid values for `filter_areas ` which we then filter based on `fitler_level[s]`
         # (rename to `filter_level` but need to check first if that is what we want to parallelise on or if it is
@@ -798,7 +763,7 @@ def trussopt(
         # output
         if isinf(vol):
             logger.error("Infeasible problem detected")
-            return [], [], [], []
+            return None
         n_active = int(np.sum(active_load_cases))
         # ns-rse 2026-03-23 : Could this perhaps be debugging?
         logger.info(
@@ -814,10 +779,10 @@ def trussopt(
             nodal_coords,
             potential_members,
             dof,
-            stress_tensile,
-            stress_compressive,
+            parameters.stress_tensile,
+            parameters.stress_compressive,
             u,
-            joint_cost,
+            parameters.joint_cost,
         )
         if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
             continue  # small vol decrease = member adding close to convergence
@@ -830,7 +795,7 @@ def trussopt(
         #         break
 
         if primal_adaptivity:
-            if primal_method == "residual":
+            if parameters.primal_method == "residual":
                 # Use equilibrium residual check
                 converged = stop_primal_violation_residual(
                     nodal_coords,
@@ -840,7 +805,7 @@ def trussopt(
                     active_load_cases,
                     dof,
                 )
-            elif primal_method == "load_factor":
+            elif parameters.primal_method == "load_factor":
                 # Use load factor LP
                 converged = stop_primal_violation_pattern(
                     nodal_coords,
@@ -849,8 +814,8 @@ def trussopt(
                     all_patterns,
                     active_load_cases,
                     dof,
-                    stress_tensile,
-                    stress_compressive,
+                    parameters.stress_tensile,
+                    parameters.stress_compressive,
                 )
             # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
 
@@ -870,71 +835,73 @@ def trussopt(
     logger.info(
         f"Active patterns: {int(np.sum(active_load_cases))}/{len(all_patterns)}"
     )
-    # If we want to filter (i.e. filter_level != 1.0) then we must solve again using the reduced subset.
-    if filter_level != 1.0:
-        logger.info(f"Solving for filter level : {filter_level}")
-        keep = [area > (filter_level * max(filter_areas)) for area in filter_areas]
-        c_n = c_n[keep]
-        final_vol, filter_areas, filter_forces, u = solve(
-            nodal_coords,
-            c_n,
-            f_active,
-            dof,
-            stress_tensile,
-            stress_compressive,
-            joint_cost,
-        )
-        logger.info(f"Volume (filter_level = {filter_level}): {final_vol}")
-    # Build dictionary of results
-    results = {
-        "timestamp": get_date_time(),
-        "problem_name": problem_name or f"w{width}_h{height}_n{len(loaded_points)}",
-        "filter_level": filter_level,
-        "width": width,
-        "height": height,
-        "n_load_points": len(loaded_points),
-        "n_patterns_total": len(all_patterns),
-        "n_patterns_active": int(np.sum(active_load_cases)),
-        "load_large": load_large,
-        "load_small": load_small,
-        "iterations": itr,
-        "final_volume": final_vol,
-        "n_members_final": len(c_n),
-        "n_nodes": len(nodal_coords),
-        "n_ground_structure": len(potential_members),
-        "cpu_time_setup": setup_end - setup_start,
-        "cpu_time_solve": solve_end - setup_end,
-        "primal_method": primal_method,
-        "notes": notes,
-    }
-
-    # Plot results
-    if plot:
-        multiplier = 1.0 if filter_level is None else filter_level
-        outfile = Path(output_dir) / (
-            problem_name.replace(" ", "_")
-            + f"_w{width}_h{height}_n{len(loaded_points)}_filter{int(multiplier * 100)}"
-        )
-        if vol > 0:
-            _, _ = plot_truss(
-                nodal_coords=nodal_coords,
-                c_n=c_n,
-                areas=filter_areas,
-                forces=filter_forces,
-                threshold=max(filter_areas) * member_area_filtering,
-                title="Filtered " + str(100 * multiplier) + "%",
-                bar_thickness=bar_thickness,
-                dpi=dpi,
-                outfile=outfile,
+    results = {}
+    for filter_level in parameters.filter_levels:
+        # If we want to filter (i.e. filter_level != 1.0) then we must solve again using the reduced subset.
+        if filter_level != 1.0:
+            logger.info(f"Solving for filter level : {filter_level}")
+            keep = [area > (filter_level * max(filter_areas)) for area in filter_areas]
+            c_n = c_n[keep]
+            final_vol, filter_areas, filter_forces, u = solve(
+                nodal_coords,
+                c_n,
+                f_active,
+                dof,
+                parameters.stress_tensile,
+                parameters.stress_compressive,
+                parameters.joint_cost,
             )
-        else:
-            logger.warning("No plot generated as volume <= 0.0")
-    logger.info(f"Plotting took {time.process_time() - solve_end!s}")
+            logger.info(f"Volume (filter_level = {filter_level}): {final_vol}")
+        # Build dictionary of results (the final_vol changes if we have filtered above)
+        results[filter_level] = {
+            "timestamp": get_date_time(),
+            "problem_name": parameters.problem_name
+            or f"w{parameters.width}_h{parameters.height}_n{len(parameters.loaded_points)}",
+            "filter_level": filter_level,
+            "width": parameters.width,
+            "height": parameters.height,
+            "n_load_points": len(parameters.loaded_points),
+            "n_patterns_total": len(all_patterns),
+            "n_patterns_active": int(np.sum(active_load_cases)),
+            "load_large": parameters.load_large,
+            "load_small": parameters.load_small,
+            "iterations": itr,
+            "final_volume": final_vol,
+            "n_members_final": len(c_n),
+            "n_nodes": len(nodal_coords),
+            "n_ground_structure": len(potential_members),
+            "cpu_time_setup": setup_end - setup_start,
+            "cpu_time_solve": solve_end - setup_end,
+            "primal_method": parameters.primal_method,
+            "notes": parameters.notes,
+        }
+
+        # Plot results
+        if parameters.plotting["run"]:
+            outfile = Path(parameters.output_dir) / (
+                parameters.problem_name.replace(" ", "_")
+                + f"_w{parameters.width}_h{parameters.height}_n{len(parameters.loaded_points)}_filter{int(filter_level * 100)}"
+            )
+            if vol > 0:
+                _, _ = plot_truss(
+                    nodal_coords=nodal_coords,
+                    c_n=c_n,
+                    areas=filter_areas,
+                    forces=filter_forces,
+                    threshold=max(filter_areas) * parameters.member_area_filtering,
+                    title="Filtered " + str(100 * filter_level) + "%",
+                    bar_thickness=parameters.plotting["bar_thickness"],
+                    dpi=parameters.plotting["dpi"],
+                    outfile=outfile,
+                )
+            else:
+                logger.warning("No plot generated as volume <= 0.0")
+        logger.info(f"Plotting took {time.process_time() - solve_end!s}")
 
     # Filter output members by area threshold
     # Build area dict where keys are ground structure member indices
     active_indices = np.where(potential_members[:, 3])[0]
-    threshold = max(filter_areas) * member_area_filtering
+    threshold = max(filter_areas) * parameters.member_area_filtering
     keep = filter_areas >= threshold
     kept_indices = active_indices[keep]
     c_n = c_n[keep]
@@ -943,38 +910,7 @@ def trussopt(
         for idx, area in zip(kept_indices, filter_areas[keep], strict=True)
     }
     logger.info(
-        f"Area filtering at {member_area_filtering} ({100 * member_area_filtering}% of max): "
+        f"Area filtering at {parameters.member_area_filtering} ({100 * parameters.member_area_filtering}% of max): "
         f"{int(np.sum(keep))} members retained"
     )
-
-    return vol, member_areas_filtered, dict_to_df(results), filter_level
-
-
-# # Example usage:
-# if __name__ == "__main__":
-#     # Test the function
-#     test_results = {
-#         'timestamp': '2026-03-04 15:30:00',
-#         'problem_name': 'test_problem',
-#         'width': 8,
-#         'height': 8,
-#         'n_load_points': 2,
-#         'n_patterns_total': 4,
-#         'n_patterns_active': 3,
-#         'load_large': 50,
-#         'load_small': 5,
-#         'iterations': 12,
-#         'final_volume': 123.456,
-#         'n_members_final': 87,
-#         'n_nodes': 81,
-#         'n_ground_structure': 1234,
-#         'cpu_time_setup': 0.234,
-#         'cpu_time_solve': 12.456,
-#         'cpu_time_total': 15.813,
-#         'wall_time_total': 17.509,
-#         'primal_adaptive': True,
-#         'notes': 'Test run'
-#     }
-
-#     save_results_to_csv(test_results, 'test_results.csv')
-#     print("Test completed - check test_results.csv")
+    return (vol, member_areas_filtered, dict_to_df(results))

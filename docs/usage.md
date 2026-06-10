@@ -145,26 +145,28 @@ ipython
 
 In [1]: from layopt.layopt import trussopt
 
-In [2]: import numpy as np
+In [2]: from layopt.classes import Parameters
 
-In [3]: parameters = {
-    "width": 1,
-    "height": 1,
-    "stress_tensile": 1.0,
-    "stress_compressive": 1.0,
-    "joint_cost": 0.0,
-    "loaded_points": np.asarray([[3, 3]]),
-    "load_direction": np.asarray([0.0, -1.0]),
-    "load_large": 50.0,
-    "load_small": 5.0,
-    "max_length": 18.0,
-    "support_points": np.asarray([[]]),
-    "primal_method": "load_factor",
-    "problem_name": "short cantilever",
-    "notes": "short cantilever test",
-}
+In [3]: import numpy as np
 
-In [4]: results = layopt.trussopt(**parameters)
+In [4]: parameters = Parameters(
+    width = 1,
+    height = 1,
+    stress_tensile = 1.0,
+    stress_compressive = 1.0,
+    joint_cost = 0.0,
+    loaded_points = np.asarray([[3, 3]]),
+    load_direction = np.asarray([0.0, -1.0]),
+    load_large = 50.0,
+    load_small = 5.0,
+    max_length = 18.0,
+    support_points = np.asarray([[]]),
+    primal_method = "load_factor",
+    problem_name = "short cantilever",
+    notes = "short cantilever test",
+)
+
+In [5]: results = trussopt(parameters)
    ...:
 2026-04-20 09:58:30.666 | INFO     | layopt.layopt:make_pattern_loads:414 - Total patterns for 1 load point(s) : 2
 2026-04-20 09:58:30.666 | INFO     | layopt.layopt:make_pattern_loads:417 - Base case (all large) : pt0=L
@@ -178,7 +180,30 @@ In [4]: results = layopt.trussopt(**parameters)
 2026-04-20 09:58:30.676 | INFO     | layopt.layopt:trussopt:960 - Solve took 0.0137718109999998
 2026-04-20 09:58:30.677 | INFO     | layopt.layopt:trussopt:961 - Active patterns: 1/2
 
-In
+...
+
+In [6]: results[2]
+
+                                      1.0
+timestamp             2026-06-05 14:37:26
+problem_name             short cantilever
+filter_level                          1.0
+width                                   1
+height                                  1
+n_load_points                           1
+n_patterns_total                        2
+n_patterns_active                       1
+load_large                           50.0
+load_small                            5.0
+iterations                              2
+final_volume                        150.0
+n_members_final                         6
+n_nodes                                 4
+n_ground_structure                      6
+cpu_time_setup                   0.001512
+cpu_time_solve                   0.025975
+primal_method                 load_factor
+notes               short cantilever test
 ```
 
 [ipython]: https://ipython.org/
