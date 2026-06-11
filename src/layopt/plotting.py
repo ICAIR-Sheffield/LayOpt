@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
-from matplotlib import figure
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 if TYPE_CHECKING:
     import numpy as np
@@ -26,7 +29,7 @@ def plot_truss(
     img_ext: str = ".png",
     bar_thickness: float = 0.3,
     dpi: int = 1200,
-) -> tuple[figure.Figure, figure.Axes]:
+) -> tuple[Figure, Axes]:
     """
     Visualise truss.
 
@@ -63,6 +66,7 @@ def plot_truss(
     ax.axis("off")
     ax.axis("equal")
     ax.set_title(title)
+    color: str | tuple[Any, int, Any]
     for i in [i for i in range(len(areas)) if areas[i] >= threshold]:
         # for i in [i for i in areas if i >= threshold]:
         if len(forces) > 1:  # multiple LC coloring
@@ -126,7 +130,7 @@ def plot_all_cases(
             nodal_coords=nodal_coords,
             c_n=c_n,
             areas=areas,
-            forces=[forces[k]],
+            forces=[forces[k]],  # type: ignore[call-overload]
             threshold=threshold,
             title=stress_tensile + " case " + str(k),
         )

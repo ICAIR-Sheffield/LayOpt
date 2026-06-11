@@ -75,7 +75,9 @@ def reconcile_config_args(
     return dict(config)
 
 
-def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]:
+def merge_mappings(
+    map1: MutableMapping[Any, Any], map2: MutableMapping[Any, Any]
+) -> dict[str, Any]:
     """
     Merge two mappings (dictionaries), with priority given to the second mapping.
 
@@ -83,9 +85,9 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
 
     Parameters
     ----------
-    map1 : MutableMapping
+    map1 : MutableMapping[Any, Any]
         First mapping to merge, with secondary priority.
-    map2 : MutableMapping
+    map2 : MutableMapping[Any, Any]
         Second mapping to merge, with primary priority.
 
     Returns
@@ -128,7 +130,9 @@ def merge_mappings(map1: MutableMapping, map2: MutableMapping) -> dict[str, Any]
     return dict(map1)
 
 
-def _convert_to_numpy_array(config: dict[str, Any], to_convert: str) -> dict[str, Any]:
+def _convert_to_numpy_array(
+    config: dict[str, Any] | MutableMapping[Any, Any], to_convert: str
+) -> dict[str, Any] | MutableMapping[Any, Any]:
     """
     Convert the specified dictionary key to ``np.asarray()``.
 
@@ -136,7 +140,7 @@ def _convert_to_numpy_array(config: dict[str, Any], to_convert: str) -> dict[str
     ----------
     config : dict[str, Any]
         Dictionary with field to be converted.
-    to_convert : str
+    to_convert : str | MutableMapping[Any, Any]
         Key for value that is to be converted to numpy array. If key doesn't exist the ``config`` is returned as is.
 
     Returns
