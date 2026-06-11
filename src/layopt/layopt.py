@@ -898,19 +898,45 @@ def trussopt(
                 logger.warning("No plot generated as volume <= 0.0")
         logger.info(f"Plotting took {time.process_time() - solve_end!s}")
 
-    # Filter output members by area threshold
-    # Build area dict where keys are ground structure member indices
-    active_indices = np.where(potential_members[:, 3])[0]
-    threshold = max(filter_areas) * parameters.member_area_filtering
-    keep = filter_areas >= threshold
-    kept_indices = active_indices[keep]
-    c_n = c_n[keep]
-    member_areas_filtered: dict[int, float] = {
-        int(idx): float(area)
-        for idx, area in zip(kept_indices, filter_areas[keep], strict=True)
-    }
+    member_areas_filtered = member_area_filtering(
+        active_indices=np.where(potential_members[:, 3])[0],
+        filter_areas=filter_areas,
+        filtering_threshold=parameters.member_area_filtering,
+    )
     logger.info(
         f"Area filtering at {parameters.member_area_filtering} ({100 * parameters.member_area_filtering}% of max): "
-        f"{int(np.sum(keep))} members retained"
+        f"{len(member_areas_filtered)} members retained"
     )
     return (vol, member_areas_filtered, dict_to_df(results))
+
+
+def member_area_filtering(
+    active_indices: npt.NDArray[np.float64],
+    filter_areas: npt.NDArray[np.float64],
+    filtering_threshold: float,
+) -> dict[int, float]:
+    """
+    Filter output members by area threshold.
+
+    Build a dictionary of areas where keys are ground structure member indices, filtering potential members for those
+    that exceed the threshold.
+
+    Parameters
+    ----------
+    active_indices : npt.NDArray[np.int]
+        Active indices to filter.
+    filter_areas : npt.NDArray[np.float64]
+        Areas to be filtered.
+    filtering_threshold : float
+        Filtering threshold.
+
+    Returns
+    -------
+    dict[int, float]
+        Dictionary of areas that exceed the threshold.
+    """
+    keep = filter_areas >= (max(filter_areas) * filtering_threshold)
+    return {
+        int(idx): float(area)
+        for idx, area in zip(active_indices[keep], filter_areas[keep], strict=True)
+    }
