@@ -233,6 +233,45 @@ def test_trussopt(
 
 
 @pytest.mark.parametrize(
+    ("active_indices", "filter_areas", "filtering_threshold", "expected"),
+    [
+        pytest.param(
+            np.asarray([0, 1]),
+            np.asarray([10.0, 10.0]),
+            0.1,
+            {0: 10, 1: 10},
+            id="Both areas exceed threshold",
+        ),
+        pytest.param(
+            np.asarray([0, 1]),
+            np.asarray([10.0, 0.9]),
+            0.1,
+            {0: 10},
+            id="Only first area exceeds threshold",
+        ),
+        pytest.param(
+            np.asarray([0, 1, 10, 1000]),
+            np.asarray([10.0, 0.9, 500.1, 500.2]),
+            0.1,
+            {10: 500.1, 1000: 500.2},
+            id="Last two of four exceed threshold",
+        ),
+    ],
+)
+def test_member_area_filtering(
+    active_indices: npt.NDArray[np.int8],
+    filter_areas: npt.NDArray[np.float64],
+    filtering_threshold: float,
+    expected: dict[int, np.float64],
+) -> None:
+    """Test for ``layopt.member_area_filtering()``."""
+    assert (
+        layopt.member_area_filtering(active_indices, filter_areas, filtering_threshold)
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
     (
         "loaded_points",
         "load_large",
