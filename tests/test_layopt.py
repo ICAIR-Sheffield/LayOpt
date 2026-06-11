@@ -555,6 +555,7 @@ def test_make_pattern_loads_zero_load_points_error(
         "stress_tensile",
         "stress_compressive",
         "dof",
+        "solver",
         "expected_converge",
     ),
     [
@@ -643,6 +644,7 @@ def test_make_pattern_loads_zero_load_points_error(
             np.array(
                 [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ),  # dof
+            "mosek", # solver
             True,  # expected converge
             id="All active load cases convergence",
         ),
@@ -681,6 +683,7 @@ def test_make_pattern_loads_zero_load_points_error(
             np.array(
                 [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ),  # dof
+            "mosek", # solver
             False,  # expected converge
             id="One inactive load case no convergence",
         ),
@@ -695,6 +698,7 @@ def test_stop_primal_violation(
     stress_tensile: int,
     stress_compressive: int,
     dof: npt.NDArray[np.float64],
+    solver: str,
     expected_converge: bool,
 ) -> None:
     """Test for convergence based on whether all load cases active."""
@@ -707,6 +711,7 @@ def test_stop_primal_violation(
         dof,
         stress_tensile,
         stress_compressive,
+        solver,
     )
     assert actual_converge == expected_converge
     assert np.all(active_load_cases) is np.bool_(

@@ -104,6 +104,7 @@ def solve(
     stress_tensile: float,
     stress_compressive: float,
     joint_cost: float,
+    solver: str,
 ) -> tuple[
     float,
     npt.NDArray[np.float64],
@@ -129,6 +130,8 @@ def solve(
         Compressive stress limit.
     joint_cost : float
         Joint cost.
+    solver : str
+        CVXPY solver name.
 
     Returns
     -------
@@ -164,7 +167,7 @@ def solve(
     objective = cvx.Minimize(member_cost @ a)
     problem = cvx.Problem(objective, eq_constraints + other_constraints)
     # uses CVXPY preference order of solvers, MOSEK first if installed
-    problem.solve()
+    problem.solve(solver)
 
     vol = problem.value if problem.value is not None else 0.0
     a_val = a.value if a.value is not None else np.zeros(n_members)
@@ -440,6 +443,7 @@ def stop_primal_violation_pattern(
     dof: npt.NDArray[np.float64],
     stress_tensile: float,
     stress_compressive: float,
+    solver: str,
 ) -> bool:
     """
     Check for primal violation (load factor structural analysis) and add new load cases.
@@ -462,6 +466,8 @@ def stop_primal_violation_pattern(
         Tensile stress limit.
     stress_compressive : float
         Compressive stress limit.
+    solver : str
+        CVXPY solver name.
 
     Returns
     -------
@@ -517,7 +523,7 @@ def stop_primal_violation_pattern(
         objective = cvx.Maximize(lambda_var)
         problem = cvx.Problem(objective, constraints)
         # uses CVXPY preference order of solvers, MOSEK first if installed
-        problem.solve()
+        problem.solve(solver)
 
         load_factors[k] = lambda_var.value if lambda_var.value is not None else 0.0
 
@@ -752,6 +758,7 @@ def trussopt(
             parameters.stress_tensile,
             parameters.stress_compressive,
             parameters.joint_cost,
+            parameters.cvxpy["solver"],
         )
         # We need to solve once so that we have valid values for `filter_areas ` which we then filter based on `fitler_level[s]`
         # (rename to `filter_level` but need to check first if that is what we want to parallelise on or if it is
@@ -813,6 +820,7 @@ def trussopt(
                     dof,
                     parameters.stress_tensile,
                     parameters.stress_compressive,
+                    parameters.cvxpy["solver"],
                 )
             # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
 
@@ -847,6 +855,7 @@ def trussopt(
                 parameters.stress_tensile,
                 parameters.stress_compressive,
                 parameters.joint_cost,
+                parameters.cvxpy["solver"],
             )
             logger.info(f"Volume (filter_level = {filter_level}): {final_vol}")
         # Build dictionary of results (the final_vol changes if we have filtered above)

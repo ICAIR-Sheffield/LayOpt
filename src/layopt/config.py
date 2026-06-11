@@ -8,6 +8,7 @@ from pathlib import Path
 from pprint import pformat
 from typing import Any
 
+import cvxpy as cvx
 import numpy as np
 from loguru import logger
 
@@ -71,6 +72,9 @@ def reconcile_config_args(
             f"BEFORE update from command line config :\n{pformat(default_config, indent=4)}"
         )
         config = merge_mappings(map1=config, map2=_args)
+
+    # pass config through CVXPY solver name validation
+    config = reconcile_solver(config)
     logger.debug(f"Final configuration AFTER update : \n{pformat(config, indent=4)}\n")
     return dict(config)
 
@@ -148,4 +152,38 @@ def _convert_to_numpy_array(config: dict[str, Any], to_convert: str) -> dict[str
         config[to_convert] = np.asarray(config[to_convert])
     except KeyError:
         return config
+    return config
+
+
+def reconcile_solver(config: dict[str, Any]) -> dict[str, Any]:
+    """
+    Check solver name in config is installed for use in CVXPY.
+
+    Parameters
+    ----------
+    config : dict[str, Any]
+        Dictionary containing requested CVXPY solver name.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary with reconciled CVXPY solver name.
+    """
+    # use MOSEK is solver not specified in config
+    requested_solver = str(config["cvxpy"].get("solver", "mosek")).upper()
+    cvxpy_solvers = cvx.installed_solvers()
+    if requested_solver in cvxpy_solvers:
+        config["cvxpy"]["solver"] = requested_solver
+        return config
+
+    logger.warning(f"Requested CVXPY solver '{requested_solver}' is not installed.")
+    # use CLARABEL as first back-up, else let CVXPY choose solver
+    if "CLARABEL" in cvxpy_solvers:
+        logger.info("Falling back to available solver: 'CLARABEL'")
+        config["cvxpy"]["solver"] = "CLARABEL"
+    else:
+        logger.error(
+            "Fallback solver 'CLARABEL' not found. Leaving empty to let CVXPY auto-select."
+        )
+        config["cvxpy"].pop("solver", None)
     return config
