@@ -634,6 +634,48 @@ def _support_conditions(
     return np.array(dof).flatten()
 
 
+def _potential_members(
+    node_coords: npt.NDArray,
+    max_length: float,
+    joint_cost: float,
+    convex: bool,
+    polygon: Polygon,
+) -> npt.NDArray[np.float64]:
+    """
+    Create the ground structure.
+
+    Parameters
+    ----------
+    node_coords : npt.NDArray,
+        Node coordinates.
+    max_length : int | float,
+        Maximum length.
+    joint_cost : int | float,
+        Joint cost.
+    convex : bool,
+        Whether the structure is convex.
+    polygon : Polygon
+        Bounding box for the structure.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Array of ground structure coordinates.
+    """
+    potential_members = []
+    for i, j in itertools.combinations(range(len(node_coords)), 2):
+        dx, dy = (
+            abs(node_coords[i][0] - node_coords[j][0]),
+            abs(node_coords[i][1] - node_coords[j][1]),
+        )
+        length = np.sqrt(dx**2 + dy**2)
+        # Remove overlapping members, or members longer than maxLength
+        if (length < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
+            seg = [] if convex else LineString([node_coords[i], node_coords[j]])
+            if convex or polygon.contains(seg) or polygon.boundary.contains(seg):
+                potential_members.append([i, j, length, False])
+    return np.asarray(potential_members)
+
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
@@ -706,21 +748,13 @@ def trussopt(
     )
 
     # Create the 'ground structure'
-    _potential_members = []
-    for i, j in itertools.combinations(range(len(nodal_coords)), 2):
-        dx, dy = (
-            abs(nodal_coords[i][0] - nodal_coords[j][0]),
-            abs(nodal_coords[i][1] - nodal_coords[j][1]),
-        )
-        length = np.sqrt(dx**2 + dy**2)
-        # Remove overlapping members, or members longer than maxLength
-        if (
-            length < parameters.max_length and gcd(int(dx), int(dy)) == 1
-        ) or parameters.joint_cost != 0:
-            seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
-            if convex or poly.contains(seg) or poly.boundary.contains(seg):
-                _potential_members.append([i, j, length, False])
-    potential_members = np.array(_potential_members)
+    potential_members = _potential_members(
+        node_coords=nodal_coords,
+        max_length=parameters.max_length,
+        joint_cost=parameters.joint_cost,
+        convex=convex,
+        polygon=poly,
+    )
 
     # Create the active members
     # DualAdaptivity = True

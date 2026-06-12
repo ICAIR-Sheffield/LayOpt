@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 from syrupy.matchers import path_type
+from shapely.geometry import Polygon
 
 from layopt import layopt
 
@@ -857,10 +858,33 @@ def test_support_conditions(
     support_points: npt.NDArray[np.int64],
     expected: npt.NDArray[np.int64],
 ) -> None:
-    """Test for ``layopt.support_conditions()``."""
+    """Test for ``layopt._support_conditions()``."""
     np.testing.assert_array_equal(
-        layopt.support_conditions(
+        layopt._support_conditions(
             nodal_coords=node_coords, support_points=support_points
+        ),
+        expected,
+    )
+
+@pytest.mark.skip(reason="Awaiting parameterisation.")
+@pytest.mark.parametrize(
+    ("node_coords", "max_length", "joint_cost", "convex", "polygon", "expected"),
+    [
+        pytest.param(),
+    ],
+)
+def test_potential_members(
+    node_coords: npt.NDArray[np.int64],
+    max_length: int | float,
+    joint_cost: float,
+    convex: bool,
+    polygon: Polygon,
+    expected: npt.NDArray,
+) -> None:
+    """Test for ``layopt._potential_members()``."""
+    np.testing.assert_array_equal(
+        layopt._potential_members(
+            node_coords=node_coords, max_length=max_length,joint_cost=joint_cost, convex=convex, polygon=polygon
         ),
         expected,
     )
