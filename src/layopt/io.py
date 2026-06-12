@@ -52,11 +52,11 @@ def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
         config = args
     # If we have 'Parameters' then configuration is stored as a dataclass and we again don't have 'filename' key/value pair
     elif isinstance(args, Parameters):
-        output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)
+        output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)  # type: ignore[redundant-expr]
         filename = f"config_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml"
         config = RootModel[Parameters](args).model_dump()
     else:
-        msg = f"args is neither 'Namespace' or 'dict' : {type(args)}"
+        msg = f"args is neither 'Namespace', 'dict' or 'Parameters' : {type(args)}"
         raise TypeError(msg)
     if ".yaml" not in str(filename) and ".yml" not in str(filename):
         config_path = output_dir / f"{filename}.yaml"
@@ -168,7 +168,7 @@ def get_date_time(strftime: str = "%Y-%m-%d %H:%M:%S") -> str:
     return datetime.now(tz=datetime.now().astimezone().tzinfo).strftime(strftime)
 
 
-def dict_to_df(results: dict[float, dict[str, Any]]) -> pd.DataFrame:
+def dict_to_df(results: dict[float, dict[str, Any]]) -> Any:
     """
     Convert a dictionary of LayOpt results to Pandas DataFrame.
 

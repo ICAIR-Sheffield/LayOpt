@@ -20,6 +20,7 @@ import itertools
 import time
 from math import ceil, gcd, isinf
 from pathlib import Path
+from typing import Any
 
 import cvxpy as cvx
 import numpy as np
@@ -326,7 +327,7 @@ def make_pattern_loads(
 def stop_primal_violation_residual(
     nodal_coords: npt.NDArray[np.float64],
     c_n: npt.NDArray[np.float64],
-    forces: npt.NDArray[np.float64],
+    forces: list[npt.NDArray[np.float64]],
     all_patterns: list[npt.NDArray[np.float64]],
     active_load_cases: npt.NDArray[np.int64],
     dof: npt.NDArray[np.float64],
@@ -634,7 +635,6 @@ def trussopt(
             (0, parameters.height),
         ]
     )
-    # poly = Polygon([(0, 0), (parameters.width, 0), (parameters.width, parameters.height), (0, parameters.height)])
     convex = poly.convex_hull.area == poly.area
     logger.debug(f"Domain created, convex? : {convex=}")
 
@@ -645,7 +645,7 @@ def trussopt(
     logger.debug(f"Points created : {len(points)=}")
     nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
-    dof = np.ones((len(nodal_coords), 2))
+    dof: npt.NDArray[Any] = np.ones((len(nodal_coords), 2))
     # ns-rse 2026-05-13 Build a list of nodes to be added to Structure where do loading and virtual_displacements come from?
     # all_nodes = [
     #     Node(coordinate=param[0], supported_dof=param[1])
@@ -653,13 +653,12 @@ def trussopt(
     # ]
 
     # Default load point
-    if parameters.loaded_points is None:
-        parameters.loaded_points = np.asarray(
-            [[parameters.width, parameters.height // 2]]
-        )
-        logger.info(
-            f"Loaded points not provided, calculated as : {parameters.loaded_points=}"
-        )
+    parameters.loaded_points = (
+        np.asarray([[parameters.width, parameters.height // 2]])
+        if parameters.loaded_points is None
+        else parameters.loaded_points
+    )
+    logger.debug(f"Loaded points are : {parameters.loaded_points=}")
     # support conditions
     for i, node in enumerate(nodal_coords):
         if parameters.support_points.size == 0:
@@ -904,19 +903,45 @@ def trussopt(
                 logger.warning("No plot generated as volume <= 0.0")
         logger.info(f"Plotting took {time.process_time() - solve_end!s}")
 
-    # Filter output members by area threshold
-    # Build area dict where keys are ground structure member indices
-    active_indices = np.where(potential_members[:, 3])[0]
-    threshold = max(filter_areas) * parameters.member_area_filtering
-    keep = filter_areas >= threshold
-    kept_indices = active_indices[keep]
-    c_n = c_n[keep]
-    member_areas_filtered: dict[int, float] = {
-        int(idx): float(area)
-        for idx, area in zip(kept_indices, filter_areas[keep], strict=True)
-    }
+    member_areas_filtered = member_area_filtering(
+        active_indices=np.where(potential_members[:, 3])[0],
+        filter_areas=filter_areas,
+        filtering_threshold=parameters.member_area_filtering,
+    )
     logger.info(
         f"Area filtering at {parameters.member_area_filtering} ({100 * parameters.member_area_filtering}% of max): "
-        f"{int(np.sum(keep))} members retained"
+        f"{len(member_areas_filtered)} members retained"
     )
     return (vol, member_areas_filtered, dict_to_df(results))
+
+
+def member_area_filtering(
+    active_indices: npt.NDArray[np.float64],
+    filter_areas: npt.NDArray[np.float64],
+    filtering_threshold: float,
+) -> dict[int, float]:
+    """
+    Filter output members by area threshold.
+
+    Build a dictionary of areas where keys are ground structure member indices, filtering potential members for those
+    that exceed the threshold.
+
+    Parameters
+    ----------
+    active_indices : npt.NDArray[np.int]
+        Active indices to filter.
+    filter_areas : npt.NDArray[np.float64]
+        Areas to be filtered.
+    filtering_threshold : float
+        Filtering threshold.
+
+    Returns
+    -------
+    dict[int, float]
+        Dictionary of areas that exceed the threshold.
+    """
+    keep = filter_areas >= (max(filter_areas) * filtering_threshold)
+    return {
+        int(idx): float(area)
+        for idx, area in zip(active_indices[keep], filter_areas[keep], strict=True)
+    }
