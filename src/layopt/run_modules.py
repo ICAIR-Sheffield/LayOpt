@@ -118,12 +118,16 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     _config = _parse_configuration(args)
     _set_logging(log_level=_config.log_level)
     # Ensure filter_levels is a list and includes 1.0
-    filter_levels = [1.0] if len(_config.filter_levels) == 0 else _config.filter_levels
+    filter_levels = (
+        np.asarray([1.0])
+        if len(_config.filter_levels) == 0
+        else np.asarray(_config.filter_levels)
+    )
     # ns-rse 2026-04-30 : if 1.0 isn't in filter_levels we add it so we always have unfiltered results
     if 1.0 not in filter_levels:
         # if 1.0 not in filter_levels:
         filter_levels = np.append(filter_levels, 1.0)
-    _, _, results_df = layopt.trussopt(parameters=_config)
+    _, _, results_df = layopt.trussopt(parameters=_config)  # type: ignore[misc]
     # Transpose and tidy data frame and write results and configuration to disk
     results_df = results_df.T.reset_index(drop=True)
     results_df = results_df.sort_values(["filter_level"])

@@ -20,6 +20,7 @@ import itertools
 import time
 from math import ceil, gcd, isinf
 from pathlib import Path
+from typing import Any
 
 import mosek.fusion as mosek
 import numpy as np
@@ -319,7 +320,7 @@ def make_pattern_loads(
 def stop_primal_violation_residual(
     nodal_coords: npt.NDArray[np.float64],
     c_n: npt.NDArray[np.float64],
-    forces: npt.NDArray[np.float64],
+    forces: list[npt.NDArray[np.float64]],
     all_patterns: list[npt.NDArray[np.float64]],
     active_load_cases: npt.NDArray[np.int64],
     dof: npt.NDArray[np.float64],
@@ -631,7 +632,6 @@ def trussopt(
             (0, parameters.height),
         ]
     )
-    # poly = Polygon([(0, 0), (parameters.width, 0), (parameters.width, parameters.height), (0, parameters.height)])
     convex = poly.convex_hull.area == poly.area
     logger.debug(f"Domain created, convex? : {convex=}")
 
@@ -642,7 +642,7 @@ def trussopt(
     logger.debug(f"Points created : {len(points)=}")
     nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
-    dof = np.ones((len(nodal_coords), 2))
+    dof: npt.NDArray[Any] = np.ones((len(nodal_coords), 2))
     # ns-rse 2026-05-13 Build a list of nodes to be added to Structure where do loading and virtual_displacements come from?
     # all_nodes = [
     #     Node(coordinate=param[0], supported_dof=param[1])
@@ -650,13 +650,12 @@ def trussopt(
     # ]
 
     # Default load point
-    if parameters.loaded_points is None:
-        parameters.loaded_points = np.asarray(
-            [[parameters.width, parameters.height // 2]]
-        )
-        logger.info(
-            f"Loaded points not provided, calculated as : {parameters.loaded_points=}"
-        )
+    parameters.loaded_points = (
+        np.asarray([[parameters.width, parameters.height // 2]])
+        if parameters.loaded_points is None
+        else parameters.loaded_points
+    )
+    logger.debug(f"Loaded points are : {parameters.loaded_points=}")
     # support conditions
     for i, node in enumerate(nodal_coords):
         if parameters.support_points.size == 0:
