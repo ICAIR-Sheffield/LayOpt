@@ -91,7 +91,7 @@ docs = [
 
 [tool.pytest]
 minversion = "9.0"
-addopts = ["-ra", "--showlocals", "--mpl"]
+addopts = ["-ra", "--showlocals", "--mpl", "--cov"]
 strict = true
 filterwarnings = [
   "error",

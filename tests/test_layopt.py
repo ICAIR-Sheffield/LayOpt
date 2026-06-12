@@ -6,8 +6,8 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 import pytest
-from syrupy.matchers import path_type
 from shapely.geometry import Polygon
+from syrupy.matchers import path_type
 
 from layopt import layopt
 
@@ -867,16 +867,30 @@ def test_support_conditions(
     )
 
 
-@pytest.mark.skip(reason="Awaiting parameterisation.")
 @pytest.mark.parametrize(
     ("node_coords", "max_length", "joint_cost", "convex", "polygon", "expected"),
     [
-        pytest.param(),
+        pytest.param(
+            np.asarray([[0, 0], [0, 1], [1, 0], [1, 1]]),
+            1,
+            0.6,
+            False,
+            Polygon(np.asarray([[0, 0], [0, 1], [1, 0], [1, 1]])),
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 0.0],
+                    [0.0, 3.0, 1.4142135623730951, 0.0],
+                    [1.0, 2.0, 1.4142135623730951, 0.0],
+                    [2.0, 3.0, 1.0, 0.0],
+                ]
+            ),
+            id="Basic square",
+        )
     ],
 )
 def test_potential_members(
     node_coords: npt.NDArray[np.int64],
-    max_length: int | float,
+    max_length: float,
     joint_cost: float,
     convex: bool,
     polygon: Polygon,
@@ -895,17 +909,27 @@ def test_potential_members(
     )
 
 
-@pytest.mark.skip(reason="Awaiting parameterisation.")
 @pytest.mark.parametrize(
-    ("primal_method", "all_patterns_length", "expected_primal_method", "expected_active_load_cases"),
+    (
+        "primal_method",
+        "all_patterns_length",
+        "expected_primal_method",
+        "expected_active_load_cases",
+    ),
     [
         pytest.param(
             "residual", 4, True, np.asarray([1, 0, 0, 0]), id="residual of length 4"
         ),
         pytest.param(
-            "load_factor", 4, True, np.asarray([1, 0, 0, 0]), id="load_factor of length 4"
+            "load_factor",
+            4,
+            True,
+            np.asarray([1, 0, 0, 0]),
+            id="load_factor of length 4",
         ),
-        pytest.param("other", 4, False, np.asarray([1, 1, 1, 1]), id="other of length 4"),
+        pytest.param(
+            "other", 4, False, np.asarray([1, 1, 1, 1]), id="other of length 4"
+        ),
     ],
 )
 def test_primal_adaptivity(
@@ -916,8 +940,8 @@ def test_primal_adaptivity(
 ) -> None:
     """Test for ``layopt._primal_adaptivity()``."""
     primal_method_result, active_load_cases = layopt._primal_adaptivity(
-            primal_method=primal_method, all_patterns_length=all_patterns_length
-        )
+        primal_method=primal_method, all_patterns_length=all_patterns_length
+    )
     assert primal_method_result == expected_primal_method
     np.testing.assert_array_equal(
         active_load_cases,

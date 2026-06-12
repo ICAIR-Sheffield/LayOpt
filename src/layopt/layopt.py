@@ -20,7 +20,6 @@ import itertools
 import time
 from math import ceil, gcd, isinf
 from pathlib import Path
-from typing import Any
 
 import mosek.fusion as mosek
 import numpy as np
