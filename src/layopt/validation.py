@@ -68,6 +68,11 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             lambda n: n >= 1,
             error="Invalid value in config for 'height', valid values are int >= 1.",
         ),
+        "steps": Or(
+            And(int, lambda n: n >= 1),
+            And(float, lambda n: n > 0.0),
+            error="Invalid value in config for 'steps', valid values are > 0.0.",
+        ),
         "stress_tensile": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),

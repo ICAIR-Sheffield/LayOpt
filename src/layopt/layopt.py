@@ -602,6 +602,38 @@ def stop_primal_violation_pattern(
     return True  # converged, terminate
 
 
+def _support_conditions(
+    nodal_coords: npt.NDArray[np.int32], support_points: npt.NDArray[np.int32]
+) -> npt.NDArray[np.float64]:
+    """
+    Create the degrees of freedom for support conditions.
+
+    Parameters
+    ----------
+    nodal_coords : npt.NDArray[np.int32]
+        Coordinates for all nodes.
+    support_points : int | float
+        Preselected support points.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Flattened array of degrees of freedom.
+    """
+    dof = np.ones((len(nodal_coords), 2))
+    for i, node in enumerate(nodal_coords):
+        if support_points.size == 0:
+            if node[0] == 0:
+                dof[i, :] = [0, 0]  # Support nodes with x=0
+        else:
+            dof[i, :] = (
+                [0, 0]
+                if any((node == point).all() for point in support_points)
+                else [1, 1]
+            )
+    return np.array(dof).flatten()
+
+
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
@@ -642,7 +674,6 @@ def trussopt(
     logger.debug(f"Points created : {len(points)=}")
     nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
-    dof: npt.NDArray[Any] = np.ones((len(nodal_coords), 2))
     # ns-rse 2026-05-13 Build a list of nodes to be added to Structure where do loading and virtual_displacements come from?
     # all_nodes = [
     #     Node(coordinate=param[0], supported_dof=param[1])
@@ -650,26 +681,18 @@ def trussopt(
     # ]
 
     # Default load point
-    parameters.loaded_points = (
-        np.asarray([[parameters.width, parameters.height // 2]])
-        if parameters.loaded_points is None
-        else parameters.loaded_points
+    if parameters.loaded_points is None:
+        parameters.loaded_points = np.asarray(
+            [[parameters.width, parameters.height // 2]]
+        )
+        logger.info(
+            f"Loaded points not provided, calculated as : {parameters.loaded_points=}"
+        )
+    # Calculate support conditions/degrees of freedom
+    dof = _support_conditions(
+        nodal_coords=nodal_coords, support_points=parameters.support_points
     )
-    logger.debug(f"Loaded points are : {parameters.loaded_points=}")
-    # support conditions
-    for i, node in enumerate(nodal_coords):
-        if parameters.support_points.size == 0:
-            if node[0] == 0:
-                dof[i, :] = [0, 0]  # Support nodes with x=0
-        else:
-            dof[i, :] = (
-                [0, 0]
-                if any((node == point).all() for point in parameters.support_points)
-                else [1, 1]
-            )
     logger.debug(f"Degrees of Freedom : {dof=}")
-    dof = np.array(dof).flatten()
-
     # Generate all pattern loads
     # ns-rse 2026-03-17 : Unused return arguments but may combine all_patterns and pattern_descriptions to dict
     # all_patterns, base_load, pattern_descriptions = make_pattern_loads(

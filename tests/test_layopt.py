@@ -802,3 +802,65 @@ def test_stop_violation(
     assert isinstance(actual_num_added, int)
     assert actual_num_added >= 0
     assert actual_num_added == expected_num_added
+
+
+@pytest.mark.parametrize(
+    ("node_coords", "support_points", "expected"),
+    [
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [1, 0],
+                    [1, 1],
+                ]
+            ),
+            np.asarray([]),
+            np.asarray([0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 1x1 square, no support points defined",
+        ),
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [1, 0],
+                    [1, 1],
+                    [1, 2],
+                ]
+            ),
+            np.asarray([]),
+            np.asarray([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 2x3 rectangle, no support points defined",
+        ),
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [1, 0],
+                    [1, 1],
+                    [1, 2],
+                ]
+            ),
+            np.asarray([[0, 0], [0, 2]]),
+            np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 2x3 rectangle, two support points defined",
+        ),
+    ],
+)
+def test_support_conditions(
+    node_coords: npt.NDArray[np.int64],
+    support_points: npt.NDArray[np.int64],
+    expected: npt.NDArray[np.int64],
+) -> None:
+    """Test for ``layopt.support_conditions()``."""
+    np.testing.assert_array_equal(
+        layopt.support_conditions(
+            nodal_coords=node_coords, support_points=support_points
+        ),
+        expected,
+    )
