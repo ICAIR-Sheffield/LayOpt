@@ -676,6 +676,32 @@ def _potential_members(
                 potential_members.append([i, j, length, False])
     return np.asarray(potential_members)
 
+
+def _primal_adaptivity(
+    primal_method: str, all_patterns_length: int
+) -> tuple[bool, npt.NDArray[np.int32]]:
+    """
+    Derive primal method and active load cases. Start with base load for cases only.
+
+    Parameters
+    ----------
+    primal_method : str
+        Primal method.
+    all_patterns_length : int
+        All patterns.
+
+    Returns
+    -------
+    tuple[bool, npt.NDArray[np.int32]]
+        A tuple of a boolean for ``primal_method`` and the associated ``active_load_cases``.
+    """
+    if primal_method in {"residual", "load_factor"}:
+        active_load_cases = np.zeros(all_patterns_length, dtype=int)
+        active_load_cases[0] = 1  # Base case = all large loads
+        return (True, active_load_cases)
+    return (False, np.ones(all_patterns_length, dtype=int))
+
+
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
@@ -767,20 +793,9 @@ def trussopt(
         pm[3] = True
 
     #### Primal adaptivity: start with base load case only ####
-    primal_adaptivity = True
-    # if PrimalAdaptivity:
-    #     activeLoadCases = np.zeros(len(allPatterns), dtype=int)
-    #     activeLoadCases[0] = 1  # Base case = all large loads
-    # # does below make sense here?
-    # else:
-    #     activeLoadCases = np.ones(len(allPatterns), dtype=int)
-    if parameters.primal_method in {"residual", "load_factor"}:
-        primal_adaptivity = True
-        active_load_cases = np.zeros(len(all_patterns), dtype=int)
-        active_load_cases[0] = 1  # Base case = all large loads
-    else:
-        primal_adaptivity = False
-        active_load_cases = np.ones(len(all_patterns), dtype=int)
+    primal_adaptivity, active_load_cases = _primal_adaptivity(
+        primal_method=parameters.primal_method, all_patterns_length=len(all_patterns)
+    )
 
     setup_end = time.process_time()
     logger.info(f"Setup took {setup_end - setup_start!s}")
