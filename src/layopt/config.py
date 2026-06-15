@@ -173,16 +173,20 @@ def reconcile_solver(config: dict[str, Any]) -> dict[str, Any]:
     dict[str, Any]
         Dictionary with reconciled CVXPY solver name.
     """
-    # use MOSEK is solver not specified in config
+    # use MOSEK if solver not specified in config
     requested_solver = str(config["cvxpy"].get("solver", "mosek")).upper()
     cvxpy_solvers = cvx.installed_solvers()
     if requested_solver in cvxpy_solvers:
+        logger.info(f"Using available CVXPY solver: {requested_solver}")
         config["cvxpy"]["solver"] = requested_solver
         return config
 
     logger.warning(f"Requested CVXPY solver '{requested_solver}' is not installed.")
-    # use CLARABEL as first back-up, else let CVXPY choose solver
-    if "CLARABEL" in cvxpy_solvers:
+    # check if MOSEK installed, and use CLARABEL as back-up if not, else let CVXPY choose solver
+    if "MOSEK" in cvxpy_solvers:
+        logger.info("Falling back to available solver: 'MOSEK'")
+        config["cvxpy"]["solver"] = "MOSEK"
+    elif "CLARABEL" in cvxpy_solvers:
         logger.info("Falling back to available solver: 'CLARABEL'")
         config["cvxpy"]["solver"] = "CLARABEL"
     else:

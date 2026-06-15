@@ -8,16 +8,14 @@ from pathlib import Path
 from pkgutil import get_data
 from typing import Any
 
+import cvxpy as cvx
 import numpy as np
 import numpy.typing as npt
 import pytest
 from ruamel.yaml import YAML
 from schema import SchemaError
 
-from layopt.config import (
-    merge_mappings,
-    reconcile_config_args,
-)
+from layopt.config import merge_mappings, reconcile_config_args, reconcile_solver
 from layopt.validation import LAYOPT_CONFIG_SCHEMA, validate_config
 
 BASE_DIR = Path.cwd()
@@ -208,3 +206,94 @@ def test_merge_mappings(
     """Test ``merge_mappings()``."""
     merged_dict = merge_mappings(dict1, dict2)
     assert merged_dict == expected_merged_dict
+
+
+@pytest.mark.parametrize(
+    ("requested_solver", "expected_solver"),
+    [
+        pytest.param(
+            "cplex",
+            "CPLEX",
+            id="non-mosek_solver_installed",
+        ),
+        pytest.param(
+            "placeholder",
+            "MOSEK",
+            id="solver_not_installed",
+        ),
+    ],
+)
+def test_reconcile_solver_mosek_installed(
+    requested_solver: str,
+    expected_solver: str,
+    monkeypatch,
+) -> None:
+    """Test that solver name correctly updated with MOSEK installed."""
+    monkeypatch.setitem(DEFAULT_CONFIG, "cvxpy", {"solver": requested_solver})
+    monkeypatch.setattr(
+        cvx, "installed_solvers", lambda: ["MOSEK", "CPLEX", "CLARABEL"]
+    )
+    actual_reconciled_solver = reconcile_solver(config=DEFAULT_CONFIG)["cvxpy"][
+        "solver"
+    ]
+    assert actual_reconciled_solver == expected_solver
+
+
+@pytest.mark.parametrize(
+    ("requested_solver", "expected_solver"),
+    [
+        pytest.param(
+            "cplex",
+            "CPLEX",
+            id="non-mosek_solver_installed",
+        ),
+        pytest.param(
+            "placeholder",
+            "CLARABEL",
+            id="solver_not_installed",
+        ),
+    ],
+)
+def test_reconcile_solver_clarabel_no_mosek(
+    requested_solver: str,
+    expected_solver: str,
+    monkeypatch,
+) -> None:
+    """Test that solver name correctly updated with MOSEK not installed."""
+    monkeypatch.setitem(DEFAULT_CONFIG, "cvxpy", {"solver": requested_solver})
+    monkeypatch.setattr(cvx, "installed_solvers", lambda: ["CPLEX", "CLARABEL"])
+    actual_reconciled_solver = reconcile_solver(config=DEFAULT_CONFIG)["cvxpy"][
+        "solver"
+    ]
+    assert actual_reconciled_solver == expected_solver
+
+
+def test_reconcile_solver_missing_solver_config(
+    monkeypatch,
+) -> None:
+    """Test that if solver missing from config, set to MOSEK if installed."""
+    monkeypatch.setitem(DEFAULT_CONFIG, "cvxpy", {})
+    monkeypatch.setattr(
+        cvx, "installed_solvers", lambda: ["MOSEK", "CPLEX", "CLARABEL"]
+    )
+    actual_reconciled_solver = reconcile_solver(config=DEFAULT_CONFIG)["cvxpy"][
+        "solver"
+    ]
+    assert actual_reconciled_solver == "MOSEK"
+
+
+def test_reconcile_solver_no_clarabel_no_mosek_solver_not_installed(
+    monkeypatch,
+    caplog,
+) -> None:
+    """Test that CVXPY left to auto-select solver if configured solver, MOSEK and CLARABEL not installed."""
+    monkeypatch.setitem(DEFAULT_CONFIG, "cvxpy", {"solver": "placeholder"})
+    monkeypatch.setattr(cvx, "installed_solvers", lambda: ["HIGHS", "CPLEX"])
+    with caplog.at_level(logging.ERROR):
+        reconcile_solver(config=DEFAULT_CONFIG)
+
+    assert (
+        "Fallback solver 'CLARABEL' not found. Leaving empty to let CVXPY auto-select."
+        in caplog.text
+    )
+    assert DEFAULT_CONFIG["cvxpy"] == {}
