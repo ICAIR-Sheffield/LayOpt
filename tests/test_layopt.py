@@ -683,7 +683,7 @@ def test_make_pattern_loads_zero_load_points_error(
             np.array(
                 [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ),  # dof
-            "mosek", # solver
+            "mosek",  # solver
             True,  # expected converge
             id="All active load cases convergence",
         ),
@@ -722,7 +722,7 @@ def test_make_pattern_loads_zero_load_points_error(
             np.array(
                 [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ),  # dof
-            "mosek", # solver
+            "mosek",  # solver
             False,  # expected converge
             id="One inactive load case no convergence",
         ),
