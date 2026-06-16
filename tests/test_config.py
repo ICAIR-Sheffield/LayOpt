@@ -209,59 +209,43 @@ def test_merge_mappings(
 
 
 @pytest.mark.parametrize(
-    ("requested_solver", "expected_solver"),
+    ("requested_solver", "mock_installed_solvers", "expected_solver"),
     [
         pytest.param(
             "cplex",
+            ["MOSEK", "CPLEX", "CLARABEL"],
             "CPLEX",
-            id="non-mosek_solver_installed",
+            id="request_cplex_mosek_installed",
+        ),
+        pytest.param(
+            "cplex",
+            ["CPLEX", "CLARABEL"],
+            "CPLEX",
+            id="request_cplex_mosek_not_installed",
         ),
         pytest.param(
             "placeholder",
+            ["MOSEK", "CPLEX", "CLARABEL"],
             "MOSEK",
-            id="solver_not_installed",
+            id="requested_solver_not_installed_mosek_installed",
+        ),
+        pytest.param(
+            "placeholder",
+            ["CPLEX", "CLARABEL"],
+            "CLARABEL",
+            id="requested_solver_not_installed_mosek_not_installed",
         ),
     ],
 )
-def test_reconcile_solver_mosek_installed(
+def test_reconcile_solver(
     requested_solver: str,
+    mock_installed_solvers: list[str],
     expected_solver: str,
     monkeypatch,
 ) -> None:
     """Test that solver name correctly updated with MOSEK installed."""
     monkeypatch.setitem(DEFAULT_CONFIG, "cvxpy", {"solver": requested_solver})
-    monkeypatch.setattr(
-        cvx, "installed_solvers", lambda: ["MOSEK", "CPLEX", "CLARABEL"]
-    )
-    actual_reconciled_solver = reconcile_solver(config=DEFAULT_CONFIG)["cvxpy"][
-        "solver"
-    ]
-    assert actual_reconciled_solver == expected_solver
-
-
-@pytest.mark.parametrize(
-    ("requested_solver", "expected_solver"),
-    [
-        pytest.param(
-            "cplex",
-            "CPLEX",
-            id="non-mosek_solver_installed",
-        ),
-        pytest.param(
-            "placeholder",
-            "CLARABEL",
-            id="solver_not_installed",
-        ),
-    ],
-)
-def test_reconcile_solver_clarabel_no_mosek(
-    requested_solver: str,
-    expected_solver: str,
-    monkeypatch,
-) -> None:
-    """Test that solver name correctly updated with MOSEK not installed."""
-    monkeypatch.setitem(DEFAULT_CONFIG, "cvxpy", {"solver": requested_solver})
-    monkeypatch.setattr(cvx, "installed_solvers", lambda: ["CPLEX", "CLARABEL"])
+    monkeypatch.setattr(cvx, "installed_solvers", lambda: mock_installed_solvers)
     actual_reconciled_solver = reconcile_solver(config=DEFAULT_CONFIG)["cvxpy"][
         "solver"
     ]

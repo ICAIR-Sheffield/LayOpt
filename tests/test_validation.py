@@ -65,13 +65,19 @@ TEST_SCHEMA = Schema(
             pytest.raises(SchemaError),
             id="Invalid value for primal_method",
         ),
+        pytest.param(
+            {"cvxpy": {"solver": "nonsense"}},
+            LAYOPT_CONFIG_SCHEMA,
+            pytest.raises(SchemaError),
+            id="Invalid value for solver",
+        ),
     ],
 )
 def test_validate_config_exceptions(
     new_config: dict[str, Any], schema: dict[str, Any], expectation
 ) -> None:
     """Test various configurations."""
-    if "primal_method" in new_config:
+    if "primal_method" in new_config or "solver" in new_config.get("cvxpy", {}):
         default_config = get_data(package="layopt", resource="default_config.yaml")
         yaml = YAML(typ="safe")
         default_config = yaml.load(default_config)
@@ -104,6 +110,11 @@ def test_validate_config_exceptions(
             {"primal_method": "load_factor"},
             does_not_raise(),
             id="primal_method load_factor",
+        ),
+        pytest.param(
+            {"cvxpy": {"solver": "clarabel"}},
+            does_not_raise(),
+            id="solver CLARABEL",
         ),
     ],
 )

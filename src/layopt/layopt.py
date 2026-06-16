@@ -170,24 +170,22 @@ def solve(
     # uses CVXPY preference order of solvers, MOSEK first if installed
     problem.solve(solver, accept_unknown=True)
 
-    vol = problem.value if problem.value is not None else 0.0
-    a_val = a.value if a.value is not None else np.zeros(n_members)
-    q_vals = [
-        qi.value if qi.value is not None else np.zeros(n_members) for qi in q_vars
-    ]
+    vol = 0.0 if problem.value is None else problem.value
+    areas = np.zeros(n_members) if a.value is None else a.value
+    forces = [np.zeros(n_members) if qi.value is None else qi.value for qi in q_vars]
 
     # eq_constraints = constraints[::3]  # every third constraint is the equilibrium one
-    u = []
+    deflections = []
     for eq_con in eq_constraints:
         dual = eq_con.dual_value
         if dual is None:
             dual = np.zeros(eq_matrix_b.shape[0])
-        u.append(-np.array(dual))
+        deflections.append(-np.array(dual))
 
     if vol == 0:
-        u = [ui * 10000 for ui in u]
+        deflections = [ui * 10000 for ui in deflections]
 
-    return vol, a_val, q_vals, u
+    return vol, areas, forces, deflections
 
 
 def stop_violation(
