@@ -602,16 +602,16 @@ def stop_primal_violation_pattern(
 
 
 def _support_conditions(
-    nodal_coords: npt.NDArray[np.int32], support_points: npt.NDArray[np.int32]
+    nodal_coords: npt.NDArray[np.float64], support_points: npt.NDArray[np.float64]
 ) -> npt.NDArray[np.float64]:
     """
     Create the degrees of freedom for support conditions.
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray[np.int32]
+    nodal_coords : npt.NDArray[np.float64]
         Coordinates for all nodes.
-    support_points : int | float
+    support_points : npt.NDArray[np.float64]
         Preselected support points.
 
     Returns
@@ -634,7 +634,7 @@ def _support_conditions(
 
 
 def _potential_members(
-    node_coords: npt.NDArray,
+    nodal_coords: npt.NDArray,
     max_length: float,
     joint_cost: float,
     convex: bool,
@@ -645,7 +645,7 @@ def _potential_members(
 
     Parameters
     ----------
-    node_coords : npt.NDArray,
+    nodal_coords : npt.NDArray,
         Node coordinates.
     max_length : int | float,
         Maximum length.
@@ -662,15 +662,15 @@ def _potential_members(
         Array of ground structure coordinates.
     """
     potential_members = []
-    for i, j in itertools.combinations(range(len(node_coords)), 2):
+    for i, j in itertools.combinations(range(len(nodal_coords)), 2):
         dx, dy = (
-            abs(node_coords[i][0] - node_coords[j][0]),
-            abs(node_coords[i][1] - node_coords[j][1]),
+            abs(nodal_coords[i][0] - nodal_coords[j][0]),
+            abs(nodal_coords[i][1] - nodal_coords[j][1]),
         )
         length = np.sqrt(dx**2 + dy**2)
         # Remove overlapping members, or members longer than maxLength
         if (length < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
-            seg = [] if convex else LineString([node_coords[i], node_coords[j]])
+            seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
             if convex or polygon.contains(seg) or polygon.boundary.contains(seg):
                 potential_members.append([i, j, length, False])
     return np.asarray(potential_members)
@@ -739,7 +739,9 @@ def trussopt(
     # xv, yv = np.meshgrid(range(parameters.width + 1), range(parameters.height + 1))
     points = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
     logger.debug(f"Points created : {len(points)=}")
-    nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
+    nodal_coords: npt.NDArray[np.float64] = np.array(
+        [[pt.x, pt.y] for pt in points if poly.intersects(pt)]
+    )
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
     # ns-rse 2026-05-13 Build a list of nodes to be added to Structure where do loading and virtual_displacements come from?
     # all_nodes = [
@@ -774,7 +776,7 @@ def trussopt(
 
     # Create the 'ground structure'
     potential_members = _potential_members(
-        node_coords=nodal_coords,
+        nodal_coords=nodal_coords,
         max_length=parameters.max_length,
         joint_cost=parameters.joint_cost,
         convex=convex,

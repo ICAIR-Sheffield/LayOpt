@@ -806,7 +806,7 @@ def test_stop_violation(
 
 
 @pytest.mark.parametrize(
-    ("node_coords", "support_points", "expected"),
+    ("nodal_coords", "support_points", "expected"),
     [
         pytest.param(
             np.asarray(
@@ -854,21 +854,21 @@ def test_stop_violation(
     ],
 )
 def test_support_conditions(
-    node_coords: npt.NDArray[np.int64],
+    nodal_coords: npt.NDArray[np.int64],
     support_points: npt.NDArray[np.int64],
     expected: npt.NDArray[np.int64],
 ) -> None:
     """Test for ``layopt._support_conditions()``."""
     np.testing.assert_array_equal(
         layopt._support_conditions(
-            nodal_coords=node_coords, support_points=support_points
+            nodal_coords=nodal_coords, support_points=support_points
         ),
         expected,
     )
 
 
 @pytest.mark.parametrize(
-    ("node_coords", "max_length", "joint_cost", "convex", "polygon", "expected"),
+    ("nodal_coords", "max_length", "joint_cost", "convex", "polygon", "expected"),
     [
         pytest.param(
             np.asarray([[0, 0], [0, 1], [1, 0], [1, 1]]),
@@ -885,11 +885,26 @@ def test_support_conditions(
                 ]
             ),
             id="Basic square",
-        )
+        ),
+        pytest.param(
+            np.asarray([[0, 0], [0, 1], [1, 0]]),
+            1,
+            0.6,
+            False,
+            Polygon(np.asarray([[0, 0], [0, 1], [1, 0]])),
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 0.0],
+                    [0.0, 2.0, 1.0, 0.0],
+                    [1.0, 2.0, 1.4142135623730951, 0.0],
+                ]
+            ),
+            id="Basic triangle",
+        ),
     ],
 )
 def test_potential_members(
-    node_coords: npt.NDArray[np.int64],
+    nodal_coords: npt.NDArray[np.int64],
     max_length: float,
     joint_cost: float,
     convex: bool,
@@ -899,7 +914,7 @@ def test_potential_members(
     """Test for ``layopt._potential_members()``."""
     np.testing.assert_array_equal(
         layopt._potential_members(
-            node_coords=node_coords,
+            nodal_coords=nodal_coords,
             max_length=max_length,
             joint_cost=joint_cost,
             convex=convex,

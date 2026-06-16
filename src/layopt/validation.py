@@ -121,7 +121,7 @@ LAYOPT_CONFIG_SCHEMA = Schema(
         "member_area_filtering": Or(
             And(int, lambda n: 1 >= n >= 0),
             And(float, lambda n: 1.0 >= n >= 0.0),
-            error="❌ Invalid value in config for 'member_area_filtering', valid values are >= 0.0 and <= 1.0.",
+            error="Invalid value in config for 'member_area_filtering', valid values are >= 0.0 and <= 1.0.",
         ),
         "filter_levels": And(
             np.ndarray,
