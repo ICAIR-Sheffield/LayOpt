@@ -134,6 +134,13 @@ def layopt_parser() -> arg.ArgumentParser:
         help="Small load to apply at each point.",
     )
     optimise_parser.add_argument(
+        "--solver",
+        dest="solver",
+        type=str,
+        required=False,
+        help="The solver 'cvxpy' should use.",
+    )
+    optimise_parser.add_argument(
         "--max-length",
         dest="max_length",
         type=float,

@@ -73,7 +73,11 @@ def reconcile_config_args(
         )
         config = merge_mappings(map1=config, map2=_args)
 
-    # pass config through CVXPY solver name validation
+    # If user has specified a solver we update the value outside of merge_mappings() because args["solver"] is not
+    # nested as it is in the default at config["cvxpy"]["solver"]
+    if "solver" in _args and _args["solver"] is not None:
+        config["cvxpy"]["solver"] = _args["solver"].upper()
+    # Pass config through CVXPY solver name validation
     config = reconcile_solver(config)
     logger.debug(f"Final configuration AFTER update : \n{pformat(config, indent=4)}\n")
     return dict(config)

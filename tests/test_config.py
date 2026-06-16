@@ -28,6 +28,7 @@ DEFAULT_CONFIG = yaml.load(default_config)
 
 
 # Are we on GitHub and OSX?
+GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 GITHUB_OSX = os.getenv("GITHUB_ACTIONS") == "true" and sys.platform == "darwin"
 
 
@@ -107,6 +108,26 @@ def test_reconcile_config_args_no_config(caplog) -> None:
             1.456,
             id="load_small 1.456",
         ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, solver="clarabel", func=None, module=None
+            ),
+            "solver",
+            "CLARABEL",
+            id="solver clarabel",  # Not a great test as defaults to clarabel if mosek isn't installed
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None, solver="mosek", func=None, module=None
+            ),
+            "solver",
+            "MOSEK",
+            id="solver mosek",
+            marks=pytest.mark.skipif(
+                GITHUB_ACTIONS,
+                reason="mosek library requires license so no longer installed in continuous integration",
+            ),
+        ),
     ],
 )
 def test_reconcile_config_args(
@@ -120,6 +141,8 @@ def test_reconcile_config_args(
     )
     if isinstance(config[parameter], np.ndarray):
         np.testing.assert_array_equal(config[parameter], value)
+    elif parameter == "solver":
+        assert config["cvxpy"][parameter] == value
     else:
         assert config[parameter] == value
 
