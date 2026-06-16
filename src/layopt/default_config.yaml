@@ -19,7 +19,7 @@ support_points: # Support points
   - []
 member_area_filtering: 0.001 # Fraction of maximum member area for output threshold
 cvxpy:
-  solver: mosek # See https://www.cvxpy.org/tutorial/solvers/index.html?h=solve#choosing-a-solver for further details
+  solver: clarabel # See https://www.cvxpy.org/tutorial/solvers/index.html?h=solve#choosing-a-solver for further details
 filter_levels: [1.0] # List of values to filter by if empty no filtering is performed
 primal_method: load_factor # Primal method
 problem_name: short cantilever # Problem name
