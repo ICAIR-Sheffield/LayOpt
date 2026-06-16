@@ -4,6 +4,7 @@ log_level: info # Verbosity used in logging
 cores: 2 # Number of cores to use when processing
 width: 3 # Width of structure
 height: 6 # Height of structure
+steps: 1 # Steps to generate nodes
 stress_tensile: 1.0 # Tensile stress
 stress_compressive: 1.0 # Compressive stress
 joint_cost: 0.0 # Joint costs

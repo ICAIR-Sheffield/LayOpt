@@ -20,7 +20,6 @@ import itertools
 import time
 from math import ceil, gcd, isinf
 from pathlib import Path
-from typing import Any
 
 import mosek.fusion as mosek
 import numpy as np
@@ -602,6 +601,106 @@ def stop_primal_violation_pattern(
     return True  # converged, terminate
 
 
+def _support_conditions(
+    nodal_coords: npt.NDArray[np.float64], support_points: npt.NDArray[np.float64]
+) -> npt.NDArray[np.float64]:
+    """
+    Create the degrees of freedom for support conditions.
+
+    Parameters
+    ----------
+    nodal_coords : npt.NDArray[np.float64]
+        Coordinates for all nodes.
+    support_points : npt.NDArray[np.float64]
+        Preselected support points.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Flattened array of degrees of freedom.
+    """
+    dof = np.ones((len(nodal_coords), 2))
+    for i, node in enumerate(nodal_coords):
+        if support_points.size == 0:
+            if node[0] == 0:
+                dof[i, :] = [0, 0]  # Support nodes with x=0
+        else:
+            dof[i, :] = (
+                [0, 0]
+                if any((node == point).all() for point in support_points)
+                else [1, 1]
+            )
+    return np.array(dof).flatten()
+
+
+def _potential_members(
+    nodal_coords: npt.NDArray,
+    max_length: float,
+    joint_cost: float,
+    convex: bool,
+    polygon: Polygon,
+) -> npt.NDArray[np.float64]:
+    """
+    Create the ground structure.
+
+    Parameters
+    ----------
+    nodal_coords : npt.NDArray,
+        Node coordinates.
+    max_length : int | float,
+        Maximum length.
+    joint_cost : int | float,
+        Joint cost.
+    convex : bool,
+        Whether the structure is convex.
+    polygon : Polygon
+        Bounding box for the structure.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Array of ground structure coordinates.
+    """
+    potential_members = []
+    for i, j in itertools.combinations(range(len(nodal_coords)), 2):
+        dx, dy = (
+            abs(nodal_coords[i][0] - nodal_coords[j][0]),
+            abs(nodal_coords[i][1] - nodal_coords[j][1]),
+        )
+        length = np.sqrt(dx**2 + dy**2)
+        # Remove overlapping members, or members longer than maxLength
+        if (length < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
+            seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
+            if convex or polygon.contains(seg) or polygon.boundary.contains(seg):
+                potential_members.append([i, j, length, False])
+    return np.asarray(potential_members)
+
+
+def _primal_adaptivity(
+    primal_method: str, all_patterns_length: int
+) -> tuple[bool, npt.NDArray[np.int32]]:
+    """
+    Derive primal method and active load cases. Start with base load for cases only.
+
+    Parameters
+    ----------
+    primal_method : str
+        Primal method.
+    all_patterns_length : int
+        All patterns.
+
+    Returns
+    -------
+    tuple[bool, npt.NDArray[np.int32]]
+        A tuple of a boolean for ``primal_method`` and the associated ``active_load_cases``.
+    """
+    if primal_method in {"residual", "load_factor"}:
+        active_load_cases = np.zeros(all_patterns_length, dtype=int)
+        active_load_cases[0] = 1  # Base case = all large loads
+        return (True, active_load_cases)
+    return (False, np.ones(all_patterns_length, dtype=int))
+
+
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
@@ -640,9 +739,10 @@ def trussopt(
     # xv, yv = np.meshgrid(range(parameters.width + 1), range(parameters.height + 1))
     points = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
     logger.debug(f"Points created : {len(points)=}")
-    nodal_coords = np.array([[pt.x, pt.y] for pt in points if poly.intersects(pt)])
+    nodal_coords: npt.NDArray[np.float64] = np.array(
+        [[pt.x, pt.y] for pt in points if poly.intersects(pt)]
+    )
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
-    dof: npt.NDArray[Any] = np.ones((len(nodal_coords), 2))
     # ns-rse 2026-05-13 Build a list of nodes to be added to Structure where do loading and virtual_displacements come from?
     # all_nodes = [
     #     Node(coordinate=param[0], supported_dof=param[1])
@@ -650,26 +750,18 @@ def trussopt(
     # ]
 
     # Default load point
-    parameters.loaded_points = (
-        np.asarray([[parameters.width, parameters.height // 2]])
-        if parameters.loaded_points is None
-        else parameters.loaded_points
+    if parameters.loaded_points is None:
+        parameters.loaded_points = np.asarray(
+            [[parameters.width, parameters.height // 2]]
+        )
+        logger.info(
+            f"Loaded points not provided, calculated as : {parameters.loaded_points=}"
+        )
+    # Calculate support conditions/degrees of freedom
+    dof = _support_conditions(
+        nodal_coords=nodal_coords, support_points=parameters.support_points
     )
-    logger.debug(f"Loaded points are : {parameters.loaded_points=}")
-    # support conditions
-    for i, node in enumerate(nodal_coords):
-        if parameters.support_points.size == 0:
-            if node[0] == 0:
-                dof[i, :] = [0, 0]  # Support nodes with x=0
-        else:
-            dof[i, :] = (
-                [0, 0]
-                if any((node == point).all() for point in parameters.support_points)
-                else [1, 1]
-            )
     logger.debug(f"Degrees of Freedom : {dof=}")
-    dof = np.array(dof).flatten()
-
     # Generate all pattern loads
     # ns-rse 2026-03-17 : Unused return arguments but may combine all_patterns and pattern_descriptions to dict
     # all_patterns, base_load, pattern_descriptions = make_pattern_loads(
@@ -683,21 +775,13 @@ def trussopt(
     )
 
     # Create the 'ground structure'
-    _potential_members = []
-    for i, j in itertools.combinations(range(len(nodal_coords)), 2):
-        dx, dy = (
-            abs(nodal_coords[i][0] - nodal_coords[j][0]),
-            abs(nodal_coords[i][1] - nodal_coords[j][1]),
-        )
-        length = np.sqrt(dx**2 + dy**2)
-        # Remove overlapping members, or members longer than maxLength
-        if (
-            length < parameters.max_length and gcd(int(dx), int(dy)) == 1
-        ) or parameters.joint_cost != 0:
-            seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
-            if convex or poly.contains(seg) or poly.boundary.contains(seg):
-                _potential_members.append([i, j, length, False])
-    potential_members = np.array(_potential_members)
+    potential_members = _potential_members(
+        nodal_coords=nodal_coords,
+        max_length=parameters.max_length,
+        joint_cost=parameters.joint_cost,
+        convex=convex,
+        polygon=poly,
+    )
 
     # Create the active members
     # DualAdaptivity = True
@@ -710,20 +794,9 @@ def trussopt(
         pm[3] = True
 
     #### Primal adaptivity: start with base load case only ####
-    primal_adaptivity = True
-    # if PrimalAdaptivity:
-    #     activeLoadCases = np.zeros(len(allPatterns), dtype=int)
-    #     activeLoadCases[0] = 1  # Base case = all large loads
-    # # does below make sense here?
-    # else:
-    #     activeLoadCases = np.ones(len(allPatterns), dtype=int)
-    if parameters.primal_method in {"residual", "load_factor"}:
-        primal_adaptivity = True
-        active_load_cases = np.zeros(len(all_patterns), dtype=int)
-        active_load_cases[0] = 1  # Base case = all large loads
-    else:
-        primal_adaptivity = False
-        active_load_cases = np.ones(len(all_patterns), dtype=int)
+    primal_adaptivity, active_load_cases = _primal_adaptivity(
+        primal_method=parameters.primal_method, all_patterns_length=len(all_patterns)
+    )
 
     setup_end = time.process_time()
     logger.info(f"Setup took {setup_end - setup_start!s}")

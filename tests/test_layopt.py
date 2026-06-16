@@ -6,6 +6,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 import pytest
+from shapely.geometry import Polygon
 from syrupy.matchers import path_type
 
 from layopt import layopt
@@ -802,3 +803,162 @@ def test_stop_violation(
     assert isinstance(actual_num_added, int)
     assert actual_num_added >= 0
     assert actual_num_added == expected_num_added
+
+
+@pytest.mark.parametrize(
+    ("nodal_coords", "support_points", "expected"),
+    [
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [1, 0],
+                    [1, 1],
+                ]
+            ),
+            np.asarray([]),
+            np.asarray([0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 1x1 square, no support points defined",
+        ),
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [1, 0],
+                    [1, 1],
+                    [1, 2],
+                ]
+            ),
+            np.asarray([]),
+            np.asarray([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 2x3 rectangle, no support points defined",
+        ),
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [1, 0],
+                    [1, 1],
+                    [1, 2],
+                ]
+            ),
+            np.asarray([[0, 0], [0, 2]]),
+            np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 2x3 rectangle, two support points defined",
+        ),
+    ],
+)
+def test_support_conditions(
+    nodal_coords: npt.NDArray[np.int64],
+    support_points: npt.NDArray[np.int64],
+    expected: npt.NDArray[np.int64],
+) -> None:
+    """Test for ``layopt._support_conditions()``."""
+    np.testing.assert_array_equal(
+        layopt._support_conditions(
+            nodal_coords=nodal_coords, support_points=support_points
+        ),
+        expected,
+    )
+
+
+@pytest.mark.parametrize(
+    ("nodal_coords", "max_length", "joint_cost", "convex", "polygon", "expected"),
+    [
+        pytest.param(
+            np.asarray([[0, 0], [0, 1], [1, 0], [1, 1]]),
+            1,
+            0.6,
+            False,
+            Polygon(np.asarray([[0, 0], [0, 1], [1, 0], [1, 1]])),
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 0.0],
+                    [0.0, 3.0, 1.4142135623730951, 0.0],
+                    [1.0, 2.0, 1.4142135623730951, 0.0],
+                    [2.0, 3.0, 1.0, 0.0],
+                ]
+            ),
+            id="Basic square",
+        ),
+        pytest.param(
+            np.asarray([[0, 0], [0, 1], [1, 0]]),
+            1,
+            0.6,
+            False,
+            Polygon(np.asarray([[0, 0], [0, 1], [1, 0]])),
+            np.asarray(
+                [
+                    [0.0, 1.0, 1.0, 0.0],
+                    [0.0, 2.0, 1.0, 0.0],
+                    [1.0, 2.0, 1.4142135623730951, 0.0],
+                ]
+            ),
+            id="Basic triangle",
+        ),
+    ],
+)
+def test_potential_members(
+    nodal_coords: npt.NDArray[np.int64],
+    max_length: float,
+    joint_cost: float,
+    convex: bool,
+    polygon: Polygon,
+    expected: npt.NDArray,
+) -> None:
+    """Test for ``layopt._potential_members()``."""
+    np.testing.assert_array_equal(
+        layopt._potential_members(
+            nodal_coords=nodal_coords,
+            max_length=max_length,
+            joint_cost=joint_cost,
+            convex=convex,
+            polygon=polygon,
+        ),
+        expected,
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "primal_method",
+        "all_patterns_length",
+        "expected_primal_method",
+        "expected_active_load_cases",
+    ),
+    [
+        pytest.param(
+            "residual", 4, True, np.asarray([1, 0, 0, 0]), id="residual of length 4"
+        ),
+        pytest.param(
+            "load_factor",
+            4,
+            True,
+            np.asarray([1, 0, 0, 0]),
+            id="load_factor of length 4",
+        ),
+        pytest.param(
+            "other", 4, False, np.asarray([1, 1, 1, 1]), id="other of length 4"
+        ),
+    ],
+)
+def test_primal_adaptivity(
+    primal_method: str,
+    all_patterns_length: int,
+    expected_primal_method: bool,
+    expected_active_load_cases: npt.NDArray[np.int32],
+) -> None:
+    """Test for ``layopt._primal_adaptivity()``."""
+    primal_method_result, active_load_cases = layopt._primal_adaptivity(
+        primal_method=primal_method, all_patterns_length=all_patterns_length
+    )
+    assert primal_method_result == expected_primal_method
+    np.testing.assert_array_equal(
+        active_load_cases,
+        expected_active_load_cases,
+    )
