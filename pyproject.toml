@@ -32,9 +32,10 @@ classifiers = [
 ]
 dependencies = [
   "art",
+  "clarabel",
+  "cvxpy",
   "loguru",
   "matplotlib",
-  "mosek",
   "numpy",
   "pandas",
   "pandas-stubs",

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+import cvxpy as cvx
 import numpy as np
 from loguru import logger
 from schema import And, Or, Schema, SchemaError, SchemaWrongKeyError, Use
@@ -123,6 +124,13 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             And(float, lambda n: 1.0 >= n >= 0.0),
             error="Invalid value in config for 'member_area_filtering', valid values are >= 0.0 and <= 1.0.",
         ),
+        "cvxpy": {
+            "solver": And(
+                Use(lambda s: str(s).upper()),
+                lambda s: s in cvx.installed_solvers(),
+                error=f"Invalid value for 'solver', it should be one of your currently installed solvers: {cvx.installed_solvers()}.",
+            ),
+        },
         "filter_levels": And(
             np.ndarray,
             error="Invalid value for 'filter_levels', this should be an array of floats.",

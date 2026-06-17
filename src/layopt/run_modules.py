@@ -44,6 +44,7 @@ def _log_setup(_config: dict[str, Any]) -> None:
         f"Stress (Compressive)                : {_config['stress_compressive']}"
     )
     logger.info(f"Stress (Tensile)                    : {_config['stress_tensile']}")
+    logger.info(f"CVXPY solver                        : {_config['cvxpy']['solver']}")
     logger.info(f"Output directory                    : {_config['output_dir']}")
     logger.info(f"Cores for parallel processing       : {_config['cores']}")
 
