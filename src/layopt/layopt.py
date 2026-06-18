@@ -166,8 +166,7 @@ def solve(
 
     objective = cvx.Minimize(member_cost @ a)
     problem = cvx.Problem(objective, eq_constraints + other_constraints)
-    # uses CVXPY preference order of solvers, MOSEK first if installed
-    problem.solve(solver, accept_unknown=True)
+    problem.solve(solver)
 
     vol = 0.0 if problem.value is None else problem.value
     areas = np.zeros(n_members) if a.value is None else a.value
@@ -509,19 +508,7 @@ def stop_primal_violation_pattern(
             continue  # skip active cases
 
         fk_dof_param.value = pattern * dof
-
-        # uses CVXPY preference order of solvers, MOSEK first if installed
-        problem.solve()
-
-        constraints = [
-            eq_matrix_b @ q_var == lambda_var * fk_dof_param,  # equilibrium
-            q_var >= -stress_compressive * areas_nonzero,  # compression limit
-            q_var <= stress_tensile * areas_nonzero,  # tension limit
-        ]
-        objective = cvx.Maximize(lambda_var)
-        problem = cvx.Problem(objective, constraints)
-        # uses CVXPY preference order of solvers, MOSEK first if installed
-        problem.solve(solver, accept_unknown=True)
+        problem.solve(solver)
 
         load_factors[k] = lambda_var.value if lambda_var.value is not None else 0.0
 
