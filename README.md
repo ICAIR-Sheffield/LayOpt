@@ -17,13 +17,37 @@ the software please see our [website][layopt].
 
 ## Installation
 
+## Virtual Environment
+
+It is recommended that you use a [Python Virtual Environment][pyvenv] to install LayOpt. There are many options
+available but a good choice, used in the development of LayOpt, is [uv][uv]. Create a directory for your work and after
+[installing uv][uv_install] create a virtual environment.
+
+```shell
+# Create a directory
+mkdir LayOpt
+# Change directory
+cd LayOpt
+# Create a virtual Environment
+uv venv
+```
+
 ### PyPI
 
-**LayOpt** is not yet published to PyPI, for now you will have to install from GitHub.
+Layopt is available on [PyPI][pypi-link]. Ideally you should use a Python Virtual Environment
+(see above).
+
+```shell
+# Plain virtual environment
+pip install layopt
+# uv virtual environment
+uv pip install layopt
+```
 
 ### GitHub
 
-You can use [`pip`][pip] to install the package directly from GitHub. In your Virtual Environment run...
+You can use [`pip`][pip] to install the package directly from GitHub. This allows you to install a specific branch or
+commit to test out new functionality that is under development. In your Virtual Environment run...
 
 ```shell
 # Install from HEAD of main branch
@@ -41,10 +65,8 @@ To find out how to contribute please see our [Contributing page][layopt_contribu
 
 ## Documentation
 
-We use the [Material for Mkdocs][material_mkdocs] static site generator to build a website. This is deployed on both
-ReadTheDocs and GitHub Pages.
+We use the [Material for Mkdocs][material_mkdocs] static site generator to build a website. This is deployed on GitHub Pages.
 
-- [ReadTheDocs][rtd-link]
 - [GitHub Pages][gh-pages-link]
 
 ## Citing
@@ -77,11 +99,14 @@ To cite this software please refer to the `CITATION.cff` included in this reposi
 [pip]:                      https://pip.pypa.io/en/stable/installation/
 [pre-commit-badge]:         https://results.pre-commit.ci/badge/github/ICAIR-Sheffield/LayOpt/main.svg
 [pre-commit-link]:          https://results.pre-commit.ci/latest/github/ICAIR-Sheffield/LayOpt/main
-<!-- [pypi-link]:                https://pypi.org/project/LayOpt/ -->
+[pypi-link]:                https://pypi.org/project/LayOpt/
 <!-- [pypi-platforms]:           https://img.shields.io/pypi/pyversions/LayOpt -->
 <!-- [pypi-version]:             https://img.shields.io/pypi/v/LayOpt -->
+[pyvenv]:                   https://realpython.com/python-virtual-environments-a-primer/
 [rtd-badge]:                https://readthedocs.org/projects/LayOpt/badge/?version=latest
 [rtd-link]:                 https://LayOpt.readthedocs.io/en/latest/?badge=latest
 [tuos]:                     https://www.sheffield.ac.uk/
+[uv]:                       https://docs.astral.sh/uv/
+[uv_install]:               https://docs.astral.sh/uv/getting-started/installation/
 
 <!-- prettier-ignore-end -->
