@@ -34,7 +34,8 @@ uv pip install layopt
 
 ## GitHub
 
-You can use [`pip`][pip] to install the package directly from GitHub. In your Virtual Environment run...
+You can use [`pip`][pip] to install the package directly from GitHub. This allows you to install a specific branch or
+commit to test out new functionality that is under development. In your Virtual Environment run...
 
 ```shell
 # Install from HEAD of main branch
