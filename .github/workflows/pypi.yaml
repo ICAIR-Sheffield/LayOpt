@@ -27,9 +27,7 @@ jobs:
           uv sync --locked --all-extras --dev
       - name: Build package
         run: |
-          uv pip install --upgrade setuptools
-          export DEB_PYTHON_INSTALL_LAYOUT=deb_system
-          python -m build --no-isolation
+          uv build
       - name: Store the distribution packages
         uses: actions/upload-artifact@v7
         with:
