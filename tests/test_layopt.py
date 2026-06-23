@@ -17,6 +17,8 @@ PRECISION = 6
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-positional-arguments
+# pylint: disable=too-many-lines
+# pylint: disable=protected-access
 
 np.set_printoptions(precision=PRECISION)
 
@@ -180,41 +182,85 @@ def test_calc_eq_matrix_b_errors(
         layopt.calc_eq_matrix_b(nodal_coords=nodal_coords, c_n=c_n, dof=dof)
 
 
-@pytest.mark.skipif(
-    GITHUB_ACTIONS,
-    reason="mosek library requires license so test will always fail in continuous integration",
-)
 @pytest.mark.parametrize(
-    ("trussopt_param_fixture"),
+    ("trussopt_param_fixture", "solver_name"),
     [
         pytest.param(
             "trussopt_param_one_by_one",
-            id="1x1",
+            "MOSEK",
+            id="1x1_mosek",
         ),
         pytest.param(
             "trussopt_param_two_by_two",
-            id="2x2",
+            "MOSEK",
+            id="2x2_mosek",
         ),
         pytest.param(
             "trussopt_param_three_by_six_short_cantilever",
-            id="short cantilever",
+            "MOSEK",
+            id="short_cantilever_mosek",
         ),
         pytest.param(
-            "trussopt_param_eight_by_eight_square_cantilever", id="square cantilever"
+            "trussopt_param_eight_by_eight_square_cantilever",
+            "MOSEK",
+            id="square_cantilever_mosek",
         ),
         pytest.param(
-            "trussopt_param_three_by_one_parallel_forces", id="parallel forces"
+            "trussopt_param_three_by_one_parallel_forces",
+            "MOSEK",
+            id="parallel_forces_mosek",
         ),
-        pytest.param("trussopt_param_eighteen_by_four_spanning", id="spanning example"),
+        pytest.param(
+            "trussopt_param_eighteen_by_four_spanning",
+            "MOSEK",
+            id="spanning_example_mosek",
+        ),
+        pytest.param(
+            "trussopt_param_one_by_one",
+            "clarabel",
+            id="1x1_clarabel",
+        ),
+        pytest.param(
+            "trussopt_param_two_by_two",
+            "clarabel",
+            id="2x2_clarabel",
+        ),
+        pytest.param(
+            "trussopt_param_three_by_six_short_cantilever",
+            "clarabel",
+            id="short_cantilever_clarabel",
+        ),
+        pytest.param(
+            "trussopt_param_eight_by_eight_square_cantilever",
+            "clarabel",
+            id="square_cantilever_clarabel",
+        ),
+        pytest.param(
+            "trussopt_param_three_by_one_parallel_forces",
+            "clarabel",
+            id="parallel_forces_clarabel",
+        ),
+        pytest.param(
+            "trussopt_param_eighteen_by_four_spanning",
+            "clarabel",
+            id="spanning_example_clarabel",
+        ),
     ],
 )
 def test_trussopt(
     trussopt_param_fixture: str,
+    solver_name: str,
     request,
     snapshot,
 ) -> None:
     """Regression test for layopt.trussopt()."""
     params = request.getfixturevalue(trussopt_param_fixture)
+    params.cvxpy["solver"] = solver_name
+    if params.cvxpy["solver"] == "MOSEK" and GITHUB_ACTIONS:
+        pytest.skip(
+            "MOSEK requires license so test will always fail in continuous integration"
+        )
+
     results = layopt.trussopt(parameters=params)
     # ns-rse 2026-04-15 - results is currently a tuple, the third item of which is now a dictionary of dataframe
     df = results[2]
