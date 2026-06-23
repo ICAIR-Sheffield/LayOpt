@@ -17,6 +17,8 @@ PRECISION = 6
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-positional-arguments
+# pylint: disable=too-many-lines
+# pylint: disable=protected-access
 
 np.set_printoptions(precision=PRECISION)
 
