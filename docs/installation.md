@@ -32,6 +32,19 @@ pip install layopt
 uv pip install layopt
 ```
 
+### Pre-releases
+
+If you wish to try pre-releases, denoted by suffixes of the form `a#` for alpha releases, `b#` for beta and `rc#` for
+release candidates you should include the specific version when calling `pip`. For example to install the `0.1.0a1`
+(first alpha release of version 0.1.0) you would use...
+
+``` shell
+# Plain virtual environment
+pip install layopt==0.1.0a1
+# uv virtual environment
+uv pip install layopt==0.1.0a1
+```
+
 ## GitHub
 
 You can use [`pip`][pip] to install the package directly from GitHub. This allows you to install a specific branch or

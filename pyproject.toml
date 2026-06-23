@@ -1,11 +1,11 @@
 [build-system]
-requires = ["uv_build>=0.7.19"]
-build-backend = "uv_build"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
 
 
 [project]
 name = "LayOpt"
-version = "0.1.0"
+dynamic = ["version"]
 authors = [
   { name = "Helen Fairclough", email = "helen.fairclough@sheffield.ac.uk" },
   { name = "Andrew Fisher", email = "andrew.fisher@sheffield.ac.uk" },
@@ -17,7 +17,7 @@ license = "GPL-3.0-or-later"
 license-files = ["COPYING.md"]
 requires-python = ">=3.12"
 classifiers = [
-  "Development Status :: 1 - Planning",
+  "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
   "Intended Audience :: Developers",
   "Operating System :: OS Independent",
@@ -232,6 +232,9 @@ skip = 'uv.lock'
 count = ''
 quiet-level = 3
 # ignore-words-list = ''
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
 [project.scripts]
 layopt = "layopt.entry_point:entry_point"
