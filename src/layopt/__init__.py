@@ -16,7 +16,7 @@ __release__ = ".".join(__version__.split(".")[:-2])
 LAYOPT_VERSION = Version(__version__)
 if LAYOPT_VERSION.is_prerelease and LAYOPT_VERSION.is_devrelease:
     LAYOPT_BASE_VERSION = str(LAYOPT_VERSION.base_version)
-    LAYOPT_COMMIT = str(LAYOPT_VERSION).split("+g")[1]
+    LAYOPT_COMMIT = str(LAYOPT_VERSION).split("+")[1]
 else:
     LAYOPT_BASE_VERSION = str(LAYOPT_VERSION)
     LAYOPT_COMMIT = ""
