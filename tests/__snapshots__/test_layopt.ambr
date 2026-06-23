@@ -94,7 +94,7 @@
     81,
   )
 # ---
-# name: test_trussopt[1x1]
+# name: test_trussopt[1x1_clarabel]
   tuple(
     np.float64(150.0),
     dict({
@@ -103,13 +103,48 @@
     }),
   )
 # ---
-# name: test_trussopt[1x1].1
+# name: test_trussopt[1x1_clarabel].1
   '''
       problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
   0  1x1 structure          1.0     1      1             1                2                 1       50.0        5.0          2        150.0               6       4                  6   load_factor  1x1 structure test
   '''
 # ---
-# name: test_trussopt[2x2]
+# name: test_trussopt[1x1_mosek]
+  tuple(
+    np.float64(150.0),
+    dict({
+      2: 70.710678,
+      5: 50.0,
+    }),
+  )
+# ---
+# name: test_trussopt[1x1_mosek].1
+  '''
+      problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
+  0  1x1 structure          1.0     1      1             1                2                 1       50.0        5.0          2        150.0               6       4                  6   load_factor  1x1 structure test
+  '''
+# ---
+# name: test_trussopt[2x2_clarabel]
+  tuple(
+    np.float64(300.0),
+    dict({
+      2: 28.894891,
+      3: 33.058281,
+      22: 28.894891,
+      23: 33.058282,
+      25: 29.568227,
+      26: 20.431773,
+      27: 20.431773,
+    }),
+  )
+# ---
+# name: test_trussopt[2x2_clarabel].1
+  '''
+      problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
+  0  2x2 structure          1.0     2      2             1                2                 1       50.0        5.0          2        300.0              22       9                 28   load_factor  2x2 structure test
+  '''
+# ---
+# name: test_trussopt[2x2_mosek]
   tuple(
     np.float64(300.0),
     dict({
@@ -123,13 +158,13 @@
     }),
   )
 # ---
-# name: test_trussopt[2x2].1
+# name: test_trussopt[2x2_mosek].1
   '''
       problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method               notes
   0  2x2 structure          1.0     2      2             1                2                 1       50.0        5.0          3        300.0              22       9                 28   load_factor  2x2 structure test
   '''
 # ---
-# name: test_trussopt[parallel forces]
+# name: test_trussopt[parallel_forces_clarabel]
   tuple(
     np.float64(1500.0),
     dict({
@@ -148,13 +183,38 @@
     }),
   )
 # ---
-# name: test_trussopt[parallel forces].1
+# name: test_trussopt[parallel_forces_clarabel].1
   '''
         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                 notes
   0  parallel forces          1.0     3      1             2                4                 1       50.0        5.0          2       1500.0              16       8                 20   load_factor  parallel forces test
   '''
 # ---
-# name: test_trussopt[short cantilever]
+# name: test_trussopt[parallel_forces_mosek]
+  tuple(
+    np.float64(1500.0),
+    dict({
+      0: 250.0,
+      2: 70.710678,
+      4: 150.0,
+      5: 70.710678,
+      7: 70.710678,
+      9: 50.0,
+      11: 70.710678,
+      13: 70.710678,
+      15: 70.710678,
+      17: 250.0,
+      18: 150.0,
+      19: 50.0,
+    }),
+  )
+# ---
+# name: test_trussopt[parallel_forces_mosek].1
+  '''
+        problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                 notes
+  0  parallel forces          1.0     3      1             2                4                 1       50.0        5.0          2       1500.0              16       8                 20   load_factor  parallel forces test
+  '''
+# ---
+# name: test_trussopt[short_cantilever_clarabel]
   tuple(
     np.float64(300.0),
     dict({
@@ -167,13 +227,105 @@
     }),
   )
 # ---
-# name: test_trussopt[short cantilever].1
+# name: test_trussopt[short_cantilever_clarabel].1
+  '''
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  short cantilever          1.0     3      6             1                2                 1       50.0        5.0          2        300.0              81      28                251   load_factor  short cantliever test
+  '''
+# ---
+# name: test_trussopt[short_cantilever_mosek]
+  tuple(
+    np.float64(300.0),
+    dict({
+      2: 35.355339,
+      80: 35.355339,
+      147: 35.355339,
+      196: 35.355339,
+      218: 35.355339,
+      235: 35.355339,
+    }),
+  )
+# ---
+# name: test_trussopt[short_cantilever_mosek].1
   '''
          problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
   0  short cantilever          1.0     3      6             1                2                 1       50.0        5.0          2        300.0              83      28                251   load_factor  short cantliever test
   '''
 # ---
-# name: test_trussopt[spanning example]
+# name: test_trussopt[spanning_example_clarabel]
+  tuple(
+    np.float64(319.170903),
+    dict({
+      3: 4.673271,
+      21: 2.207848,
+      23: 0.932567,
+      32: 5.639422,
+      33: 1.884618,
+      34: 0.812564,
+      946: 4.672451,
+      954: 0.932568,
+      956: 2.206526,
+      964: 0.812564,
+      965: 1.884618,
+      966: 5.641561,
+      1068: 4.673271,
+      1668: 4.67245,
+      1889: 2.207848,
+      1903: 4.67327,
+      1992: 0.164975,
+      1994: 0.415347,
+      2009: 0.114234,
+      2010: 0.463277,
+      2014: 0.115482,
+      2022: 0.163317,
+      2023: 0.115482,
+      2043: 0.115482,
+      2084: 0.115482,
+      2085: 0.163317,
+      2112: 0.130168,
+      2114: 0.164975,
+      2125: 0.634977,
+      2126: 0.229193,
+      2204: 4.67245,
+      2246: 2.206525,
+      2444: 2.735521,
+      2446: 3.058406,
+      2466: 4.67327,
+      2484: 0.163317,
+      2488: 1.825939,
+      2497: 0.421172,
+      2504: 0.470885,
+      2506: 0.421172,
+      2508: 0.850633,
+      2517: 0.421172,
+      2524: 0.092043,
+      2526: 0.041163,
+      2528: 0.131344,
+      2530: 0.293695,
+      2546: 0.850633,
+      2548: 0.421172,
+      2550: 0.470885,
+      2566: 1.825939,
+      2570: 0.163317,
+      2588: 4.67245,
+      2608: 3.059566,
+      2610: 2.736559,
+      2722: 2.557811,
+      2723: 2.557811,
+      2724: 6.926294,
+      2725: 6.926294,
+      2726: 2.52556,
+      2727: 2.52556,
+    }),
+  )
+# ---
+# name: test_trussopt[spanning_example_clarabel].1
+  '''
+         problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
+  0  spanning example          1.0    18      4             4               16                 7       3.75      0.204         13   319.170903             612      95               2734   load_factor  spanning example test
+  '''
+# ---
+# name: test_trussopt[spanning_example_mosek]
   tuple(
     np.float64(319.170901),
     dict({
@@ -240,13 +392,63 @@
     }),
   )
 # ---
-# name: test_trussopt[spanning example].1
+# name: test_trussopt[spanning_example_mosek].1
   '''
          problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
   0  spanning example          1.0    18      4             4               16                 9       3.75      0.204         14   319.170901             681      95               2734   load_factor  spanning example test
   '''
 # ---
-# name: test_trussopt[square cantilever]
+# name: test_trussopt[square_cantilever_clarabel]
+  tuple(
+    np.float64(2070.370371),
+    dict({
+      0: 16.666667,
+      2: 12.272754,
+      11: 7.444326,
+      12: 62.328294,
+      17: 12.350842,
+      45: 16.666667,
+      94: 16.666667,
+      140: 16.666667,
+      189: 16.666666,
+      235: 16.666666,
+      284: 16.666666,
+      330: 16.666666,
+      397: 52.704624,
+      467: 12.272754,
+      881: 12.272754,
+      924: 7.444326,
+      989: 62.112997,
+      993: 5.176082,
+      1221: 12.272753,
+      1286: 2.995519,
+      1288: 11.982077,
+      1352: 66.782305,
+      1354: 35.355339,
+      1512: 8.888074,
+      1514: 7.689655,
+      1520: 3.105649,
+      1564: 30.758622,
+      1566: 11.785112,
+      1569: 38.225958,
+      1615: 35.355339,
+      1695: 8.888075,
+      1748: 31.705261,
+      1780: 37.267799,
+      1845: 8.888075,
+      1867: 38.225958,
+      1896: 37.396977,
+      1954: 8.888075,
+    }),
+  )
+# ---
+# name: test_trussopt[square_cantilever_clarabel].1
+  '''
+          problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                   notes
+  0  square cantilever          1.0     8      8             2                4                 1       50.0        5.0          6  2070.370371             383      81               2040   load_factor  square cantliever test
+  '''
+# ---
+# name: test_trussopt[square_cantilever_mosek]
   tuple(
     np.float64(2070.37037),
     dict({
@@ -290,7 +492,7 @@
     }),
   )
 # ---
-# name: test_trussopt[square cantilever].1
+# name: test_trussopt[square_cantilever_mosek].1
   '''
           problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                   notes
   0  square cantilever          1.0     8      8             2                4                 1       50.0        5.0          6   2070.37037             377      81               2040   load_factor  square cantliever test
