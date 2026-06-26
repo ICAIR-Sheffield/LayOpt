@@ -206,5 +206,24 @@ primal_method                 load_factor
 notes               short cantilever test
 ```
 
+## Feature Requests and Bugs
+
+If there is a feature missing from LayOpt that you would like to see implemented then you can use the [issue
+tracker][issue_tracker] to request a new feature. We have a [Feature request template][feature_request] to facilitate
+this.
+
+If you observe unexpected behaviour or crashes then you can use the [bug report template][bug_report], although it is
+worth checking the [issue tracker][issue_tracker] to see if the problem has already been identified.
+
+The [bug report template][bug_report] has a number of sections requesting information which makes it easier for
+developers to understand and replicate the problem so they can investigate and fix it.
+
+If you know how to code in Python and wish to try adding features or fixing bugs then pull requests are welcome. You can
+may find the [Contributing](contributing.md) section useful on how to clone the repository and use the development tools
+employed in the LayOpt package.
+
+[bug_report]: https://github.com/ICAIR-Sheffield/LayOpt/issues/new?template=bug_report.yaml
+[feature_request]: https://github.com/ICAIR-Sheffield/LayOpt/issues/new?template=feature_request.yaml
 [ipython]: https://ipython.org/
+[issue_tracker]: https://github.com/ICAIR-Sheffield/LayOpt/issues?q=sort%3Aupdated-desc%20is%3Aissue%20state%3Aopen%20
 [yaml]: https://yaml.org
