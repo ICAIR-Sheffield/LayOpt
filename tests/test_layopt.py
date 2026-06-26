@@ -1035,3 +1035,47 @@ def test_make_polygon(
 ) -> None:
     """Test for _make_polygon()."""
     assert layopt._make_polygon(bounding_coordinates) == expected
+
+
+@pytest.mark.parametrize(
+    ("width", "height", "polygon", "expected"),
+    [
+        pytest.param(
+            4,
+            4,
+            Polygon([[0, 0], [0, 4], [4, 0], [4, 4]]),
+            np.asarray(
+                [
+                    [0.0, 0.0],
+                    [4.0, 0.0],
+                    [0.0, 1.0],
+                    [1.0, 1.0],
+                    [3.0, 1.0],
+                    [4.0, 1.0],
+                    [0.0, 2.0],
+                    [1.0, 2.0],
+                    [2.0, 2.0],
+                    [3.0, 2.0],
+                    [4.0, 2.0],
+                    [0.0, 3.0],
+                    [1.0, 3.0],
+                    [3.0, 3.0],
+                    [4.0, 3.0],
+                    [0.0, 4.0],
+                    [4.0, 4.0],
+                ]
+            ),
+            id="simple 4x4 square",
+        ),
+    ],
+)
+def test_make_nodes(
+    width: int,
+    height: int,
+    polygon: Polygon,
+    expected: npt.NDArray[np.float64],
+) -> None:
+    """Test for _make_nodes()."""
+    np.testing.assert_array_almost_equal(
+        layopt._create_nodes(width, height, polygon), expected
+    )

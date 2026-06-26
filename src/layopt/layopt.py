@@ -709,6 +709,30 @@ def _make_polygon(bounding_coordinates: npt.NDArray[np.int32]) -> Polygon:
     return Polygon(bounding_coordinates)
 
 
+def _create_nodes(width: int, height: int, polygon: Polygon) -> npt.NDArray[np.float64]:
+    """
+    Create the nodes for the structure.
+
+    Parameters
+    ----------
+    width : int | float
+        The width of the structure.
+    height : int | float
+        The height of the structure.
+    polygon : Polygon
+        Polygon of the structure.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Two dimensional array of node coordinates.
+    """
+    xv, yv = np.meshgrid(range(width + 1), range(height + 1))
+    points = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
+    logger.debug(f"Points created : {len(points)=}")
+    return np.array([[pt.x, pt.y] for pt in points if polygon.intersects(pt)])
+
+
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
@@ -731,23 +755,21 @@ def trussopt(
     """
     setup_start = time.process_time()
     # Make domain
-    bounding_coordinates = np.asarray([
-        [0, 0],
-        [parameters.width, 0],
-        [parameters.width, parameters.height],
-        [0, parameters.height],
-    ])
+    bounding_coordinates = np.asarray(
+        [
+            [0, 0],
+            [parameters.width, 0],
+            [parameters.width, parameters.height],
+            [0, parameters.height],
+        ]
+    )
     poly = _make_polygon(bounding_coordinates)
     convex = poly.convex_hull.area == poly.area
     logger.debug(f"Domain created, convex? : {convex=}")
 
     # Make nodes
-    xv, yv = np.meshgrid(range(parameters.width + 1), range(parameters.height + 1))
-    # xv, yv = np.meshgrid(range(parameters.width + 1), range(parameters.height + 1))
-    points = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
-    logger.debug(f"Points created : {len(points)=}")
-    nodal_coords: npt.NDArray[np.float64] = np.array(
-        [[pt.x, pt.y] for pt in points if poly.intersects(pt)]
+    nodal_coords: npt.NDArray[np.float64] = _create_nodes(
+        width=parameters.width, height=parameters.height, polygon=poly
     )
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
     # ns-rse 2026-05-13 Build a list of nodes to be added to Structure where do loading and virtual_displacements come from?
