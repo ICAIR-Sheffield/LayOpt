@@ -62,6 +62,16 @@ run this job with:
 layopt -c single_span_config.yaml optimise
 ```
 
+The output in the terminal should include the following (with a different date & time):
+
+```shell
+2026-06-26 16:10:41.567 | INFO     | layopt.layopt:trussopt:894 - Volume (filter_level = 1.0): 269.64787019560805
+```
+
+and the output directory will contain the following plot and a CSV file output of results:
+
+![Single span output width 9 and height 2](img/arch_testing_smaller_w9_h2_n10_filter100.png)
+
 ## Square cantilever
 
 This example is adapted from Subsection 7.2 of [Fairclough et al. (2023)](https://doi.org/10.1007/s00158-023-03585-x).
@@ -123,3 +133,13 @@ your working directory). You can then run this job with:
 ```shell
 layopt -c square_cantilevel_config.yaml optimise
 ```
+
+The output in the terminal should include the following (with a different date & time):
+
+```shell
+2026-06-26 16:17:32.151 | INFO     | layopt.layopt:trussopt:894 - Volume (filter_level = 1.0): 2070.3703705771877
+```
+
+and the output directory will contain the following plot and a CSV file output of results:
+
+![Square cantilever output width 8 and height 8](img/square_cantilever_w8_h8_n2_filter100.png)
