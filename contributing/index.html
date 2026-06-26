@@ -417,17 +417,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#style" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Style
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#virtual-environments" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -439,10 +428,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pre-commit" class="md-nav__link">
+  <a href="#linting-and-style" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pre-commit
+        Linting and Style
       
     </span>
   </a>
@@ -450,10 +439,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#linting-and-style" class="md-nav__link">
+  <a href="#pre-commit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Linting and Style
+        Pre-commit
       
     </span>
   </a>
@@ -841,17 +830,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#style" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Style
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#virtual-environments" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -863,10 +841,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pre-commit" class="md-nav__link">
+  <a href="#linting-and-style" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pre-commit
+        Linting and Style
       
     </span>
   </a>
@@ -874,10 +852,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#linting-and-style" class="md-nav__link">
+  <a href="#pre-commit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Linting and Style
+        Pre-commit
       
     </span>
   </a>
@@ -919,20 +897,6 @@ to the code base.</p>
 <p>We advocate the use of <a href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional Commits</a> which provides a structured nomenclature for writing
 your commit messages. We would also encourage the use of multi-line commit messages rather than a single header so that
 more detailed information on <em>why</em> something has been done in a certain way is recorded against commits.</p>
-<h2 id="style">Style</h2>
-<p>We employ <a href="https://pre-commit.com/">pre-commit</a> hooks to apply a number of linting, type-hints and style rules using the following
-tools.</p>
-<ul>
-<li><a href="https://black.readthedocs.io/en/stable/">black</a></li>
-<li><a href="https://github.com/codespell-project/codespell">codespell</a></li>
-<li><a href="https://numpydoc.readthedocs.io/en/latest/validation.html">numpydoc</a></li>
-<li><a href="https://www.mypy-lang.org/">mypy</a></li>
-<li><a href="https://prettier.io/">prettier</a></li>
-<li><a href="https://pylint.readthedocs.io/en/stable/">pylint</a></li>
-<li><a href="https://docs.astral.sh/ruff/">ruff</a></li>
-</ul>
-<p>If you follow the <a href="../installation/#development">development installation instructions</a> you should have all necessary
-tools installed and find that your IDE recognises and uses some of these automatically.</p>
 <h2 id="virtual-environments">Virtual Environments</h2>
 <p>It is recommended that you use <a href="https://docs.python.org/3/library/venv.html">Virtual Environments</a> to install the LayOpt package and its dependencies. We use
 <a href="https://docs.astral.sh/uv/">uv</a> and recommend it. After <a href="https://docs.astral.sh/uv/getting-started/installation/">installing uv</a> you will need to create a virtual environment, synchronise
@@ -946,15 +910,33 @@ and install the package.</p>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Install the development packages</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--group<span class="w"> </span>dev
 </span></code></pre></div>
+<h2 id="linting-and-style">Linting and Style</h2>
+<p>Using a consistent style to write code means it's easier to read and understand both your own and others code. The
+widely accepted <a href="https://peps.python.org/pep-0008/">PEP8</a> style guide is used by the LayOpt code base and <a href="https://numpydoc.readthedocs.io/en/latest/">numpydoc</a> for formatting of
+docstrings. These are enforced on the code base using <a href="#pre-commit">Pre-commit</a> hooks and you are encouraged to install
+and use these hooks when committing your work.</p>
 <h2 id="pre-commit">Pre-commit</h2>
-<p>The <a href="https://pre-commit.com/">pre-commit</a> hooks need installing after you have installed the development packages</p>
+<p>We employ <a href="https://pre-commit.com/">pre-commit</a>, a framework for running checks on data prior to making commits, and apply a number
+of linting, type-hints and style rules using the following tools.</p>
+<ul>
+<li><a href="https://black.readthedocs.io/en/stable/">black</a></li>
+<li><a href="https://github.com/codespell-project/codespell">codespell</a></li>
+<li><a href="https://numpydoc.readthedocs.io/en/latest/validation.html">numpydoc</a></li>
+<li><a href="https://www.mypy-lang.org/">mypy</a></li>
+<li><a href="https://prettier.io/">prettier</a></li>
+<li><a href="https://pylint.readthedocs.io/en/stable/">pylint</a></li>
+<li><a href="https://docs.astral.sh/ruff/">ruff</a></li>
+</ul>
+<p>If you follow the <a href="../installation/#development">development installation instructions</a> you should have all necessary
+tools installed and find that your IDE recognises and uses some of these automatically. If you have already cloned the
+repository then you can install the Pre-commit hooks with:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pre-commit<span class="w"> </span>install
 </span></code></pre></div>
 <p>You should now find that the pre-commit hooks run before each commit is made. If the hooks do not pass then the commit
-will fail (although this can be over-ridden at the command line using the <code>-n</code> flag).</p>
-<h2 id="linting-and-style">Linting and Style</h2>
-<p>Using a consistent style to write code means its easier to read and understand both your own and others code. The widely
-accepted <a href="https://peps.python.org/pep-0008/">PEP8</a> style guide is used by the LayOpt code base and <a href="https://numpydoc.readthedocs.io/en/latest/">numpydoc</a> for formatting of docstrings.</p>
+will fail. We encourage the use of pre-commit hooks to check your commits but once installed they can be over-ridden at
+the Git command line by using the <code>-n</code> flag). The hooks also run in the Continuous Integration that is triggered when
+pull requests are created and errors there will be highlighted and need fixing prior to approving and merging pull
+requests.</p>
 
 
 
