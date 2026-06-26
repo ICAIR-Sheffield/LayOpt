@@ -20,22 +20,6 @@ We advocate the use of [Conventional Commits][conventional_commit] which provide
 your commit messages. We would also encourage the use of multi-line commit messages rather than a single header so that
 more detailed information on _why_ something has been done in a certain way is recorded against commits.
 
-## Style
-
-We employ [pre-commit][pre-commit] hooks to apply a number of linting, type-hints and style rules using the following
-tools.
-
-- [black][black]
-- [codespell][codespell]
-- [numpydoc][numpydoc_validation]
-- [mypy][mypy]
-- [prettier][prettier]
-- [pylint][pylint]
-- [ruff][ruff]
-
-If you follow the [development installation instructions](installation.md#development) you should have all necessary
-tools installed and find that your IDE recognises and uses some of these automatically.
-
 ## Virtual Environments
 
 It is recommended that you use [Virtual Environments][venv] to install the LayOpt package and its dependencies. We use
@@ -53,21 +37,39 @@ uv sync
 uv pip install --group dev
 ```
 
+## Linting and Style
+
+Using a consistent style to write code means it's easier to read and understand both your own and others code. The
+widely accepted [PEP8][pep8] style guide is used by the LayOpt code base and [numpydoc][numpydoc] for formatting of
+docstrings. These are enforced on the code base using [Pre-commit](#pre-commit) hooks and you are encouraged to install
+and use these hooks when committing your work.
+
 ## Pre-commit
 
-The [pre-commit][pre-commit] hooks need installing after you have installed the development packages
+We employ [pre-commit][pre-commit], a framework for running checks on data prior to making commits, and apply a number
+of linting, type-hints and style rules using the following tools.
+
+- [black][black]
+- [codespell][codespell]
+- [numpydoc][numpydoc_validation]
+- [mypy][mypy]
+- [prettier][prettier]
+- [pylint][pylint]
+- [ruff][ruff]
+
+If you follow the [development installation instructions](installation.md#development) you should have all necessary
+tools installed and find that your IDE recognises and uses some of these automatically. If you have already cloned the
+repository then you can install the Pre-commit hooks with:
 
 ```shell
 pre-commit install
 ```
 
 You should now find that the pre-commit hooks run before each commit is made. If the hooks do not pass then the commit
-will fail (although this can be over-ridden at the command line using the `-n` flag).
-
-## Linting and Style
-
-Using a consistent style to write code means its easier to read and understand both your own and others code. The widely
-accepted [PEP8][pep8] style guide is used by the LayOpt code base and [numpydoc][numpydoc] for formatting of docstrings.
+will fail. We encourage the use of pre-commit hooks to check your commits but once installed they can be over-ridden at
+the Git command line by using the `-n` flag). The hooks also run in the Continuous Integration that is triggered when
+pull requests are created and errors there will be highlighted and need fixing prior to approving and merging pull
+requests.
 
 [black]: https://black.readthedocs.io/en/stable/
 [codespell]: https://github.com/codespell-project/codespell
