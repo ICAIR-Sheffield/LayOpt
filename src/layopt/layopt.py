@@ -733,6 +733,27 @@ def _create_nodes(width: int, height: int, polygon: Polygon) -> npt.NDArray[np.f
     return np.array([[pt.x, pt.y] for pt in points if polygon.intersects(pt)])
 
 
+def _loaded_points(width: int, height: int) -> npt.NDArray[np.float64]:
+    """
+    Calculate loaded points based on width and height.
+
+    Loaded points are calculated as being located at the width and mid-point of the height.
+
+    Parameters
+    ----------
+    width : int
+        Width of structure.
+    height : int
+        Height of structure.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Array of loaded points.
+    """
+    return np.asarray([[width, height // 2]])
+
+
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
@@ -780,8 +801,8 @@ def trussopt(
 
     # Default load point
     if parameters.loaded_points is None:
-        parameters.loaded_points = np.asarray(
-            [[parameters.width, parameters.height // 2]]
+        parameters.loaded_points = _loaded_points(
+            width=parameters.width, height=parameters.height
         )
         logger.info(
             f"Loaded points not provided, calculated as : {parameters.loaded_points=}"

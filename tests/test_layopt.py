@@ -1079,3 +1079,16 @@ def test_make_nodes(
     np.testing.assert_array_almost_equal(
         layopt._create_nodes(width, height, polygon), expected
     )
+
+
+@pytest.mark.parametrize(
+    ("width", "height", "expected"),
+    [
+        pytest.param(4, 4, np.asarray([[4.0, 2.0]]), id="simple 4x4 square"),
+    ],
+)
+def test_loaded_points(
+    width: int, height: int, expected: npt.NDArray[np.float64]
+) -> None:
+    """Test for _loaded_points()."""
+    np.testing.assert_array_equal(layopt._loaded_points(width, height), expected)
