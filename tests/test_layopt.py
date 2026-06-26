@@ -1013,3 +1013,25 @@ def test_primal_adaptivity(
         active_load_cases,
         expected_active_load_cases,
     )
+
+
+@pytest.mark.parametrize(
+    ("bounding_coordinates", "expected"),
+    [
+        pytest.param(
+            np.asarray([[0, 0], [0, 1], [1, 0], [1, 1]]),
+            Polygon([[0, 0], [0, 1], [1, 0], [1, 1]]),
+            id="basic square",
+        ),
+        pytest.param(
+            np.asarray([[0, 0], [0, 1], [1, 0]]),
+            Polygon([[0, 0], [0, 1], [1, 0]]),
+            id="basic triangle",
+        ),
+    ],
+)
+def test_make_polygon(
+    bounding_coordinates: npt.NDArray[np.int32], expected: Polygon
+) -> None:
+    """Test for _make_polygon()."""
+    assert layopt._make_polygon(bounding_coordinates) == expected

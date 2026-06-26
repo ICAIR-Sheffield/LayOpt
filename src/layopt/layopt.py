@@ -689,6 +689,26 @@ def _primal_adaptivity(
     return (False, np.ones(all_patterns_length, dtype=int))
 
 
+def _make_polygon(bounding_coordinates: npt.NDArray[np.int32]) -> Polygon:
+    """
+    Construct a ``Polygon`` domain based on the supplied coordinates.
+
+    Traditionally these are rectangular or square but there is no reason that the array of points can not be any other
+    shape.
+
+    Parameters
+    ----------
+    bounding_coordinates : npt.NDArray[np.int32]
+        Coordinates that bound the structure.
+
+    Returns
+    -------
+    Polygon
+        A ``Polygon`` object (from the shapely package).
+    """
+    return Polygon(bounding_coordinates)
+
+
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
@@ -711,14 +731,13 @@ def trussopt(
     """
     setup_start = time.process_time()
     # Make domain
-    poly = Polygon(
-        [
-            (0, 0),
-            (parameters.width, 0),
-            (parameters.width, parameters.height),
-            (0, parameters.height),
-        ]
-    )
+    bounding_coordinates = np.asarray([
+        [0, 0],
+        [parameters.width, 0],
+        [parameters.width, parameters.height],
+        [0, parameters.height],
+    ])
+    poly = _make_polygon(bounding_coordinates)
     convex = poly.convex_hull.area == poly.area
     logger.debug(f"Domain created, convex? : {convex=}")
 
