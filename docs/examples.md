@@ -2,7 +2,7 @@
 
 ## Single span
 
-Below is the contents of a configuration file for a single span example.
+Below is an example configuration file for a single span structure.
 
 ```yaml
 base_dir: ./ # Base directory where code is being run
@@ -11,6 +11,7 @@ log_level: info # Verbosity used in logging
 cores: 2 # Number of cores to use when processing
 width: 9 # Width of structure
 height: 2 # Height of structure
+steps: 1 # Steps to generate nodes
 stress_tensile: 1.0 # Tensile stress
 stress_compressive: 1.0 # Compressive stress
 joint_cost: 0.0 # Joint costs
@@ -52,8 +53,14 @@ The setup of this example is represented by the following image (produced using 
 [LayOpt truss layout optimization](https://www.layopt.com/truss/) web tool):
 ![Single span of width 9 and height 2](img/single_span_example_setup_resized.svg)
 
-Saving the above configuration as `single_span_config.yaml` in your working directory, you can then run this job with
-`layopt -c single_span_config.yaml optimise`.
+A copy of the above configuration can be downloaded by right-clicking on
+[`single_span_config.yaml`](assets/single_span_config.yaml) and saving it to your working directory (alternatively, copy
+and paste the above text into a file called `single_span_config.yaml` and save it to your working directory). You can then
+run this job with:
+
+```shell
+layopt -c single_span_config.yaml optimise
+```
 
 ## Square cantilever
 
@@ -66,6 +73,7 @@ log_level: info # Verbosity used in logging
 cores: 2 # Number of cores to use when processing
 width: 8 # Width of structure
 height: 8 # Height of structure
+steps: 1 # Steps to generate nodes
 stress_tensile: 1.0 # Tensile stress
 stress_compressive: 1.0 # Compressive stress
 joint_cost: 0.0 # Joint costs
@@ -106,3 +114,12 @@ The setup of this example is represented by the following image (produced using 
 [LayOpt truss layout optimization](https://www.layopt.com/truss/) web tool):
 
 ![Square cantilever width 8 and height 8](img/square_cantilever.png)
+
+A copy of the above configuration can be downloaded by right-clicking on
+[`square_cantilever_config.yaml`](assets/square_cantilever_config.yaml) and saving it to your working directory
+(alternatively, copy and paste the above text into a file called `square_cantilevel_config.yaml` and save it to
+your working directory). You can then run this job with:
+
+```shell
+layopt -c square_cantilevel_config.yaml optimise
+```
