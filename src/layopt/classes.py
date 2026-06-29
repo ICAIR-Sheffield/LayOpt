@@ -8,6 +8,8 @@ import numpy.typing as npt
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
+# from layopt import layopt
+
 
 @dataclass(
     repr=True,
@@ -32,6 +34,9 @@ class Parameters:
     load_large: float = Field(default=50.0, title="Maximum length.", ge=0.0)
     load_small: float = Field(default=5.0, title="Maximum length.", ge=0.0)
     max_length: float = Field(default=18.0, title="Maximum length.", ge=0.0)
+    active_member_threshold: float = Field(
+        default=1.5, title="Active member threshold", gt=0.0
+    )
     support_points: npt.NDArray[np.float32] = Field(
         default=np.asarray([[3, 3]]), title="Support Points."
     )
@@ -273,12 +278,31 @@ class Structure:
         A list of ``Case`` within the structure.
     joint_cost : float
         Joint cost.
+    parameters : Parameters
+        Parameters for the structure.
     """
 
     elements: list[TrussBar | GrillageBeam]
     nodes: list[Node]
     cases: list[Case]
     joint_cost: float
+    parameters: Parameters
+
+    # def __post_init__(self):
+    #     self.polygon = layopt._make_polygon([[0, 0], [self.width, 0], [self.width, self.height], [0,   self.height]])
+    #     self.convex = self.polygon.convex_hull.area == self.polygon.area
+    #     self.nodes = layopt._make_nodes(width=self.parameters.width, height=self.parameters.height)
+    #     # self.all_patterns =
+    #     self.potential_members = layopt._potential_members(
+    #         nodal_coords=self.parameters.nodal_coords,
+    #         max_length=self.parameters.max_length,
+    #         joint_cost=self.parameters.joint_cost,
+    #         convex=self.parameters.convex,
+    #         polygon=self.parameters.poly,
+    #     )
+    #     self.primal_adaptivity, self.active_load_cases =
+    #     layopt._primal_adaptivity(primal_method=self.primal_method,
+    #                               all_patterns_length=len(self.all_patterns))
 
     def __str__(self) -> str:
         """

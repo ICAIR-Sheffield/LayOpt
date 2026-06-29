@@ -627,6 +627,7 @@ def _potential_members(
     joint_cost: float,
     convex: bool,
     polygon: Polygon,
+    active_member_threshold: float = 1.5,
 ) -> npt.NDArray[np.float64]:
     """
     Create the ground structure.
@@ -643,6 +644,8 @@ def _potential_members(
         Whether the structure is convex.
     polygon : Polygon
         Bounding box for the structure.
+    active_member_threshold : float
+        Threshold for marking a potential member as active.
 
     Returns
     -------
@@ -660,7 +663,12 @@ def _potential_members(
         if (length < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
             seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
             if convex or polygon.contains(seg) or polygon.boundary.contains(seg):
-                potential_members.append([i, j, length, False])
+                # Create active members
+                if length <= active_member_threshold:
+                    potential_members.append([i, j, length, True])
+                else:
+                    potential_members.append([i, j, length, False])
+
     return np.asarray(potential_members)
 
 
@@ -831,19 +839,9 @@ def trussopt(
         joint_cost=parameters.joint_cost,
         convex=convex,
         polygon=poly,
+        active_member_threshold=parameters.active_member_threshold,
     )
-
-    # Create the active members
-    # DualAdaptivity = True
-    # start_len = 1.5 if DualAdaptivity else 10000
-    # for pm in [p for p in PML if p[2] <= start_len]:  # Activate short members (adaptive)
-    # ns-rse 2026-03-16 : DualAdaptivity is always 'True'
-    for pm in [
-        p for p in potential_members if p[2] <= 1.5
-    ]:  # Activate short members (adaptive)
-        pm[3] = True
-
-    #### Primal adaptivity: start with base load case only ####
+    # Primal adaptivity: start with base load case only ####
     primal_adaptivity, active_load_cases = _primal_adaptivity(
         primal_method=parameters.primal_method, all_patterns_length=len(all_patterns)
     )
