@@ -5,10 +5,12 @@ from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+from loguru import logger
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
+from shapely.geometry import Polygon
 
-# from layopt import layopt
+from layopt import structure
 
 
 @dataclass(
@@ -270,39 +272,90 @@ class Structure:
 
     Attributes
     ----------
-    elements : list[TrussBar | GrillageBeam]
-        Definition required.
-    nodes : list[Node]
-        A list of ``Node`` within the structure.
-    cases : list[Case]
-        A list of ``Case`` within the structure.
-    joint_cost : float
-        Joint cost.
     parameters : Parameters
         Parameters for the structure.
+    bounding_coordinates : list[list[int, int]]
+        Bounding coordinates of the structure.
+    polygon : Polygon
+        Shapely polygon object of the structure.
+    convex : bool
+        Whether the structure is convex or not.
+    nodes : npt.NDArray[np.float64]
+        Two-dimensional nodes of the structure.
+    dof : npt.NDArray[np.float64],
+        Degrees of Freedom
+    potential_members : npt.NDArray[np.float64]
+        Potential members, with active points indicated.
+    primal_adaptivity : bool
+        Indicator of primal adaptivity.
+    active_load_cases : npt.NDArray[np.float64]
     """
 
-    elements: list[TrussBar | GrillageBeam]
-    nodes: list[Node]
-    cases: list[Case]
-    joint_cost: float
     parameters: Parameters
+    bounding_coordinates: list[list[int]] = Field(
+        title="Bounding coordinates", init=False
+    )
+    polygon: Polygon = Field(title="Polygon", init=False)
+    convex: bool = Field(title="Convex", init=False)
+    nodes: npt.NDArray[np.float64] = Field(title="Nodes", init=False)
+    dof: npt.NDArray[np.float64] = Field(title="Degrees of Freedom", init=False)
+    all_patterns: list[npt.NDArray[np.float64]] = Field(
+        title="Loaded points", init=False
+    )
+    potential_members: npt.NDArray[np.float64] = Field(
+        title="Potential members", init=False
+    )
+    primal_adaptivity: bool = Field(title="Primal adaptivity", init=False)
+    active_load_cases: npt.NDArray[np.int64] = Field(
+        title="Active load cases", init=False
+    )
 
-    # def __post_init__(self):
-    #     self.polygon = layopt._make_polygon([[0, 0], [self.width, 0], [self.width, self.height], [0,   self.height]])
-    #     self.convex = self.polygon.convex_hull.area == self.polygon.area
-    #     self.nodes = layopt._make_nodes(width=self.parameters.width, height=self.parameters.height)
-    #     # self.all_patterns =
-    #     self.potential_members = layopt._potential_members(
-    #         nodal_coords=self.parameters.nodal_coords,
-    #         max_length=self.parameters.max_length,
-    #         joint_cost=self.parameters.joint_cost,
-    #         convex=self.parameters.convex,
-    #         polygon=self.parameters.poly,
-    #     )
-    #     self.primal_adaptivity, self.active_load_cases =
-    #     layopt._primal_adaptivity(primal_method=self.primal_method,
-    #                               all_patterns_length=len(self.all_patterns))
+    def __post_init__(self) -> None:
+        """Post initialisation create the structure based on parameters."""
+        self.bounding_coordinates = np.asarray(
+            [
+                [0, 0],
+                [self.parameters.width, 0],
+                [self.parameters.width, self.parameters.height],
+                [0, self.parameters.height],
+            ]
+        )
+        self.polygon = structure.make_polygon(self.bounding_coordinates)
+        self.convex = self.polygon.convex_hull.area == self.polygon.area
+        self.nodes = structure.create_nodes(
+            width=self.parameters.width,
+            height=self.parameters.height,
+            polygon=self.polygon,
+        )
+        if self.parameters.loaded_points is None:
+            self.parameters.loaded_points = structure.calc_default_loaded_points(
+                width=self.parameters.width, height=self.parameters.height
+            )
+            logger.info(
+                f"Loaded points not provided, calculated as : {self.parameters.loaded_points=}"
+            )
+        self.dof = structure.support_conditions(
+            nodal_coords=self.nodes, support_points=self.parameters.support_points
+        )
+        self.all_patterns, _, _ = structure.make_pattern_loads(
+            self.nodes,
+            self.parameters.loaded_points,
+            self.parameters.load_large,
+            self.parameters.load_small,
+            self.parameters.load_direction,
+        )
+        self.potential_members = structure.calc_potential_members(
+            nodal_coords=self.nodes,
+            max_length=self.parameters.max_length,
+            joint_cost=self.parameters.joint_cost,
+            convex=self.convex,
+            polygon=self.polygon,
+            active_member_threshold=self.parameters.active_member_threshold,
+        )
+        self.primal_adaptivity, self.active_load_cases = structure.primal_adaptivity(
+            primal_method=self.parameters.primal_method,
+            all_patterns_length=len(self.all_patterns),
+        )
 
     def __str__(self) -> str:
         """
@@ -314,8 +367,10 @@ class Structure:
             Formatted statistics on ``Structure``.
         """
         return (
-            f"Total elements : {len(self.elements)}"
-            f"Total nodes : {len(self.nodes)}"
-            f"Total cases : {len(self.cases)}"
-            f"Joint cost : {self.joint_cost}"
+            f"Width             : {self.parameters.width}"
+            f"Width             : {self.parameters.height}"
+            f"Convex            : {self.convex}"
+            f"Total nodes       : {len(self.nodes)}"
+            f"Potential members : {len(self.potential_members)}"
+            f"Joint cost        : {self.parameters.joint_cost}"
         )
