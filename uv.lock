@@ -912,6 +912,7 @@ dev = [
     { name = "mkdocs-material" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python" },
+    { name = "mosek" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pydocstyle" },
@@ -977,6 +978,7 @@ dev = [
     { name = "mkdocs-material", specifier = ">=9.7.6" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocstrings-python", specifier = ">=2.0.3" },
+    { name = "mosek" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pydocstyle", extras = ["toml"] },
@@ -1386,6 +1388,20 @@ wheels = [
 ]
 
 [[package]]
+name = "mosek"
+version = "11.2.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/fa/cafd7af72c090e4c13d35124264803ad4bf5cf80d24de470846f3bfc8d9b/mosek-11.2.2-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:15a6fd2be996e4dd01d5130f876937db4137dcb660e5128944c9363fd51cf119", size = 8794686, upload-time = "2026-06-10T05:59:50.712Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/06/25814cec5fbc4dc93190c0f37afcdd24b83efe570d598ca3c21c610cb543/mosek-11.2.2-cp39-abi3-manylinux2014_x86_64.whl", hash = "sha256:77c9f2c86e9adc0a8da9a44c9cf2e0e7dc4eecae850e5295855abb628b7755be", size = 15364494, upload-time = "2026-06-10T05:59:55.452Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/7c/fd1f85cd13a4bcf84aa620c74aa28ad7872d319d6645a53018f8560bf52e/mosek-11.2.2-cp39-abi3-manylinux_2_27_aarch64.whl", hash = "sha256:f3debca608fcaac8b7129975e0ad5083d89844ba4658f48ed18fec420e0ddaf0", size = 9909410, upload-time = "2026-06-10T05:59:58.623Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/19/cceda5079e8416b8353dd0d1ef71c70004d5bbd43fcdf34f797a87c315f0/mosek-11.2.2-cp39-abi3-win_amd64.whl", hash = "sha256:0ffe2125658f83110771caf0d8b83b40f1c4b0d1b18c2083b37757b719aa070c", size = 11201973, upload-time = "2026-06-10T06:00:01.89Z" },
+]
+
+[[package]]
 name = "mypy"
 version = "1.20.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1672,7 +1688,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "ptyprocess" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
