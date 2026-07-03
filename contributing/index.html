@@ -449,6 +449,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mosek" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mosek
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -889,6 +917,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mosek" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mosek
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -935,7 +991,7 @@ and install the package.</p>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Synchronise and install the package and its dependencies</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>uv<span class="w"> </span>sync
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Install the development packages</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--group<span class="w"> </span>dev
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>--group<span class="w"> </span>dev
 </span></code></pre></div>
 <h2 id="linting-and-style">Linting and Style</h2>
 <p>Using a consistent style to write code means it's easier to read and understand both your own and others code. The
@@ -964,6 +1020,35 @@ will fail. We encourage the use of pre-commit hooks to check your commits but on
 the Git command line by using the <code>-n</code> flag). The hooks also run in the Continuous Integration that is triggered when
 pull requests are created and errors there will be highlighted and need fixing prior to approving and merging pull
 requests.</p>
+<h2 id="tests">Tests</h2>
+<p>We have a comprehensive test-suite that that can be found in the <code>tests/</code> directory and uses the <a href="https://docs.pytest.org/en/stable/">pytest</a>
+framework. Assuming you have installed <code>layopt</code> with all of the development dependencies as described above these tests
+can be run locally.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># To run in parallel with 6 processes</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>pytest<span class="w"> </span>-n<span class="w"> </span><span class="m">6</span>
+</span></code></pre></div>
+<p>In a number of places we use the <a href="https://syrupy-project.github.io/syrupy/">syrupy</a> extension which makes snapshots of results against which the tests are
+compared.</p>
+<p>The tests are run as part of our Continuous Integration when Pull Requests are made on several different versions of
+Python across several different operating systems.</p>
+<p>When making contributions we would ask that as a bare minimum you try and ensure all existing tests pass. Sometimes if
+fixing a bug then the <a href="https://syrupy-project.github.io/syrupy/">syrupy</a> snapshots may need updating too.</p>
+<h3 id="mosek">Mosek</h3>
+<p>One of the development dependencies is the <a href="https://www.mosek.com/">MOSEK</a> solver library and our test suite uses this solver when
+running tests locally. Whilst this can be installed from PyPI running/using it requires a license to be placed in the
+<code>~/mosek</code>. These licenses are <a href="https://www.mosek.com/products/academic-licenses/">free for academics</a> but commercial use incurs a <a href="https://www.mosek.com/sales/commercial-pricing/">license
+fee</a>. It is worth noting though that the use of <a href="https://www.mosek.com/">MOSEK</a> is not essential as we utilise <a href="https://www.cvxpy.org/">cvxpy</a>
+library for convex optimisation which provides a flexible approach to selecting solvers and we use the
+<a href="https://clarabel.org/stable/python/getting_started_py/">clarabel</a> package as a default dependency.</p>
+<!-- markdownlint-disable MD046 -->
+<div class="admonition failure">
+<p class="admonition-title">Failure</p>
+<p>If you do not have a <a href="#mosek">Mosek</a> license then these tests will always fail and as they are not run in Continuous
+Integration. We ask that you highlight the lack of a license in the pull request check list and a project member
+will run the tests locally when reviewing the pull request.</p>
+</div>
+<!-- markdownlint-enable MD046 -->
 
 
 
