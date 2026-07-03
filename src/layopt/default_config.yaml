@@ -16,6 +16,7 @@ load_direction: # Load direction
 load_large: 50.0 # Large load
 load_small: 5.0 # Small load
 max_length: 18.0 # Max length
+active_member_threshold: 1.5 # Threshold for marking a potential member as active
 support_points: # Support points
   - []
 member_area_filtering: 0.001 # Fraction of maximum member area for output threshold

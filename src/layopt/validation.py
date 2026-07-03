@@ -114,6 +114,11 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             And(float, lambda n: n >= 0.0),
             error="Invalid value in config for 'max_length', valid values are >= 0.0.",
         ),
+        "active_member_threshold": And(
+            float,
+            lambda n: n > 0,
+            error="Invalid value in config for 'active_member_threshold', this should be a float > 0.",
+        ),
         "support_points": And(
             np.ndarray,
             lambda n: len(n.shape) == 2,

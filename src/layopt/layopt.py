@@ -1,10 +1,5 @@
 """Layopt module."""
 
-# below line for use in Colab
-# @title { vertical-output: true}
-
-## AF WIP 20260217
-
 # -*- coding: utf-8 -*-
 ## This file forms supplementary material to the paper
 ## "Adaptive topology optimization of fail-safe truss structures" by
@@ -14,11 +9,9 @@
 ## He, L., Gilbert, M. & Song, X. A Python script for adaptive layout
 ## optimization of trusses. Struct Multidisc Optim 60, 835â€“847 (2019).
 ## https://doi.org/10.1007/s00158-019-02226-6
-# !pip install mosek
 
-import itertools
 import time
-from math import ceil, gcd, isinf
+from math import ceil, isinf
 from pathlib import Path
 
 import cvxpy as cvx
@@ -28,14 +21,10 @@ import pandas as pd
 from loguru import logger
 from scipy import sparse
 
-# from numpy.matlib import repmat
-from shapely.geometry import LineString, Point, Polygon
-
+from layopt import structure
 from layopt.classes import Parameters
 from layopt.io import dict_to_df, get_date_time
 from layopt.plotting import plot_truss
-
-# pylint: disable=too-many-lines
 
 
 def calc_eq_matrix_b(
@@ -237,80 +226,6 @@ def stop_violation(
     for i in range(min(num, len(vio_sort))):
         potential_members[lst[vio_c_n[vio_sort[i]]]][3] = True  # set member as active
     return min(num, len(vio_sort))
-
-
-def make_pattern_loads(
-    nodal_coords: npt.NDArray[np.float64],
-    loaded_points: npt.NDArray[np.int64],
-    load_large: float = 50.0,
-    load_small: float = 5.0,
-    load_direction: tuple[float, float] = (0.0, -1.0),
-) -> tuple[list[npt.NDArray[np.float64]], npt.NDArray[np.float64], list[str]]:
-    """
-    Generate all 2^n combinations of large/small loads at each load point.
-
-    Parameters
-    ----------
-    nodal_coords : npt.NDArray[np.float64]
-        Nodal coordinates.
-    loaded_points : npt.NDArray[np.int64]
-        Load points.
-    load_large : float
-        Large load to apply at each load point (default=``50``).
-    load_small : float
-        Small load to apply at each load point (default=``5``).
-    load_direction : tuple[float, float]
-        Load direction (default=``(0,-1)``).
-
-    Returns
-    -------
-    tuple[list[npt.NDArray[np.float64]], npt.NDArray[np.float64], list[str]]
-        A tuple consisting of ``all_patterns`` (all load cases), ``base_load``
-        (base load case) and ``pattern_descriptions`` (description of each load
-        case using ``L`` for large or ``S`` for small at each load point).
-    """
-    if not isinstance(loaded_points, np.ndarray):
-        msg = f"'loaded_points' is not a numpy array : {type(loaded_points)=}"
-        raise TypeError(msg)
-    try:
-        assert loaded_points.shape[1] >= 1, IndexError(
-            f"Need at least one load point : {loaded_points.shape=}"
-        )
-    except IndexError as e:
-        msg = f"Need at least one load point : {loaded_points.shape}"
-        raise IndexError(msg) from e
-
-    # Find node indices for each load point
-    load_node_indices = []
-    for loaded_point in loaded_points:
-        dists = np.linalg.norm(nodal_coords - np.array(loaded_point), axis=1)
-        load_node_indices.append(np.argmin(dists))
-
-    # ns-rse 2026-03-17 : Could maybe use a dictionary here to link patterns and descriptions?
-    all_patterns = []
-    pattern_descriptions = []
-
-    # Generate all 2^n combinations
-    # First combo (all loadLarge) is base case
-    for combo in itertools.product([load_large, load_small], repeat=len(loaded_points)):
-        fk = np.zeros(len(nodal_coords) * 2)
-        desc = []
-        for pt_idx, magnitude in enumerate(combo):
-            node = load_node_indices[pt_idx]
-            fk[node * 2] += magnitude * load_direction[0]
-            fk[node * 2 + 1] += magnitude * load_direction[1]
-            desc.append(f"pt{pt_idx}={'L' if magnitude == load_large else 'S'}")
-
-        all_patterns.append(fk)
-        pattern_descriptions.append(", ".join(desc))
-
-    # ns-rse 2026-03-17 : Return directly as part of tuple
-    base_load = all_patterns[0]  # First pattern = all large loads
-    logger.info(
-        f"Total patterns for {len(loaded_points)} load point(s) : {len(all_patterns)}"
-    )
-    logger.info(f"Base case (all large) : {pattern_descriptions[0]}")
-    return all_patterns, base_load, pattern_descriptions
 
 
 # ns-rse 2026-03-23 : Could this comment perhaps form the extended description for the function?
@@ -589,106 +504,6 @@ def stop_primal_violation_pattern(
     return True  # converged, terminate
 
 
-def _support_conditions(
-    nodal_coords: npt.NDArray[np.float64], support_points: npt.NDArray[np.float64]
-) -> npt.NDArray[np.float64]:
-    """
-    Create the degrees of freedom for support conditions.
-
-    Parameters
-    ----------
-    nodal_coords : npt.NDArray[np.float64]
-        Coordinates for all nodes.
-    support_points : npt.NDArray[np.float64]
-        Preselected support points.
-
-    Returns
-    -------
-    npt.NDArray[np.float64]
-        Flattened array of degrees of freedom.
-    """
-    dof = np.ones((len(nodal_coords), 2))
-    for i, node in enumerate(nodal_coords):
-        if support_points.size == 0:
-            if node[0] == 0:
-                dof[i, :] = [0, 0]  # Support nodes with x=0
-        else:
-            dof[i, :] = (
-                [0, 0]
-                if any((node == point).all() for point in support_points)
-                else [1, 1]
-            )
-    return np.array(dof).flatten()
-
-
-def _potential_members(
-    nodal_coords: npt.NDArray,
-    max_length: float,
-    joint_cost: float,
-    convex: bool,
-    polygon: Polygon,
-) -> npt.NDArray[np.float64]:
-    """
-    Create the ground structure.
-
-    Parameters
-    ----------
-    nodal_coords : npt.NDArray,
-        Node coordinates.
-    max_length : int | float,
-        Maximum length.
-    joint_cost : int | float,
-        Joint cost.
-    convex : bool,
-        Whether the structure is convex.
-    polygon : Polygon
-        Bounding box for the structure.
-
-    Returns
-    -------
-    npt.NDArray[np.float64]
-        Array of ground structure coordinates.
-    """
-    potential_members = []
-    for i, j in itertools.combinations(range(len(nodal_coords)), 2):
-        dx, dy = (
-            abs(nodal_coords[i][0] - nodal_coords[j][0]),
-            abs(nodal_coords[i][1] - nodal_coords[j][1]),
-        )
-        length = np.sqrt(dx**2 + dy**2)
-        # Remove overlapping members, or members longer than maxLength
-        if (length < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
-            seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
-            if convex or polygon.contains(seg) or polygon.boundary.contains(seg):
-                potential_members.append([i, j, length, False])
-    return np.asarray(potential_members)
-
-
-def _primal_adaptivity(
-    primal_method: str, all_patterns_length: int
-) -> tuple[bool, npt.NDArray[np.int32]]:
-    """
-    Derive primal method and active load cases. Start with base load for cases only.
-
-    Parameters
-    ----------
-    primal_method : str
-        Primal method.
-    all_patterns_length : int
-        All patterns.
-
-    Returns
-    -------
-    tuple[bool, npt.NDArray[np.int32]]
-        A tuple of a boolean for ``primal_method`` and the associated ``active_load_cases``.
-    """
-    if primal_method in {"residual", "load_factor"}:
-        active_load_cases = np.zeros(all_patterns_length, dtype=int)
-        active_load_cases[0] = 1  # Base case = all large loads
-        return (True, active_load_cases)
-    return (False, np.ones(all_patterns_length, dtype=int))
-
-
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
@@ -711,42 +526,34 @@ def trussopt(
     """
     setup_start = time.process_time()
     # Make domain
-    poly = Polygon(
+    bounding_coordinates = np.asarray(
         [
-            (0, 0),
-            (parameters.width, 0),
-            (parameters.width, parameters.height),
-            (0, parameters.height),
+            [0, 0],
+            [parameters.width, 0],
+            [parameters.width, parameters.height],
+            [0, parameters.height],
         ]
     )
+    poly = structure.make_polygon(bounding_coordinates)
     convex = poly.convex_hull.area == poly.area
     logger.debug(f"Domain created, convex? : {convex=}")
 
     # Make nodes
-    xv, yv = np.meshgrid(range(parameters.width + 1), range(parameters.height + 1))
-    # xv, yv = np.meshgrid(range(parameters.width + 1), range(parameters.height + 1))
-    points = [Point(xv.flat[i], yv.flat[i]) for i in range(xv.size)]
-    logger.debug(f"Points created : {len(points)=}")
-    nodal_coords: npt.NDArray[np.float64] = np.array(
-        [[pt.x, pt.y] for pt in points if poly.intersects(pt)]
+    nodal_coords: npt.NDArray[np.float64] = structure.create_nodes(
+        width=parameters.width, height=parameters.height, polygon=poly
     )
     logger.debug(f"Node coordinates :\n{nodal_coords=}")
-    # ns-rse 2026-05-13 Build a list of nodes to be added to Structure where do loading and virtual_displacements come from?
-    # all_nodes = [
-    #     Node(coordinate=param[0], supported_dof=param[1])
-    #     for param in zip(nodal_coords, dof)
-    # ]
 
     # Default load point
     if parameters.loaded_points is None:
-        parameters.loaded_points = np.asarray(
-            [[parameters.width, parameters.height // 2]]
+        parameters.loaded_points = structure.calc_default_loaded_points(
+            width=parameters.width, height=parameters.height
         )
         logger.info(
             f"Loaded points not provided, calculated as : {parameters.loaded_points=}"
         )
     # Calculate support conditions/degrees of freedom
-    dof = _support_conditions(
+    dof = structure.support_conditions(
         nodal_coords=nodal_coords, support_points=parameters.support_points
     )
     logger.debug(f"Degrees of Freedom : {dof=}")
@@ -754,7 +561,7 @@ def trussopt(
     # ns-rse 2026-03-17 : Unused return arguments but may combine all_patterns and pattern_descriptions to dict
     # all_patterns, base_load, pattern_descriptions = make_pattern_loads(
     # ns-rse 2026-05-13 - loaded_points and load_direction are proposed to be attributes of CaseFamily
-    all_patterns, _, _ = make_pattern_loads(
+    all_patterns, _, _ = structure.make_pattern_loads(
         nodal_coords,
         parameters.loaded_points,
         parameters.load_large,
@@ -763,26 +570,16 @@ def trussopt(
     )
 
     # Create the 'ground structure'
-    potential_members = _potential_members(
+    potential_members = structure.calc_potential_members(
         nodal_coords=nodal_coords,
         max_length=parameters.max_length,
         joint_cost=parameters.joint_cost,
         convex=convex,
         polygon=poly,
+        active_member_threshold=parameters.active_member_threshold,
     )
-
-    # Create the active members
-    # DualAdaptivity = True
-    # start_len = 1.5 if DualAdaptivity else 10000
-    # for pm in [p for p in PML if p[2] <= start_len]:  # Activate short members (adaptive)
-    # ns-rse 2026-03-16 : DualAdaptivity is always 'True'
-    for pm in [
-        p for p in potential_members if p[2] <= 1.5
-    ]:  # Activate short members (adaptive)
-        pm[3] = True
-
-    #### Primal adaptivity: start with base load case only ####
-    primal_adaptivity, active_load_cases = _primal_adaptivity(
+    # Primal adaptivity: start with base load case only ####
+    primal_adaptivity, active_load_cases = structure.primal_adaptivity(
         primal_method=parameters.primal_method, all_patterns_length=len(all_patterns)
     )
 
