@@ -104,9 +104,9 @@ library for convex optimisation which provides a flexible approach to selecting 
 <!-- markdownlint-disable MD046 -->
 !!! failure
 
-    If you do not have a [Mosek](#mosek) license then these tests will always fail and as they are not run in Continuous
-    Integration. We ask that you highlight the lack of a license in the pull request check list and a project member
-    will run the tests locally when reviewing the pull request.
+    If you do not have a [Mosek](#mosek) license then these tests will always fail nor are they run in Continuous
+    Integration because of the need for licensing. We ask that you highlight the lack of a license in the pull request
+    check list and a project member  will run the tests locally when reviewing the pull request.
 <!-- markdownlint-enable MD046 -->
 
 [clarabel]: https://clarabel.org/stable/python/getting_started_py/
