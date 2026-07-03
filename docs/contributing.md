@@ -34,7 +34,7 @@ uv env
 # Synchronise and install the package and its dependencies
 uv sync
 # Install the development packages
-uv pip install --group dev
+uv pip install -e . --group dev
 ```
 
 ## Linting and Style
@@ -71,17 +71,62 @@ the Git command line by using the `-n` flag). The hooks also run in the Continuo
 pull requests are created and errors there will be highlighted and need fixing prior to approving and merging pull
 requests.
 
+## Tests
+
+We have a comprehensive test-suite that that can be found in the `tests/` directory and uses the [pytest][pytest]
+framework. Assuming you have installed `layopt` with all of the development dependencies as described above these tests
+can be run locally.
+
+```shell
+pytest
+# To run in parallel with 6 processes
+pytest -n 6
+```
+
+In a number of places we use the [syrupy][syrupy] extension which makes snapshots of results against which the tests are
+compared.
+
+The tests are run as part of our Continuous Integration when Pull Requests are made on several different versions of
+Python across several different operating systems.
+
+When making contributions we would ask that as a bare minimum you try and ensure all existing tests pass. Sometimes if
+fixing a bug then the [syrupy][syrupy] snapshots may need updating too.
+
+### Mosek
+
+One of the development dependencies is the [MOSEK][mosek] solver library and our test suite uses this solver when
+running tests locally. Whilst this can be installed from PyPI running/using it requires a license to be placed in the
+`~/mosek`. These licenses are [free for academics][mosek_license] but commercial use incurs a [license
+fee][mosek_fee]. It is worth noting though that the use of [MOSEK][mosek] is not essential as we utilise [cvxpy][cvxpy]
+library for convex optimisation which provides a flexible approach to selecting solvers and we use the
+[clarabel][clarabel] package as a default dependency.
+
+<!-- markdownlint-disable MD046 -->
+!!! failure
+
+    If you do not have a [Mosek](#mosek) license then these tests will always fail and as they are not run in Continuous
+    Integration. We ask that you highlight the lack of a license in the pull request check list and a project member
+    will run the tests locally when reviewing the pull request.
+<!-- markdownlint-enable MD046 -->
+
+[clarabel]: https://clarabel.org/stable/python/getting_started_py/
+[cvxpy]: https://www.cvxpy.org/
 [black]: https://black.readthedocs.io/en/stable/
 [codespell]: https://github.com/codespell-project/codespell
 [conventional_commit]: https://www.conventionalcommits.org/en/v1.0.0/
+[mosek]: https://www.mosek.com/
+[mosek_fee]: https://www.mosek.com/sales/commercial-pricing/
+[mosek_license]: https://www.mosek.com/products/academic-licenses/
+[mypy]: https://www.mypy-lang.org/
 [numpydoc]: https://numpydoc.readthedocs.io/en/latest/
 [numpydoc_validation]: https://numpydoc.readthedocs.io/en/latest/validation.html
-[mypy]: https://www.mypy-lang.org/
 [pep8]: https://peps.python.org/pep-0008/
 [pre-commit]: https://pre-commit.com/
 [prettier]: https://prettier.io/
 [pylint]: https://pylint.readthedocs.io/en/stable/
+[pytest]: https://docs.pytest.org/en/stable/
 [ruff]: https://docs.astral.sh/ruff/
+[syrupy]: https://syrupy-project.github.io/syrupy/
 [uv]: https://docs.astral.sh/uv/
 [uv_install]: https://docs.astral.sh/uv/getting-started/installation/
 [venv]: https://docs.python.org/3/library/venv.html

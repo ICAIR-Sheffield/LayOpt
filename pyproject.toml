@@ -71,6 +71,7 @@ dev = [
   "black",
   "codespell",
   "ipdb",
+  "mosek",
   "mypy",
   "pre-commit",
   "pydocstyle[toml]",
