@@ -89,17 +89,25 @@ compared.
 The tests are run as part of our Continuous Integration when Pull Requests are made on several different versions of
 Python across several different operating systems.
 
-When making contributions we would ask that as a bare minimum you ensure all existing tests pass. Sometimes if fixing a
-bug then the [syrupy][syrupy] snapshots may need updating too.
+When making contributions we would ask that as a bare minimum you try and ensure all existing tests pass. Sometimes if
+fixing a bug then the [syrupy][syrupy] snapshots may need updating too.
 
 ### Mosek
 
-One of the development dependencies is the [Mosek][mosek] solver library and our test suite uses this solver when
+One of the development dependencies is the [MOSEK][mosek] solver library and our test suite uses this solver when
 running tests locally. Whilst this can be installed from PyPI running/using it requires a license to be placed in the
 `~/mosek`. These licenses are [free for academics][mosek_license] but commercial use incurs a [license
-fee][mosek_fee]. It is worth noting though that the use of [Mosek][mosek] is not essential as we utilise [cvxpy][cvxpy]
+fee][mosek_fee]. It is worth noting though that the use of [MOSEK][mosek] is not essential as we utilise [cvxpy][cvxpy]
 library for convex optimisation which provides a flexible approach to selecting solvers and we use the
 [clarabel][clarabel] package as a default dependency.
+
+<!-- markdownlint-disable MD046 -->
+!!! failure
+
+    If you do not have a [Mosek](#mosek) license then these tests will always fail and as they are not run in Continuous
+    Integration. We ask that you highlight the lack of a license in the pull request check list and a project member
+    will run the tests locally when reviewing the pull request.
+<!-- markdownlint-enable MD046 -->
 
 [clarabel]: https://clarabel.org/stable/python/getting_started_py/
 [cvxpy]: https://www.cvxpy.org/

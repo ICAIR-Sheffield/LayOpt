@@ -12,6 +12,7 @@ description of why a particular item is not relevant.
 
 Before submitting a Pull Request please check the following.
 
+- [ ] I have a MOSEK license.
 - [ ] Existing tests pass.
 - [ ] Documentation has been updated and builds.
 - [ ] Pre-commit checks pass.
