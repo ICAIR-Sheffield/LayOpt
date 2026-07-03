@@ -118,6 +118,12 @@ repos:
       - id: numpydoc-validation
         exclude: ^noxfile.py$
 
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.11.26
+    hooks:
+      - id: uv-lock
+
   - repo: local
     hooks:
       - id: pylint
