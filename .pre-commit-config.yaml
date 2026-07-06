@@ -48,7 +48,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: "v3.8.3"
+    rev: "v3.9.4"
     hooks:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
@@ -56,7 +56,7 @@ repos:
         exclude: ^(tests/resources)/.*$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.15.15"
+    rev: "v0.15.20"
     hooks:
       - id: ruff-check
         args: ["--fix", "--show-fixes"]
@@ -99,7 +99,7 @@ repos:
         additional_dependencies: ["validate-pyproject-schema-store[all]"]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.37.2"
+    rev: "0.37.4"
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
@@ -107,13 +107,13 @@ repos:
       - id: check-readthedocs
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.22.1
+    rev: v0.23.0
     hooks:
       - id: markdownlint-cli2
         args: ["--config .markdownlint-cli2.yaml"]
 
   - repo: https://github.com/numpy/numpydoc
-    rev: v1.10.0
+    rev: v1.11.0rc0
     hooks:
       - id: numpydoc-validation
         exclude: ^noxfile.py$
