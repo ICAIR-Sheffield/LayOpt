@@ -46,7 +46,7 @@ class Parameters:
         default=0.001, title="Member Area Filtering", ge=0.0
     )
     cvxpy: dict[str, Any] = Field(
-        default={"solver": "mosek"},
+        default={"solver": "clarabel"},
         title="CVXPY options.",
     )
     primal_method: str = Field(default="load_factor", title="Primal method")
