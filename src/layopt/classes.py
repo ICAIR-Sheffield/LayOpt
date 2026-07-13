@@ -36,7 +36,7 @@ class Parameters:
     stress_compressive: float = Field(default=1.0, title="Compressive stress.", ge=0.0)
     joint_cost: float = Field(default=0.0, title="Joint cost.", ge=0.0)
     loaded_points: npt.NDArray[np.int64] = Field(
-        default=np.asarray([[3, 3]]), title="Loaded Points."
+        default=np.asarray([[1, 0], [2, 0]]), title="Loaded Points."
     )
     load_direction: tuple[float, float] = Field(
         default=(0.0, -1.0), title="Loaded direction."
