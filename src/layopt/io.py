@@ -5,7 +5,6 @@ from __future__ import annotations
 from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
-from pkgutil import get_data
 from typing import Any
 
 import numpy as np
@@ -33,14 +32,8 @@ def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
     # If args is `Namespace` then we are writing config with 'layopt create_config' subcommand
     if isinstance(args, Namespace):
         output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)
+        config = vars(Parameters())
         filename = "default_config.yaml" if args.filename is None else args.filename
-        try:
-            default_config = get_data(package="layopt", resource="default_config.yaml")
-            yaml = YAML(typ="safe")
-            config = yaml.load(default_config)
-        except FileNotFoundError as exc:
-            msg = "There was a problem loading 'default_config.yaml' try reinstalling LayOpt."
-            raise (FileNotFoundError(msg)) from exc
     # Otherwise we are writing after 'layopt optimise' and config is a dictionary, this won't have a 'filename'
     # key/value pair
     # ns-rse 2026-05-11 - This will be obsolete once we fully switch to the Parameters dataclass for holding configuration
@@ -49,7 +42,7 @@ def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
             Path("./") if args["output_dir"] is None else Path(args["output_dir"])
         )
         filename = f"config_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml"
-        config = args
+        config = args  # type: ignore[assignment]
     # If we have 'Parameters' then configuration is stored as a dataclass and we again don't have 'filename' key/value pair
     elif isinstance(args, Parameters):
         output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)  # type: ignore[redundant-expr]

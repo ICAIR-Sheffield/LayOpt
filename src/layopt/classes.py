@@ -22,13 +22,21 @@ from layopt import structure
 class Parameters:
     """Modelling parameters."""
 
+    base_dir: Path = Field(default=Path("./"), title="Base directory")
+    output_dir: str | Path = Field(
+        default=Path("./output/"),
+        title="Path to save the output to, default is './output/'.",
+    )
+    log_level: str = Field(default="info", title="Log level")
+    cores: int = Field(default=2, title="Cores to run optimisation on in parallel.")
     width: int = Field(default=3, title="Width of structure.", ge=1)
-    height: int = Field(default=6, title="Height of structure.", ge=1)
+    height: int = Field(default=3, title="Height of structure.", ge=1)
+    steps: float = Field(default=1.0, title="Steps to generate nodes", gt=0.0)
     stress_tensile: float = Field(default=1.0, title="Tensile stress.", ge=0.0)
     stress_compressive: float = Field(default=1.0, title="Compressive stress.", ge=0.0)
     joint_cost: float = Field(default=0.0, title="Joint cost.", ge=0.0)
     loaded_points: npt.NDArray[np.int64] = Field(
-        default=np.asarray([[3, 3]]), title="Loaded Points."
+        default=np.asarray([[1, 0], [2, 0]]), title="Loaded Points."
     )
     load_direction: tuple[float, float] = Field(
         default=(0.0, -1.0), title="Loaded direction."
@@ -40,35 +48,30 @@ class Parameters:
         default=1.5, title="Active member threshold", gt=0.0
     )
     support_points: npt.NDArray[np.float32] = Field(
-        default=np.asarray([[3, 3]]), title="Support Points."
+        default=np.asarray([[0, 0], [3, 3]]), title="Support Points."
     )
     member_area_filtering: float = Field(
         default=0.001, title="Member Area Filtering", ge=0.0
     )
     cvxpy: dict[str, Any] = Field(
-        default={"solver": "mosek"},
+        default={"solver": "clarabel"},
         title="CVXPY options.",
+    )
+    filter_levels: list[float] = Field(
+        default=[1.0], title="Filter levels to apply to solved problem."
     )
     primal_method: str = Field(default="load_factor", title="Primal method")
     problem_name: str = Field(
         default="", title="Description of the problem being solved."
     )
-    log_level: str = Field(default="info", title="Log level")
-    notes: str = Field(default="", title="Notes to add to the model.")
-    output_dir: str | Path = Field(
-        default="./output/", title="Path to save the output to, default is './output/'."
-    )
-    plotting: dict[str, Any] = Field(
-        default={"run": False, "bar_thickness": 0.3, "dpi": 1200},
-        title="Plotting options.",
-    )
-    filter_levels: list[float] = Field(
-        default=[1.0], title="Filter levels to apply to solved problem."
-    )
-    cores: int = Field(default=2, title="Cores to run optimisation on in parallel.")
     csv_filename: str = Field(
         default="results.csv",
         title="File to save results to, default is 'results.csv' (within 'output_dir', i.e. './output/results.csv')",
+    )
+    notes: str = Field(default="", title="Notes to add to the model.")
+    plotting: dict[str, Any] = Field(
+        default={"run": False, "bar_thickness": 0.3, "dpi": 1200},
+        title="Plotting options.",
     )
 
     def __post_init__(self) -> None:
