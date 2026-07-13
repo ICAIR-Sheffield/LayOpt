@@ -30,7 +30,7 @@ class Parameters:
     log_level: str = Field(default="info", title="Log level")
     cores: int = Field(default=2, title="Cores to run optimisation on in parallel.")
     width: int = Field(default=3, title="Width of structure.", ge=1)
-    height: int = Field(default=6, title="Height of structure.", ge=1)
+    height: int = Field(default=3, title="Height of structure.", ge=1)
     steps: float = Field(default=1.0, title="Steps to generate nodes", gt=0.0)
     stress_tensile: float = Field(default=1.0, title="Tensile stress.", ge=0.0)
     stress_compressive: float = Field(default=1.0, title="Compressive stress.", ge=0.0)
