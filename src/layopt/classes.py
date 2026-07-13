@@ -48,7 +48,7 @@ class Parameters:
         default=1.5, title="Active member threshold", gt=0.0
     )
     support_points: npt.NDArray[np.float32] = Field(
-        default=np.asarray([[3, 3]]), title="Support Points."
+        default=np.asarray([[0, 0], [3, 3]]), title="Support Points."
     )
     member_area_filtering: float = Field(
         default=0.001, title="Member Area Filtering", ge=0.0
