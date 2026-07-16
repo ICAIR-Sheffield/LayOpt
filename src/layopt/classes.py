@@ -294,7 +294,9 @@ class Structure:
     active_load_cases : npt.NDArray[np.float64]
     """
 
-    parameters: Parameters
+    parameters: Parameters = Field(
+        title="Parameters for the structure and modelling", init=True
+    )
     bounding_coordinates: npt.NDArray[np.float64] = Field(
         title="Bounding coordinates", init=False
     )
@@ -371,7 +373,7 @@ class Structure:
         """
         return (
             f"Width             : {self.parameters.width}"
-            f"Width             : {self.parameters.height}"
+            f"Height            : {self.parameters.height}"
             f"Convex            : {self.convex}"
             f"Total nodes       : {len(self.nodes)}"
             f"Potential members : {len(self.potential_members)}"
