@@ -69,8 +69,8 @@ def test_calc_eq_matrix_b(
     """Test for calc_eq_matrix_b()."""
     structure = request.getfixturevalue(structure_fixture)
     result = layopt.calc_eq_matrix_b(
-        nodal_coords=structure["nodal_coords"],
-        c_n=structure["c_n"],
+        nodes=structure["nodal_coords"],
+        active_members=structure["c_n"],
         dof=structure["dof"],
     )
     assert result.coords == snapshot
@@ -79,7 +79,7 @@ def test_calc_eq_matrix_b(
 
 
 @pytest.mark.parametrize(
-    ("nodal_coords", "c_n", "dof", "expected"),
+    ("nodes", "active_members", "dof", "expected"),
     [
         pytest.param(
             np.asarray([[0.0, 0.0], [1.0, 0.0]]),
@@ -171,14 +171,14 @@ def test_calc_eq_matrix_b(
     ],
 )
 def test_calc_eq_matrix_b_errors(
-    nodal_coords: npt.NDArray[np.float64],
-    c_n: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
+    active_members: npt.NDArray[np.float64],
     dof: npt.NDArray[np.float64],
     expected,
 ) -> None:
     """Test for calc_eq_matrix_b()."""
     with pytest.raises(expected):
-        layopt.calc_eq_matrix_b(nodal_coords=nodal_coords, c_n=c_n, dof=dof)
+        layopt.calc_eq_matrix_b(nodes=nodes, active_members=active_members, dof=dof)
 
 
 @pytest.mark.parametrize(

@@ -27,8 +27,8 @@ from layopt.plotting import plot_truss
 
 
 def calc_eq_matrix_b(
-    nodal_coords: npt.NDArray[np.float64],
-    c_n: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
+    active_members: npt.NDArray[np.float64],
     dof: npt.NDArray[np.float64],
 ) -> sparse.coo_matrix:
     """
@@ -36,9 +36,9 @@ def calc_eq_matrix_b(
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray[np.float64]
+    nodes : npt.NDArray[np.float64]
         Nodal coordinates.
-    c_n : npt.NDArray[np.float64]
+    active_members : npt.NDArray[np.float64]
         Active members.
     dof : npt.NDArray
         Degrees of freedom.
@@ -49,28 +49,32 @@ def calc_eq_matrix_b(
         Equilibrium matrix B.
     """
     try:
-        m, n1, n2 = len(c_n), c_n[:, 0].astype(int), c_n[:, 1].astype(int)
+        m, n1, n2 = (
+            len(active_members),
+            active_members[:, 0].astype(int),
+            active_members[:, 1].astype(int),
+        )
     except TypeError as e:
-        msg = "Missing 'c_n'"
+        msg = "Missing 'active_members'"
         raise TypeError(msg) from e
 
     try:
         length, x, y = (
-            c_n[:, 2],
-            nodal_coords[n2, 0] - nodal_coords[n1, 0],
-            nodal_coords[n2, 1] - nodal_coords[n1, 1],
+            active_members[:, 2],
+            nodes[n2, 0] - nodes[n1, 0],
+            nodes[n2, 1] - nodes[n1, 1],
         )
     except IndexError as e:
-        msg = f"{nodal_coords.shape=}, expected (2,{c_n.shape[1]})"
+        msg = f"{nodes.shape=}, expected (2,{active_members.shape[1]})"
         raise IndexError(msg) from e
     except TypeError as e:
-        msg = "Missing 'nodal_coords'"
+        msg = "Missing 'nodes'"
         raise TypeError(msg) from e
 
     try:
         d0, d1, d2, d3 = dof[n1 * 2], dof[n1 * 2 + 1], dof[n2 * 2], dof[n2 * 2 + 1]
     except IndexError as e:
-        msg = f"{dof.shape=}, expected ({(c_n.shape[0],)})"
+        msg = f"{dof.shape=}, expected ({(active_members.shape[0],)})"
         raise IndexError(msg) from e
     except TypeError as e:
         msg = "Missing 'dof'"
@@ -81,18 +85,13 @@ def calc_eq_matrix_b(
     )
     row_id = np.concatenate((n1 * 2, n1 * 2 + 1, n2 * 2, n2 * 2 + 1))
     col_id = np.concatenate((np.arange(m), np.arange(m), np.arange(m), np.arange(m)))
-    return sparse.coo_matrix((s, (row_id, col_id)), shape=(len(nodal_coords) * 2, m))
+    return sparse.coo_matrix((s, (row_id, col_id)), shape=(len(nodes) * 2, m))
 
 
 def solve(
-    nodal_coords: npt.NDArray[np.float64],
-    c_n: npt.NDArray[np.float64],
-    f: list[npt.NDArray[np.float64]],
-    dof: npt.NDArray[np.float64],
-    stress_tensile: float,
-    stress_compressive: float,
-    joint_cost: float,
-    solver: str,
+    structure: Structure,
+    active_members: npt.NDArray[np.float64],
+    active_pattern_loads: list[npt.NDArray[np.float64]],
 ) -> tuple[
     float,
     npt.NDArray[np.float64],
@@ -104,22 +103,12 @@ def solve(
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray[np.float64]
-        Nodal coordinates.
-    c_n : npt.NDArray[np.float64]
+    structure : Structure
+        Object representing the structure.
+    active_members : npt.NDArray[np.float64]
         Active members.
-    f : list[npt.NDArray[np.float64]]
-        Load cases.
-    dof : npt.NDArray
-        Degrees of freedom.
-    stress_tensile : float
-        Tensile stress limit.
-    stress_compressive : float
-        Compressive stress limit.
-    joint_cost : float
-        Joint cost.
-    solver : str
-        CVXPY solver name.
+    active_pattern_loads : list[npt.NDArray[np.float64]]
+        Active pattern loads.
 
     Returns
     -------
@@ -128,33 +117,36 @@ def solve(
         ``area`` (member areas), ``forces`` (member forces) and ``deflections``
         (virtual deflections at degrees of freedom).
     """
-    member_cost = [col[2] + joint_cost for col in c_n]
-    eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof)
+    member_cost = [col[2] + structure.parameters.joint_cost for col in active_members]
+    eq_matrix_b = calc_eq_matrix_b(
+        nodes=structure.nodes, active_members=active_members, dof=structure.dof
+    )
     eq_matrix_b = sparse.coo_matrix(
         (eq_matrix_b.data, (eq_matrix_b.row, eq_matrix_b.col)),
         shape=eq_matrix_b.shape,
     )
 
-    n_members = len(c_n)
+    # Assigned as used within for-loop
+    n_members = len(active_members)
+    # ns-rse 2026-07-17 - what does a represent here? number of non-negative active members?
     a = cvx.Variable(n_members, nonneg=True, name="a")
 
     q_vars = []
     eq_constraints = []
     other_constraints = []
-    for fk in f:
+    for active_pattern in active_pattern_loads:
         qi = cvx.Variable(n_members, name="q")
         q_vars.append(qi)
-        eq_con = eq_matrix_b @ qi == fk * dof
-        eq_constraints.append(eq_con)
+        eq_constraints.append(eq_matrix_b @ qi == active_pattern * structure.dof)
         other_constraints += [
-            # eq_matrix_b @ qi == fk * dof,                          # equilibrium
-            qi <= stress_compressive * a,  # compression limit
-            qi >= -stress_tensile * a,  # tension limit
+            # eq_matrix_b @ qi == active_pattern * dof,                          # equilibrium
+            qi <= structure.parameters.stress_compressive * a,  # compression limit
+            qi >= -structure.parameters.stress_tensile * a,  # tension limit
         ]
 
     objective = cvx.Minimize(member_cost @ a)
     problem = cvx.Problem(objective, eq_constraints + other_constraints)
-    problem.solve(solver)
+    problem.solve(structure.parameters.cvxpy["solver"])
 
     vol = 0.0 if problem.value is None else problem.value
     areas = np.zeros(n_members) if a.value is None else a.value
@@ -538,45 +530,41 @@ def trussopt(
     logger.info(f"    Total load patterns : {len(structure.all_patterns)}")
 
     vol = 1e9  # arbitrary large number to initialise
+    # Allows debugging to see if active_members has changed
+    previous_active_members = structure.potential_members[
+        structure.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
+    ]
     # Start the 'member adding' loop
     for itr in range(1, 100):
         last_volume = vol
-        # Get active members/parts of matrices \
-        c_n = structure.potential_members[structure.potential_members[:, 3] == True]  # noqa: E712, pylint: disable=singleton-comparison
 
-        # Get active pattern loads
-        f_active = [
+        # Get active pattern loads for current iteration
+        active_pattern_loads = [
             structure.all_patterns[k]
             for k in range(len(structure.all_patterns))
             if structure.active_load_cases[k] == 1
         ]
-
+        # Get active members/parts of matrices for current iteration
+        active_members = structure.potential_members[
+            structure.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
+        ]
+        logger.debug(
+            f"Itr {itr} active members changed? {active_members.shape != previous_active_members.shape}"
+        )
         # solve current reduced problem
         vol, filter_areas, filter_forces, u = solve(
-            structure.nodes,
-            c_n,
-            f_active,
-            structure.dof,
-            parameters.stress_tensile,
-            parameters.stress_compressive,
-            parameters.joint_cost,
-            parameters.cvxpy["solver"],
+            structure=structure,
+            active_members=active_members,
+            active_pattern_loads=active_pattern_loads,
         )
-        # We need to solve once so that we have valid values for `filter_areas ` which we then filter based on `fitler_level[s]`
-        # (rename to `filter_level` but need to check first if that is what we want to parallelise on or if it is
-        # `primal_method`).
-
-        # output
         if isinf(vol):
             logger.error("Infeasible problem detected")
             return None
         n_active = int(np.sum(structure.active_load_cases))
         # ns-rse 2026-03-23 : Could this perhaps be debugging?
         logger.info(
-            f"Iteration: {itr}, vol: {vol}, mems: {len(c_n)} active load cases:{n_active}/{len(structure.all_patterns)}"
+            f"Iteration: {itr}, vol: {vol}, mems: {len(active_members)} active load cases:{n_active}/{len(structure.all_patterns)}"
         )
-        # plot interim solutions (slow)
-        # plotTruss(nodal_coords, c_n, a, q, max(a) * 1e-2, "Itr:" + str(itr), extraPlot = activeDamageDef)
 
         # inner loop - adding of members based on dual violation
         # still need PMLcache? currently unused
@@ -605,7 +593,7 @@ def trussopt(
                 # Use equilibrium residual check
                 converged = stop_primal_violation_residual(
                     structure.nodes,
-                    c_n,
+                    active_members,
                     filter_forces,
                     structure.all_patterns,
                     structure.active_load_cases,
@@ -615,7 +603,7 @@ def trussopt(
                 # Use load factor LP
                 converged = stop_primal_violation_pattern(
                     structure.nodes,
-                    c_n,
+                    active_members,
                     filter_areas,
                     structure.all_patterns,
                     structure.active_load_cases,
@@ -625,7 +613,6 @@ def trussopt(
                     parameters.cvxpy["solver"],
                 )
             # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
-
             if not converged:  # pylint: disable=possibly-used-before-assignment
                 continue  # Cases added, keep iterating
             if n_added > 0:
@@ -635,6 +622,9 @@ def trussopt(
         if n_added == 0:
             break  # Converged
 
+    # Update the Structure active_members and active_pattern_loads
+    structure.active_members = active_members
+    structure.active_pattern_loads = active_pattern_loads
     final_vol = vol
     logger.info(f"Volume (filter_level = 1.0): {final_vol}")
     solve_end = time.process_time()
@@ -648,16 +638,11 @@ def trussopt(
         if filter_level != 1.0:
             logger.info(f"Solving for filter level : {filter_level}")
             keep = [area > (filter_level * max(filter_areas)) for area in filter_areas]
-            c_n = c_n[keep]
+            active_members = active_members[keep]
             final_vol, filter_areas, filter_forces, u = solve(
-                structure.nodes,
-                c_n,
-                f_active,
-                structure.dof,
-                parameters.stress_tensile,
-                parameters.stress_compressive,
-                parameters.joint_cost,
-                parameters.cvxpy["solver"],
+                structure=structure,
+                active_members=active_members,
+                active_pattern_loads=active_pattern_loads,
             )
             logger.info(f"Volume (filter_level = {filter_level}): {final_vol}")
         # Build dictionary of results (the final_vol changes if we have filtered above)
@@ -675,7 +660,7 @@ def trussopt(
             "load_small": parameters.load_small,
             "iterations": itr,
             "final_volume": final_vol,
-            "n_members_final": len(c_n),
+            "n_members_final": len(active_members),
             "n_nodes": len(structure.nodes),
             "n_ground_structure": len(structure.potential_members),
             "cpu_time_setup": setup_end - setup_start,
@@ -692,8 +677,8 @@ def trussopt(
             )
             if vol > 0:
                 _, _ = plot_truss(
-                    nodal_coords=structure.nodes,
-                    c_n=c_n,
+                    nodes=structure.nodes,
+                    active_members=active_members,
                     areas=filter_areas,
                     forces=filter_forces,
                     threshold=max(filter_areas) * parameters.member_area_filtering,
