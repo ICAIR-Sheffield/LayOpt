@@ -390,6 +390,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#rhino-and-grasshopper-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rhino and Grasshopper Users
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rhino and Grasshopper Users">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#minimum-python-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimum Python Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#locale-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locale Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#github" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -863,6 +902,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#rhino-and-grasshopper-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rhino and Grasshopper Users
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rhino and Grasshopper Users">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#minimum-python-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimum Python Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#locale-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locale Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#github" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -953,33 +1031,62 @@ release candidates you should include the specific version when calling <code>pi
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># uv virtual environment</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">layopt</span><span class="o">==</span><span class="m">0</span>.1.0a1
 </span></code></pre></div>
+<h2 id="rhino-and-grasshopper-users">Rhino and Grasshopper Users</h2>
+<!-- markdownlint-disable MD046 -->
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you are using <a href="https://www.rhino3d.com/">Rhino</a> and/or the <a href="https://www.grasshopper3d.com/">Grasshopper</a>
+plugin/extension to run Python code then you may encounter some problems. The solutions to these are described
+below.</p>
+</div>
+<!-- markdownlint-enable MD046 -->
+
+<h3 id="minimum-python-version">Minimum Python Version</h3>
+<p>LayOpt has been developed using a minimum Python version requirement of &gt;= 3.12 due to the <a href="https://devguide.python.org/versions/">end of life
+scheduled</a> for various versions. The current stable release of Rhino (8.0) only supports Python 3.9. The
+developers are however targeting <a href="https://discourse.mcneel.com/t/rhino-beta-feature-python-3-13/205209">Python 3.13</a> as the minimum version for the imminent Rhino 9.0 release
+and the <a href="https://discourse.mcneel.com/t/help-shape-rhino-9-the-beta-is-here/220246">Beta version</a> already includes this support. You should therefore use the Beta version (or &gt;= 9.0
+once released) if you wish to use LayOpt.</p>
+<h3 id="locale-issues">Locale Issues</h3>
+<p>Users have identified some <a href="https://discourse.mcneel.com/t/rhino-8-feature-scripteditor-cpython-csharp/128353/389">issues</a> with setting <code>locales</code> when the <a href="https://pandas.pydata.org/">Pandas</a> package is
+imported. LayOpt uses Pandas to handle building data frames of results which are written to <code>.csv</code> output files and so
+you may encounter this issue.</p>
+<p>If you this issue then you should follow the advice in the <a href="https://discourse.mcneel.com/t/rhino-8-feature-scripteditor-cpython-csharp/128353/389">thread</a> and set your <code>locale</code> explicitly to
+<code>en_US</code> before explicitly importing <code>pandas</code>. Sample code from the linked thread is shown below.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">locale</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">locale</span><span class="o">.</span><span class="n">setlocale</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">LC_ALL</span><span class="p">,</span> <span class="s2">&quot;en_US&quot;</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span>
+</span></code></pre></div>
+<p>If you encounter this problem and this doesn't resolve it please seek assistance in the <a href="https://discourse.mcneel.com/">Rhino forums</a>.</p>
 <h2 id="github">GitHub</h2>
 <p>You can use <a href="https://pip.pypa.io/en/stable/installation/"><code>pip</code></a> to install the package directly from GitHub. This allows you to install a specific branch or
 commit to test out new functionality that is under development. In your Virtual Environment run...</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Install from HEAD of main branch</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pip<span class="w"> </span>install<span class="w"> </span>git@https://github.com/ICAIR-Sheffield/LayOpt
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Install a specific &lt;branch&gt;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>pip<span class="w"> </span>install<span class="w"> </span>git@https://github.com/ICAIR-Sheffield/LayOpt.git@&lt;branch&gt;
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Install from HEAD of main branch</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>pip<span class="w"> </span>install<span class="w"> </span>git@https://github.com/ICAIR-Sheffield/LayOpt
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Install a specific &lt;branch&gt;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>pip<span class="w"> </span>install<span class="w"> </span>git@https://github.com/ICAIR-Sheffield/LayOpt.git@&lt;branch&gt;
 </span></code></pre></div>
 <h2 id="development">Development</h2>
 <p>Contributions are welcome. If you are considering contributing to the development of LayOpt and are not a collaborator
 of the repository then you should fork to your account first and then clone from there.</p>
 <p>We use <a href="https://docs.astral.sh/uv/">uv</a> package manager to develop LayOpt. To install this software clone the repository and make sure you have
 <a href="https://docs.astral.sh/uv/getting-started/installation/">uv installed</a>.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Clone using SSH</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:ICAIR-Sheffield/LayOpt.git
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Clone using https</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ICAIR-Sheffield/LayOpt.git
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># Change directory</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">cd</span><span class="w"> </span>LayOpt
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Create a virtual Environment</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>uv<span class="w"> </span>venv
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1"># Synchronise the virtual environment (installs dependencies)</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>uv<span class="w"> </span>sync
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1"># Install development dependencies</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--group<span class="w"> </span>dev
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Install pre-commit hooks</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>pre-commit<span class="w"> </span>install
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Clone using SSH</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:ICAIR-Sheffield/LayOpt.git
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Clone using https</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ICAIR-Sheffield/LayOpt.git
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Change directory</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nb">cd</span><span class="w"> </span>LayOpt
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Create a virtual Environment</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>uv<span class="w"> </span>venv
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1"># Synchronise the virtual environment (installs dependencies)</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>uv<span class="w"> </span>sync
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="c1"># Install development dependencies</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--group<span class="w"> </span>dev
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># Install pre-commit hooks</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>pre-commit<span class="w"> </span>install
 </span></code></pre></div>
 <h3 id="style-and-linting">Style and Linting</h3>
 <p>We use a number of <a href="https://precommit.com/">pre-commit</a> hooks to ensure the codebase follows the <a href="https://pep8.org/">PEP8</a> style guide and
