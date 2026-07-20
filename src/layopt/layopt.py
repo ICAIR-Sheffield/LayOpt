@@ -21,8 +21,7 @@ import pandas as pd
 from loguru import logger
 from scipy import sparse
 
-from layopt import structure
-from layopt.classes import Parameters
+from layopt.classes import Parameters, Structure
 from layopt.io import dict_to_df, get_date_time
 from layopt.plotting import plot_truss
 
@@ -525,90 +524,39 @@ def trussopt(
         the solved problem), and a data frame of results.
     """
     setup_start = time.process_time()
-    # Make domain
-    bounding_coordinates = np.asarray(
-        [
-            [0, 0],
-            [parameters.width, 0],
-            [parameters.width, parameters.height],
-            [0, parameters.height],
-        ]
-    )
-    poly = structure.make_polygon(bounding_coordinates)
-    convex = poly.convex_hull.area == poly.area
-    logger.debug(f"Domain created, convex? : {convex=}")
-
-    # Make nodes
-    nodal_coords: npt.NDArray[np.float64] = structure.create_nodes(
-        width=parameters.width, height=parameters.height, polygon=poly
-    )
-    logger.debug(f"Node coordinates :\n{nodal_coords=}")
-
-    # Default load point
-    if parameters.loaded_points is None:
-        parameters.loaded_points = structure.calc_default_loaded_points(
-            width=parameters.width, height=parameters.height
-        )
-        logger.info(
-            f"Loaded points not provided, calculated as : {parameters.loaded_points=}"
-        )
-    # Calculate support conditions/degrees of freedom
-    dof = structure.support_conditions(
-        nodal_coords=nodal_coords, support_points=parameters.support_points
-    )
-    logger.debug(f"Degrees of Freedom : {dof=}")
-    # Generate all pattern loads
-    # ns-rse 2026-03-17 : Unused return arguments but may combine all_patterns and pattern_descriptions to dict
-    # all_patterns, base_load, pattern_descriptions = make_pattern_loads(
-    # ns-rse 2026-05-13 - loaded_points and load_direction are proposed to be attributes of CaseFamily
-    all_patterns, _, _ = structure.make_pattern_loads(
-        nodal_coords,
-        parameters.loaded_points,
-        parameters.load_large,
-        parameters.load_small,
-        parameters.load_direction,
-    )
-
-    # Create the 'ground structure'
-    potential_members = structure.calc_potential_members(
-        nodal_coords=nodal_coords,
-        max_length=parameters.max_length,
-        joint_cost=parameters.joint_cost,
-        convex=convex,
-        polygon=poly,
-        active_member_threshold=parameters.active_member_threshold,
-    )
-    # Primal adaptivity: start with base load case only ####
-    primal_adaptivity, active_load_cases = structure.primal_adaptivity(
-        primal_method=parameters.primal_method, all_patterns_length=len(all_patterns)
-    )
-
+    # Instantiate the structure
+    # ns-rse 2026-07-16 : unclear why mypy complains about parameters its the only required argument in the class
+    # definition
+    structure = Structure(parameters=parameters)  # type: ignore[call-arg]
+    logger.debug(f"Domain created, convex? : {structure.convex=}")
+    logger.debug(f"Node coordinates :\n{structure.nodes=}")
+    logger.debug(f"Degrees of Freedom : {structure.dof=}")
     setup_end = time.process_time()
     logger.info(f"Setup took {setup_end - setup_start!s}")
-    logger.info(f"    Nodes               : {len(nodal_coords)}")
-    logger.info(f"    Members             : {len(potential_members)}")
-    logger.info(f"    Total load patterns : {len(all_patterns)}")
+    logger.info(f"    Nodes               : {len(structure.nodes)}")
+    logger.info(f"    Members             : {len(structure.potential_members)}")
+    logger.info(f"    Total load patterns : {len(structure.all_patterns)}")
 
     vol = 1e9  # arbitrary large number to initialise
     # Start the 'member adding' loop
     for itr in range(1, 100):
         last_volume = vol
-        # Get active members/parts of matrices
-        c_n = potential_members[potential_members[:, 3] == True]  # noqa: E712, pylint: disable=singleton-comparison
+        # Get active members/parts of matrices \
+        c_n = structure.potential_members[structure.potential_members[:, 3] == True]  # noqa: E712, pylint: disable=singleton-comparison
 
         # Get active pattern loads
         f_active = [
-            all_patterns[k]
-            for k in range(len(all_patterns))
-            if active_load_cases[k] == 1
+            structure.all_patterns[k]
+            for k in range(len(structure.all_patterns))
+            if structure.active_load_cases[k] == 1
         ]
 
         # solve current reduced problem
         vol, filter_areas, filter_forces, u = solve(
-            nodal_coords,
+            structure.nodes,
             c_n,
             f_active,
-            dof,
+            structure.dof,
             parameters.stress_tensile,
             parameters.stress_compressive,
             parameters.joint_cost,
@@ -622,10 +570,10 @@ def trussopt(
         if isinf(vol):
             logger.error("Infeasible problem detected")
             return None
-        n_active = int(np.sum(active_load_cases))
+        n_active = int(np.sum(structure.active_load_cases))
         # ns-rse 2026-03-23 : Could this perhaps be debugging?
         logger.info(
-            f"Iteration: {itr}, vol: {vol}, mems: {len(c_n)} active load cases:{n_active}/{len(all_patterns)}"
+            f"Iteration: {itr}, vol: {vol}, mems: {len(c_n)} active load cases:{n_active}/{len(structure.all_patterns)}"
         )
         # plot interim solutions (slow)
         # plotTruss(nodal_coords, c_n, a, q, max(a) * 1e-2, "Itr:" + str(itr), extraPlot = activeDamageDef)
@@ -634,9 +582,9 @@ def trussopt(
         # still need PMLcache? currently unused
         # PMLcache = np.copy(PML[:,3])
         n_added = stop_violation(
-            nodal_coords,
-            potential_members,
-            dof,
+            structure.nodes,
+            structure.potential_members,
+            structure.dof,
             parameters.stress_tensile,
             parameters.stress_compressive,
             u,
@@ -646,32 +594,32 @@ def trussopt(
             continue  # small vol decrease = member adding close to convergence
 
         # outer loop - adding of pattern load cases based on primal violation
-        # if stopPrimalViolationPattern(nodal_coords, c_n, a, all_patterns, active_load_cases, dof, st, sc):
+        # if stopPrimalViolationPattern(nodal_coords, c_n, a, structure.all_patterns, structure.active_load_cases, dof, st, sc):
         #     if numAdded > 0: # only fully terminate when no members violate
         #         continue
         #     else:
         #         break
 
-        if primal_adaptivity:
+        if structure.primal_adaptivity:
             if parameters.primal_method == "residual":
                 # Use equilibrium residual check
                 converged = stop_primal_violation_residual(
-                    nodal_coords,
+                    structure.nodes,
                     c_n,
                     filter_forces,
-                    all_patterns,
-                    active_load_cases,
-                    dof,
+                    structure.all_patterns,
+                    structure.active_load_cases,
+                    structure.dof,
                 )
             elif parameters.primal_method == "load_factor":
                 # Use load factor LP
                 converged = stop_primal_violation_pattern(
-                    nodal_coords,
+                    structure.nodes,
                     c_n,
                     filter_areas,
-                    all_patterns,
-                    active_load_cases,
-                    dof,
+                    structure.all_patterns,
+                    structure.active_load_cases,
+                    structure.dof,
                     parameters.stress_tensile,
                     parameters.stress_compressive,
                     parameters.cvxpy["solver"],
@@ -692,7 +640,7 @@ def trussopt(
     solve_end = time.process_time()
     logger.info("Solve took " + str(solve_end - setup_end))
     logger.info(
-        f"Active patterns: {int(np.sum(active_load_cases))}/{len(all_patterns)}"
+        f"Active patterns: {int(np.sum(structure.active_load_cases))}/{len(structure.all_patterns)}"
     )
     results = {}
     for filter_level in parameters.filter_levels:
@@ -702,10 +650,10 @@ def trussopt(
             keep = [area > (filter_level * max(filter_areas)) for area in filter_areas]
             c_n = c_n[keep]
             final_vol, filter_areas, filter_forces, u = solve(
-                nodal_coords,
+                structure.nodes,
                 c_n,
                 f_active,
-                dof,
+                structure.dof,
                 parameters.stress_tensile,
                 parameters.stress_compressive,
                 parameters.joint_cost,
@@ -721,15 +669,15 @@ def trussopt(
             "width": parameters.width,
             "height": parameters.height,
             "n_load_points": len(parameters.loaded_points),
-            "n_patterns_total": len(all_patterns),
-            "n_patterns_active": int(np.sum(active_load_cases)),
+            "n_patterns_total": len(structure.all_patterns),
+            "n_patterns_active": int(np.sum(structure.active_load_cases)),
             "load_large": parameters.load_large,
             "load_small": parameters.load_small,
             "iterations": itr,
             "final_volume": final_vol,
             "n_members_final": len(c_n),
-            "n_nodes": len(nodal_coords),
-            "n_ground_structure": len(potential_members),
+            "n_nodes": len(structure.nodes),
+            "n_ground_structure": len(structure.potential_members),
             "cpu_time_setup": setup_end - setup_start,
             "cpu_time_solve": solve_end - setup_end,
             "primal_method": parameters.primal_method,
@@ -744,7 +692,7 @@ def trussopt(
             )
             if vol > 0:
                 _, _ = plot_truss(
-                    nodal_coords=nodal_coords,
+                    nodal_coords=structure.nodes,
                     c_n=c_n,
                     areas=filter_areas,
                     forces=filter_forces,
@@ -759,7 +707,7 @@ def trussopt(
         logger.info(f"Plotting took {time.process_time() - solve_end!s}")
 
     member_areas_filtered = member_area_filtering(
-        active_indices=np.where(potential_members[:, 3])[0],
+        active_indices=np.where(structure.potential_members[:, 3])[0],
         filter_areas=filter_areas,
         filtering_threshold=parameters.member_area_filtering,
     )

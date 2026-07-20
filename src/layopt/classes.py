@@ -47,7 +47,7 @@ class Parameters:
     active_member_threshold: float = Field(
         default=1.5, title="Active member threshold", gt=0.0
     )
-    support_points: npt.NDArray[np.float32] = Field(
+    support_points: npt.NDArray[np.float64] = Field(
         default=np.asarray([[0, 0], [3, 3]]), title="Support Points."
     )
     member_area_filtering: float = Field(
@@ -294,8 +294,10 @@ class Structure:
     active_load_cases : npt.NDArray[np.float64]
     """
 
-    parameters: Parameters
-    bounding_coordinates: list[list[int]] = Field(
+    parameters: Parameters = Field(
+        title="Parameters for the structure and modelling", init=True
+    )
+    bounding_coordinates: npt.NDArray[np.float64] = Field(
         title="Bounding coordinates", init=False
     )
     polygon: Polygon = Field(title="Polygon", init=False)
@@ -309,7 +311,7 @@ class Structure:
         title="Potential members", init=False
     )
     primal_adaptivity: bool = Field(title="Primal adaptivity", init=False)
-    active_load_cases: npt.NDArray[np.int64] = Field(
+    active_load_cases: npt.NDArray[np.int32] = Field(
         title="Active load cases", init=False
     )
 
@@ -371,7 +373,7 @@ class Structure:
         """
         return (
             f"Width             : {self.parameters.width}"
-            f"Width             : {self.parameters.height}"
+            f"Height            : {self.parameters.height}"
             f"Convex            : {self.convex}"
             f"Total nodes       : {len(self.nodes)}"
             f"Potential members : {len(self.potential_members)}"
