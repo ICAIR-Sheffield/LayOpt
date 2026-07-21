@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
       - name: Install uv and set the Python version
         uses: astral-sh/setup-uv@v7
         with:
