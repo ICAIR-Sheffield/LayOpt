@@ -359,7 +359,7 @@ class Structure:
             self.parameters.load_direction,
         )
         self.potential_members = structure.calc_potential_members(
-            nodal_coords=self.nodes,
+            nodes=self.nodes,
             max_length=self.parameters.max_length,
             joint_cost=self.parameters.joint_cost,
             convex=self.convex,

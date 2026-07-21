@@ -56,8 +56,8 @@ def test_plot_truss(
     """Test for ``plotting.plot_truss()``."""
     plotting_data = request.getfixturevalue(plotting_data_fixture)
     fig, _ = plotting.plot_truss(
-        nodes=plotting_data["nodal_coords"],
-        active_members=plotting_data["c_n"],
+        nodes=plotting_data["nodes"],
+        active_members=plotting_data["active_members"],
         areas=plotting_data["areas"],
         forces=plotting_data["forces"],
         threshold=plotting_data["threshold"],
