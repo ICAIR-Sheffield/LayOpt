@@ -181,7 +181,7 @@ def make_pattern_loads(
 
 
 def calc_potential_members(
-    nodal_coords: npt.NDArray,
+    nodes: npt.NDArray[np.float64],
     max_length: float,
     joint_cost: float,
     convex: bool,
@@ -193,7 +193,7 @@ def calc_potential_members(
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray,
+    nodes : npt.NDArray[np.float64],
         Node coordinates.
     max_length : int | float,
         Maximum length.
@@ -209,18 +209,18 @@ def calc_potential_members(
     Returns
     -------
     npt.NDArray[np.float64]
-        Array of ground structure coordinates.
+        Array of node start, end, length and active status with overlapping members and members `> max_length` removed.
     """
     potential_members = []
-    for i, j in itertools.combinations(range(len(nodal_coords)), 2):
+    for i, j in itertools.combinations(range(len(nodes)), 2):
         dx, dy = (
-            abs(nodal_coords[i][0] - nodal_coords[j][0]),
-            abs(nodal_coords[i][1] - nodal_coords[j][1]),
+            abs(nodes[i][0] - nodes[j][0]),
+            abs(nodes[i][1] - nodes[j][1]),
         )
         length = np.sqrt(dx**2 + dy**2)
         # Remove overlapping members, or members longer than maxLength
         if (length < max_length and gcd(int(dx), int(dy)) == 1) or joint_cost != 0:
-            seg = [] if convex else LineString([nodal_coords[i], nodal_coords[j]])
+            seg = [] if convex else LineString([nodes[i], nodes[j]])
             if convex or polygon.contains(seg) or polygon.boundary.contains(seg):
                 # Mark as active
                 if length <= active_member_threshold:
@@ -233,7 +233,7 @@ def calc_potential_members(
 
 def primal_adaptivity(
     primal_method: str, all_patterns_length: int
-) -> tuple[bool, npt.NDArray[np.int32]]:
+) -> tuple[bool, npt.NDArray[np.bool]]:
     """
     Derive primal method and active load cases. Start with base load for cases only.
 
@@ -246,11 +246,11 @@ def primal_adaptivity(
 
     Returns
     -------
-    tuple[bool, npt.NDArray[np.int32]]
+    tuple[bool, npt.NDArray[np.bool]]
         A tuple of a boolean for ``primal_method`` and the associated ``active_load_cases``.
     """
     if primal_method in {"residual", "load_factor"}:
-        active_load_cases = np.zeros(all_patterns_length, dtype=np.int32)
+        active_load_cases = np.zeros(all_patterns_length, dtype=np.bool)
         active_load_cases[0] = 1  # Base case = all large loads
         return (True, active_load_cases)
-    return (False, np.ones(all_patterns_length, dtype=np.int32))
+    return (False, np.ones(all_patterns_length, dtype=np.bool))

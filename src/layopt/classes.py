@@ -289,9 +289,14 @@ class Structure:
         Degrees of Freedom
     potential_members : npt.NDArray[np.float64]
         Potential members, with active points indicated.
+    active_members : npt.NDArray[np.float64]
+        Active members, a subset of `potential_members`, set after solving.
     primal_adaptivity : bool
         Indicator of primal adaptivity.
     active_load_cases : npt.NDArray[np.float64]
+        Active load cases.
+    active_pattern_loads : list[npt.NDArray[np.float64]]
+        A subset of `all_patterns` where load cases are active.
     """
 
     parameters: Parameters = Field(
@@ -310,9 +315,13 @@ class Structure:
     potential_members: npt.NDArray[np.float64] = Field(
         title="Potential members", init=False
     )
+    active_members: npt.NDArray[np.float64] = Field(title="Active members", init=False)
     primal_adaptivity: bool = Field(title="Primal adaptivity", init=False)
     active_load_cases: npt.NDArray[np.int32] = Field(
         title="Active load cases", init=False
+    )
+    active_pattern_loads: list[npt.NDArray[np.float64]] = Field(
+        title="Loaded points", init=False
     )
 
     def __post_init__(self) -> None:
@@ -350,17 +359,25 @@ class Structure:
             self.parameters.load_direction,
         )
         self.potential_members = structure.calc_potential_members(
-            nodal_coords=self.nodes,
+            nodes=self.nodes,
             max_length=self.parameters.max_length,
             joint_cost=self.parameters.joint_cost,
             convex=self.convex,
             polygon=self.polygon,
             active_member_threshold=self.parameters.active_member_threshold,
         )
+        self.active_members = self.potential_members[
+            self.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
+        ]
         self.primal_adaptivity, self.active_load_cases = structure.primal_adaptivity(
             primal_method=self.parameters.primal_method,
             all_patterns_length=len(self.all_patterns),
         )
+        self.active_pattern_loads = [
+            self.all_patterns[k]
+            for k in range(len(self.all_patterns))
+            if self.active_load_cases[k] == 1
+        ]
 
     def __str__(self) -> str:
         """

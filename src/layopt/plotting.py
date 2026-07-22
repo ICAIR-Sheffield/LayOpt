@@ -19,8 +19,8 @@ plt.rcParams["figure.max_open_warning"] = 0
 
 
 def plot_truss(
-    nodal_coords: npt.NDArray[np.float64],
-    c_n: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
+    active_members: npt.NDArray[np.float64],
     areas: npt.NDArray[np.float64],
     forces: list[npt.NDArray[np.float64]],
     threshold: float,
@@ -35,9 +35,9 @@ def plot_truss(
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray
+    nodes : npt.NDArray
         Nodal coordinates.
-    c_n : npt.NDArray[np.float64]
+    active_members : npt.NDArray[np.float64]
         Active members.
     areas : npt.NDArray[np.float64]
         Member areas.
@@ -82,7 +82,7 @@ def plot_truss(
                 0,
                 min(max(-forces[0][i] / areas[i], 0), 1),
             )
-        pos = nodal_coords[c_n[i, [0, 1]].astype(int), :]
+        pos = nodes[active_members[i, [0, 1]].astype(int), :]
         ax.plot(
             pos[:, 0],
             pos[:, 1],
@@ -100,8 +100,8 @@ def plot_truss(
 
 
 def plot_all_cases(
-    nodal_coords: npt.NDArray[np.float64],
-    c_n: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
+    active_members: npt.NDArray[np.float64],
     areas: npt.NDArray[np.float64],
     forces: list[npt.NDArray[np.float64]],
     threshold: float,
@@ -112,9 +112,9 @@ def plot_all_cases(
 
     Parameters
     ----------
-    nodal_coords : npt.NDArray
+    nodes : npt.NDArray
         Nodal coordinates.
-    c_n : npt.NDArray
+    active_members : npt.NDArray
         Active members.
     areas : npt.NDArray
         Member areas.
@@ -127,8 +127,8 @@ def plot_all_cases(
     """
     for k in enumerate(forces):
         plot_truss(
-            nodal_coords=nodal_coords,
-            c_n=c_n,
+            nodes=nodes,
+            active_members=active_members,
             areas=areas,
             forces=[forces[k]],  # type: ignore[call-overload]
             threshold=threshold,
