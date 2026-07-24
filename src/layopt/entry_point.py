@@ -50,7 +50,6 @@ def layopt_parser() -> arg.ArgumentParser:
         "-l",
         "--log-level",
         dest="log_level",
-        default="info",
         type=str,
         required=False,
         help="Set verbosity of logging, options (least verbose to most) are 'error', 'warning', 'info', 'error', 'debug'.",
@@ -180,7 +179,6 @@ def layopt_parser() -> arg.ArgumentParser:
         "--csv-filename",
         dest="csv_filename",
         type=str,
-        default="results.csv",
         required=False,
         help="File to save results to. Defaults to 'results_<YYYY-MM-DD-hhmmss>.csv'.",
     )
