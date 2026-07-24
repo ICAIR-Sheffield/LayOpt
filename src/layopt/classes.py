@@ -44,8 +44,8 @@ class Parameters:
     load_large: float = Field(default=50.0, title="Maximum length.", ge=0.0)
     load_small: float = Field(default=5.0, title="Maximum length.", ge=0.0)
     max_length: float = Field(default=18.0, title="Maximum length.", ge=0.0)
-    active_member_threshold: float = Field(
-        default=1.5, title="Active member threshold", gt=0.0
+    max_length_initial_ground_structure: float = Field(
+        default=1.5, title="Threshold for marking a potential member as active in the initial ground structure.", gt=0.0
     )
     support_points: npt.NDArray[np.float64] = Field(
         default=np.asarray([[0, 0], [3, 3]]), title="Support Points."
@@ -364,7 +364,7 @@ class Structure:
             joint_cost=self.parameters.joint_cost,
             convex=self.convex,
             polygon=self.polygon,
-            active_member_threshold=self.parameters.active_member_threshold,
+            max_length_initial_ground_structure=self.parameters.max_length_initial_ground_structure,
         )
         self.active_members = self.potential_members[
             self.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison

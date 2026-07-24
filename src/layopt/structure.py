@@ -186,7 +186,7 @@ def calc_potential_members(
     joint_cost: float,
     convex: bool,
     polygon: Polygon,
-    active_member_threshold: float = 1.5,
+    max_length_initial_ground_structure: float = 1.5,
 ) -> npt.NDArray[np.float64]:
     """
     Create the ground structure.
@@ -203,8 +203,8 @@ def calc_potential_members(
         Whether the structure is convex.
     polygon : Polygon
         Bounding box for the structure.
-    active_member_threshold : float
-        Threshold for marking a potential member as active.
+    max_length_initial_ground_structure : float
+        Threshold for marking a potential member as active in the initial ground structure.
 
     Returns
     -------
@@ -223,7 +223,7 @@ def calc_potential_members(
             seg = [] if convex else LineString([nodes[i], nodes[j]])
             if convex or polygon.contains(seg) or polygon.boundary.contains(seg):
                 # Mark as active
-                if length <= active_member_threshold:
+                if length <= max_length_initial_ground_structure:
                     potential_members.append([i, j, length, True])
                 else:
                     potential_members.append([i, j, length, False])
