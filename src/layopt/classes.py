@@ -45,7 +45,9 @@ class Parameters:
     load_small: float = Field(default=5.0, title="Maximum length.", ge=0.0)
     max_length: float = Field(default=18.0, title="Maximum length.", ge=0.0)
     max_length_initial_ground_structure: float = Field(
-        default=1.5, title="Threshold for marking a potential member as active in the initial ground structure.", gt=0.0
+        default=1.5,
+        title="Threshold for marking a potential member as active in the initial ground structure.",
+        gt=0.0,
     )
     support_points: npt.NDArray[np.float64] = Field(
         default=np.asarray([[0, 0], [3, 3]]), title="Support Points."
@@ -289,11 +291,11 @@ class Structure:
         Degrees of Freedom
     potential_members : npt.NDArray[np.float64]
         Potential members, with active points indicated.
-    active_members : npt.NDArray[np.float64]
+    active_members : npt.NDArray[np.bool]
         Active members, a subset of `potential_members`, set after solving.
     primal_adaptivity : bool
         Indicator of primal adaptivity.
-    active_load_cases : npt.NDArray[np.float64]
+    load_case_active : npt.NDArray[np.float64]
         Active load cases.
     active_pattern_loads : list[npt.NDArray[np.float64]]
         A subset of `all_patterns` where load cases are active.
@@ -317,8 +319,9 @@ class Structure:
     )
     active_members: npt.NDArray[np.float64] = Field(title="Active members", init=False)
     primal_adaptivity: bool = Field(title="Primal adaptivity", init=False)
-    active_load_cases: npt.NDArray[np.int32] = Field(
-        title="Active load cases", init=False
+    load_case_active: npt.NDArray[np.bool] = Field(
+        title="Indicates whether the corresponding load case is active or not.",
+        init=False,
     )
     active_pattern_loads: list[npt.NDArray[np.float64]] = Field(
         title="Loaded points", init=False
@@ -369,14 +372,14 @@ class Structure:
         self.active_members = self.potential_members[
             self.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
         ]
-        self.primal_adaptivity, self.active_load_cases = structure.primal_adaptivity(
+        self.primal_adaptivity, self.load_case_active = structure.primal_adaptivity(
             primal_method=self.parameters.primal_method,
             all_patterns_length=len(self.all_patterns),
         )
         self.active_pattern_loads = [
             self.all_patterns[k]
             for k in range(len(self.all_patterns))
-            if self.active_load_cases[k] == 1
+            if self.load_case_active[k]
         ]
 
     def __str__(self) -> str:

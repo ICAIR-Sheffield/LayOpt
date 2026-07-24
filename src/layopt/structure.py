@@ -247,10 +247,10 @@ def primal_adaptivity(
     Returns
     -------
     tuple[bool, npt.NDArray[np.bool]]
-        A tuple of a boolean for ``primal_method`` and the associated ``active_load_cases``.
+        A tuple of a boolean for ``primal_method`` and the associated ``load_case_active``.
     """
     if primal_method in {"residual", "load_factor"}:
-        active_load_cases = np.zeros(all_patterns_length, dtype=np.bool)
-        active_load_cases[0] = 1  # Base case = all large loads
-        return (True, active_load_cases)
+        load_case_active = np.zeros(all_patterns_length, dtype=np.bool)
+        load_case_active[0] = 1  # Base case = all large loads
+        return (True, load_case_active)
     return (False, np.ones(all_patterns_length, dtype=np.bool))

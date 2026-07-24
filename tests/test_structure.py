@@ -525,21 +525,29 @@ def test_calc_potential_members(
         "primal_method",
         "all_patterns_length",
         "expected_primal_method",
-        "expected_active_load_cases",
+        "expected_load_case_active",
     ),
     [
         pytest.param(
-            "residual", 4, True, np.asarray([1, 0, 0, 0]), id="residual of length 4"
+            "residual",
+            4,
+            True,
+            np.asarray([True, False, False, False], dtype=np.bool),
+            id="residual of length 4",
         ),
         pytest.param(
             "load_factor",
             4,
             True,
-            np.asarray([1, 0, 0, 0]),
+            np.asarray([True, False, False, False], dtype=np.bool),
             id="load_factor of length 4",
         ),
         pytest.param(
-            "other", 4, False, np.asarray([1, 1, 1, 1]), id="other of length 4"
+            "other",
+            4,
+            False,
+            np.asarray([True, True, True, True], dtype=np.bool),
+            id="other of length 4",
         ),
     ],
 )
@@ -547,14 +555,14 @@ def test_primal_adaptivity(
     primal_method: str,
     all_patterns_length: int,
     expected_primal_method: bool,
-    expected_active_load_cases: npt.NDArray[np.int32],
+    expected_load_case_active: npt.NDArray[np.bool],
 ) -> None:
     """Test for ``structure.primal_adaptivity()``."""
-    primal_method_result, active_load_cases = structure.primal_adaptivity(
+    primal_method_result, load_case_active = structure.primal_adaptivity(
         primal_method=primal_method, all_patterns_length=all_patterns_length
     )
     assert primal_method_result == expected_primal_method
     np.testing.assert_array_equal(
-        active_load_cases,
-        expected_active_load_cases,
+        load_case_active,
+        expected_load_case_active,
     )
