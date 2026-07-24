@@ -295,8 +295,8 @@ class Structure:
         Active members, a subset of `potential_members`, set after solving.
     primal_adaptivity : bool
         Indicator of primal adaptivity.
-    load_case_active : npt.NDArray[np.float64]
-        Active load cases.
+    load_case_active : npt.NDArray[np.bool]
+        Indicates whether the corresponding load case is active or not.
     active_pattern_loads : list[npt.NDArray[np.float64]]
         A subset of `all_patterns` where load cases are active.
     """

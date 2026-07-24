@@ -108,7 +108,7 @@ def solve(
     active_members : npt.NDArray[np.float64]
         Active members.
     active_pattern_loads : list[npt.NDArray[np.float64]]
-        Active pattern loads.
+        A subset of 'all_patterns' where load cases are active.
 
     Returns
     -------
