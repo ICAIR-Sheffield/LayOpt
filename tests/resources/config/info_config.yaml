@@ -1,0 +1,42 @@
+# For more information on configuration and how to use it:
+# https://icair-sheffield.github.io/LayOpt/
+base_dir: .
+output_dir: output
+log_level: info
+cores: 2
+width: 3
+height: 3
+steps: 1.0
+stress_tensile: 1.0
+stress_compressive: 1.0
+joint_cost: 0.0
+loaded_points:
+  -   - 1
+      - 0
+  -   - 2
+      - 0
+load_direction:
+  - 0.0
+  - -1.0
+load_large: 50.0
+load_small: 5.0
+max_length: 18.0
+active_member_threshold: 1.5
+support_points:
+  -   - 0
+      - 0
+  -   - 3
+      - 3
+member_area_filtering: 0.001
+cvxpy:
+  solver: clarabel
+filter_levels:
+  - 1.0
+primal_method: load_factor
+problem_name: ''
+csv_filename: results.csv
+notes: ''
+plotting:
+  run: false
+  bar_thickness: 0.3
+  dpi: 1200
