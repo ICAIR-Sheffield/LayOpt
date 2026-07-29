@@ -58,6 +58,8 @@ def _set_logging(log_level: str = "info") -> None:
     log_level : str
         Logging level.
     """
+    if log_level is None:
+        log_level = "INFO"  # type: ignore[unreachable]
     logger.remove()
     logger.add(sys.stderr, level=log_level.upper())
 
