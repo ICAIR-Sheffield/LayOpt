@@ -210,8 +210,10 @@ def test_parameters_exceptions(config: ValidationError) -> None:
                 "dof": np.asarray([0.0, 0.0]),
                 "all_patterns": np.asarray([[0, 0]]),
                 "potential_members": np.empty((0, 4)),
+                "active_members": np.empty((0, 4), dtype=np.float64),
                 "primal_adaptivity": True,
                 "active_load_cases": np.asarray([0]),
+                "active_pattern_loads": np.asarray([]),
             },
             id="1x1",
         ),
@@ -231,8 +233,10 @@ def test_parameters_exceptions(config: ValidationError) -> None:
                 "dof": np.asarray([0.0, 0.0]),
                 "all_patterns": np.asarray([[0, 0]]),
                 "potential_members": np.empty((0, 4)),
+                "active_members": np.empty((0, 4), dtype=np.float64),
                 "primal_adaptivity": True,
                 "active_load_cases": np.asarray([0]),
+                "active_pattern_loads": np.asarray([]),
             },
             id="2x2",
         ),
@@ -252,8 +256,10 @@ def test_parameters_exceptions(config: ValidationError) -> None:
                 "dof": np.asarray([0.0, 0.0]),
                 "all_patterns": np.asarray([[0, 0]]),
                 "potential_members": np.empty((0, 4)),
+                "active_members": np.empty((0, 4), dtype=np.float64),
                 "primal_adaptivity": True,
                 "active_load_cases": np.asarray([0]),
+                "active_pattern_loads": np.asarray([]),
             },
             id="18x4 spanning",
         ),
@@ -318,7 +324,13 @@ def test_structure_post_init(
     np.testing.assert_array_equal(
         structure.potential_members, expected_attributes["potential_members"]
     )
+    np.testing.assert_array_equal(
+        structure.active_members, expected_attributes["active_members"]
+    )
     assert structure.primal_adaptivity == expected_attributes["primal_adaptivity"]
     np.testing.assert_array_equal(
         structure.active_load_cases, expected_attributes["active_load_cases"]
+    )
+    np.testing.assert_array_equal(
+        structure.active_pattern_loads, expected_attributes["active_pattern_loads"]
     )

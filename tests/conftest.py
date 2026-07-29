@@ -10,13 +10,13 @@ from layopt.classes import Parameters
 
 
 @pytest.fixture
-def nodal_coords() -> npt.NDArray[np.int32]:
+def nodes() -> npt.NDArray[np.int32]:
     """Coordinates for simple test."""
     return np.array([[x, y] for y in range(2) for x in range(5)])
 
 
 @pytest.fixture
-def c_n():
+def active_members():
     """Active members."""
     return np.array(
         [
@@ -36,10 +36,10 @@ def c_n():
 
 @pytest.fixture
 def input_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
-    """``nodal_coords``, ``c_n`` and ``dof`` for a 1x1 structure."""
+    """``nodes``, ``active_members`` and ``dof`` for a 1x1 structure."""
     return {
-        "nodal_coords": np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
-        "c_n": np.asarray(
+        "nodes": np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        "active_members": np.asarray(
             [
                 [0.0, 1.0, 1.0, True],
                 [0.0, 2.0, 1.0, True],
@@ -55,9 +55,9 @@ def input_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
 
 @pytest.fixture
 def input_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
-    """``nodal_coords``, ``c_n`` and ``dof`` for a 2x2 structure."""
+    """``nodes``, ``active_members`` and ``dof`` for a 2x2 structure."""
     return {
-        "nodal_coords": np.asarray(
+        "nodes": np.asarray(
             [
                 [0.0, 0.0],
                 [1.0, 0.0],
@@ -70,7 +70,7 @@ def input_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
                 [2.0, 2.0],
             ]
         ),
-        "c_n": np.asarray(
+        "active_members": np.asarray(
             [
                 [0.0, 1.0, 1.0, False],
                 [0.0, 3.0, 1.0, True],
@@ -123,9 +123,9 @@ def input_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
 
 @pytest.fixture
 def input_three_by_six() -> dict[str, npt.NDArray[np.float32]]:
-    """``nodal_coords``, ``c_n`` and ``dof`` for a 3x6 structure."""
+    """``nodes``, ``active_members`` and ``dof`` for a 3x6 structure."""
     return {
-        "nodal_coords": np.asarray(
+        "nodes": np.asarray(
             [
                 [0.0, 0.0],
                 [1.0, 0.0],
@@ -157,7 +157,7 @@ def input_three_by_six() -> dict[str, npt.NDArray[np.float32]]:
                 [3.0, 6.0],
             ]
         ),
-        "c_n": np.asarray(
+        "active_members": np.asarray(
             [
                 [0.0, 1.0, 1.0, True],
                 [0.0, 4.0, 1.0, True],
@@ -450,9 +450,11 @@ def plotting_data_one_by_one() -> dict[str, npt.NDArray[np.float32]]:
     """Relevant plotting data for 1x1 example."""
     return {
         "areas": np.asarray([70.71067812, 50.0]),
-        "c_n": np.asarray([[0.0, 3.0, 1.41421356, 1.0], [2.0, 3.0, 1.0, 1.0]]),
+        "active_members": np.asarray(
+            [[0.0, 3.0, 1.41421356, 1.0], [2.0, 3.0, 1.0, 1.0]]
+        ),
         "forces": [np.asarray([-70.71067812, 50.0])],
-        "nodal_coords": np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        "nodes": np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
         "threshold": 0.07071067811522617,
     }
 
@@ -472,7 +474,7 @@ def plotting_data_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
                 31.5985,
             ]
         ),
-        "c_n": np.asarray(
+        "active_members": np.asarray(
             [
                 [0.0, 4.0, 1.41421, 1.0],
                 [0.0, 5.0, 2.23607, 1.0],
@@ -496,7 +498,7 @@ def plotting_data_two_by_two() -> dict[str, npt.NDArray[np.float32]]:
                 ]
             )
         ],
-        "nodal_coords": np.asarray(
+        "nodes": np.asarray(
             [
                 [0.0, 0.0],
                 [1.0, 0.0],
@@ -527,7 +529,7 @@ def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.fl
                 35.35533906,
             ]
         ),
-        "c_n": np.asarray(
+        "active_members": np.asarray(
             [
                 [0.0, 5.0, 1.41421356, 1.0],
                 [5.0, 10.0, 1.41421356, 1.0],
@@ -549,7 +551,7 @@ def plotting_data_three_by_six_short_cantilever() -> dict[str, npt.NDArray[np.fl
                 ]
             )
         ],
-        "nodal_coords": np.asarray(
+        "nodes": np.asarray(
             [
                 [0.0, 0.0],
                 [1.0, 0.0],

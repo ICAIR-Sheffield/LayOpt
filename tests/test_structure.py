@@ -182,10 +182,9 @@ def test_support_conditions(
             id="3 load points (2^3)",
         ),
     ],
-    ids=["1_point", "2_points", "3_points"],
 )
 def test_make_pattern_loads_num_load_patterns(
-    nodal_coords: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
     load_large: float,
     load_small: float,
     load_direction_default: tuple[float, float],
@@ -194,7 +193,7 @@ def test_make_pattern_loads_num_load_patterns(
 ):
     """Test for ``structure.make_pattern_loads()``."""
     all_patterns, _, _ = structure.make_pattern_loads(
-        nodal_coords, loaded_points, load_large, load_small, load_direction_default
+        nodes, loaded_points, load_large, load_small, load_direction_default
     )
     assert len(all_patterns) == expected_pattern_count
 
@@ -408,7 +407,7 @@ def test_make_pattern_loads_num_load_patterns(
     ],
 )
 def test_make_pattern_loads_load_directions_and_node_snapping(
-    nodal_coords: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
     load_large: float,
     load_small: float,
     loaded_points: npt.NDArray[np.float64],
@@ -419,7 +418,7 @@ def test_make_pattern_loads_load_directions_and_node_snapping(
 ):
     """Test vertical loads, horizontal loads, and snapping to nearest nodes."""
     all_patterns, base_load, pattern_description = structure.make_pattern_loads(
-        nodal_coords, loaded_points, load_large, load_small, direction
+        nodes, loaded_points, load_large, load_small, direction
     )
     assert len(all_patterns) == expected_pattern_count
     np.testing.assert_equal(all_patterns, expected_patterns)
@@ -448,7 +447,7 @@ def test_make_pattern_loads_load_directions_and_node_snapping(
     ],
 )
 def test_make_pattern_loads_zero_load_points_error(
-    nodal_coords: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
     loaded_points: Any,
     error: str,
     msg: str,
@@ -456,7 +455,7 @@ def test_make_pattern_loads_zero_load_points_error(
     """Test that 0 load points raises AssertionError from ``structure.make_pattern_loads()``."""
     with pytest.raises(error, match=msg):
         structure.make_pattern_loads(
-            nodal_coords=nodal_coords,
+            nodal_coords=nodes,
             loaded_points=loaded_points,
             load_large=3.75,
             load_small=0.204,
@@ -465,7 +464,7 @@ def test_make_pattern_loads_zero_load_points_error(
 
 
 @pytest.mark.parametrize(
-    ("nodal_coords", "max_length", "joint_cost", "convex", "polygon", "expected"),
+    ("nodes", "max_length", "joint_cost", "convex", "polygon", "expected"),
     [
         pytest.param(
             np.asarray([[0, 0], [0, 1], [1, 0], [1, 1]]),
@@ -501,7 +500,7 @@ def test_make_pattern_loads_zero_load_points_error(
     ],
 )
 def test_calc_potential_members(
-    nodal_coords: npt.NDArray[np.int64],
+    nodes: npt.NDArray[np.int64],
     max_length: float,
     joint_cost: float,
     convex: bool,
@@ -511,7 +510,7 @@ def test_calc_potential_members(
     """Test for ``structure.calc_potential_members()``."""
     np.testing.assert_array_equal(
         structure.calc_potential_members(
-            nodal_coords=nodal_coords,
+            nodes=nodes,
             max_length=max_length,
             joint_cost=joint_cost,
             convex=convex,

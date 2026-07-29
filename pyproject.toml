@@ -121,9 +121,12 @@ warn_unreachable = true
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 ignore_missing_imports = true
+# Disabled as not available in mypy pre-commit environment
+# plugins = "pydantic.mypy"
 
 [[tool.mypy.overrides]]
 module = [
+  "cvxpy.*",
   "layopt.*",
   "loguru.*",
   "numpy.*",
@@ -136,6 +139,8 @@ module = [
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
+# [pydantic-mypy]
+# init_typed = True
 
 [tool.ruff]
 

@@ -69,8 +69,8 @@ def test_calc_eq_matrix_b(
     """Test for calc_eq_matrix_b()."""
     structure = request.getfixturevalue(structure_fixture)
     result = layopt.calc_eq_matrix_b(
-        nodal_coords=structure["nodal_coords"],
-        c_n=structure["c_n"],
+        nodes=structure["nodes"],
+        active_members=structure["active_members"],
         dof=structure["dof"],
     )
     assert result.coords == snapshot
@@ -79,7 +79,7 @@ def test_calc_eq_matrix_b(
 
 
 @pytest.mark.parametrize(
-    ("nodal_coords", "c_n", "dof", "expected"),
+    ("nodes", "active_members", "dof", "expected"),
     [
         pytest.param(
             np.asarray([[0.0, 0.0], [1.0, 0.0]]),
@@ -95,7 +95,7 @@ def test_calc_eq_matrix_b(
             ),
             np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]),
             IndexError,
-            id="nodal_coords too short",
+            id="nodes too short",
         ),
         pytest.param(
             None,
@@ -111,7 +111,7 @@ def test_calc_eq_matrix_b(
             ),
             np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]),
             TypeError,
-            id="nodal_coords is None",
+            id="nodes is None",
         ),
         pytest.param(
             np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
@@ -124,7 +124,7 @@ def test_calc_eq_matrix_b(
             ),
             np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]),
             IndexError,
-            id="c_n too short",
+            id="active_members too short",
             marks=pytest.mark.skip(
                 reason="no IndexError as serves as basis for subsetting other arrays"
             ),
@@ -134,7 +134,7 @@ def test_calc_eq_matrix_b(
             None,
             np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]),
             TypeError,
-            id="c_n is None",
+            id="active_members is None",
         ),
         pytest.param(
             np.asarray([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
@@ -171,14 +171,14 @@ def test_calc_eq_matrix_b(
     ],
 )
 def test_calc_eq_matrix_b_errors(
-    nodal_coords: npt.NDArray[np.float64],
-    c_n: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
+    active_members: npt.NDArray[np.float64],
     dof: npt.NDArray[np.float64],
     expected,
 ) -> None:
     """Test for calc_eq_matrix_b()."""
     with pytest.raises(expected):
-        layopt.calc_eq_matrix_b(nodal_coords=nodal_coords, c_n=c_n, dof=dof)
+        layopt.calc_eq_matrix_b(nodes=nodes, active_members=active_members, dof=dof)
 
 
 @pytest.mark.parametrize(
@@ -465,8 +465,8 @@ def test_member_area_filtering(
     ],
 )
 def test_stop_primal_violation(
-    nodal_coords: npt.NDArray[np.float64],
-    c_n: npt.NDArray[np.float64],
+    nodes: npt.NDArray[np.float64],
+    active_members: npt.NDArray[np.float64],
     all_patterns: npt.NDArray[np.float64],
     active_load_cases: npt.NDArray[np.float64],
     areas: npt.NDArray[np.float64],
@@ -478,8 +478,8 @@ def test_stop_primal_violation(
 ) -> None:
     """Test for convergence based on whether all load cases active."""
     actual_converge = layopt.stop_primal_violation_pattern(
-        nodal_coords,
-        c_n,
+        nodes,
+        active_members,
         areas,
         all_patterns,
         active_load_cases,
@@ -532,8 +532,8 @@ def test_stop_violation(
     """Test that the function sets members active correctly and returns non-negative integer."""
     structure = request.getfixturevalue(structure_fixture)
     actual_num_added = layopt.stop_violation(
-        nodal_coords=structure["nodal_coords"],
-        potential_members=structure["c_n"],
+        nodal_coords=structure["nodes"],
+        potential_members=structure["active_members"],
         dof=structure["dof"],
         stress_tensile=stress_tensile,
         stress_compressive=stress_compressive,

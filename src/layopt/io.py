@@ -42,7 +42,7 @@ def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
             Path("./") if args["output_dir"] is None else Path(args["output_dir"])
         )
         filename = f"config_{get_date_time(strftime='%Y-%m-%d-%H%M%S')}.yaml"
-        config = args  # type: ignore[assignment]
+        config = args
     # If we have 'Parameters' then configuration is stored as a dataclass and we again don't have 'filename' key/value pair
     elif isinstance(args, Parameters):
         output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)  # type: ignore[redundant-expr]

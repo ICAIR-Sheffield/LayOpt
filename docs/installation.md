@@ -45,6 +45,43 @@ pip install layopt==0.1.0a1
 uv pip install layopt==0.1.0a1
 ```
 
+## Rhino and Grasshopper Users
+
+<!-- markdownlint-disable MD046 -->
+!!! warning
+
+    If you are using [Rhino](https://www.rhino3d.com/) and/or the [Grasshopper](https://www.grasshopper3d.com/)
+    plugin/extension to run Python code then you may encounter some problems. The solutions to these are described
+    below.
+<!-- markdownlint-enable MD046 -->
+
+### Minimum Python Version
+
+LayOpt has been developed using a minimum Python version requirement of >= 3.12 due to the [end of life
+scheduled][python_eol] for various versions. The current stable release of Rhino (8.0) only supports Python 3.9. The
+developers are however targeting [Python 3.13][rhino_python] as the minimum version for the imminent Rhino 9.0 release
+and the [Beta version][rhino_beta] already includes this support. You should therefore use the Beta version (or >= 9.0
+once released) if you wish to use LayOpt.
+
+### Locale Issues
+
+Users have identified some [issues][rhino_locale] with setting `locales` when the [Pandas][pd] package is
+imported. LayOpt uses Pandas to handle building data frames of results which are written to `.csv` output files and so
+you may encounter this issue.
+
+If you this issue then you should follow the advice in the [thread][rhino_locale] and set your `locale` explicitly to
+`en_US` before explicitly importing `pandas`. Sample code from the linked thread is shown below.
+
+```python
+import locale
+
+locale.setlocale(locale.LC_ALL, "en_US")
+
+import pandas
+```
+
+If you encounter this problem and this doesn't resolve it please seek assistance in the [Rhino forums][rhino_forums].
+
 ## GitHub
 
 You can use [`pip`][pip] to install the package directly from GitHub. This allows you to install a specific branch or
@@ -96,10 +133,16 @@ the code base. For details of all hooks used see the `.pre-commit-config.yaml` f
 
 [mypy]: https://mypy.readthedocs.io/en/stable/getting_started.html
 [numpydoc]: https://numpydoc.readthedocs.io/en/latest/format.html
+[pd]: https://pandas.pydata.org/
 [pep8]: https://pep8.org/
 [pip]: https://pip.pypa.io/en/stable/installation/
 [precommit]: https://precommit.com/
 [pypi]: https://pypi.org/
+[python_eol]: https://devguide.python.org/versions/
 [pyvenv]: https://realpython.com/python-virtual-environments-a-primer/
+[rhino_beta]: https://discourse.mcneel.com/t/help-shape-rhino-9-the-beta-is-here/220246
+[rhino_forums]: https://discourse.mcneel.com/
+[rhino_locale]: https://discourse.mcneel.com/t/rhino-8-feature-scripteditor-cpython-csharp/128353/389
+[rhino_python]: https://discourse.mcneel.com/t/rhino-beta-feature-python-3-13/205209
 [uv]: https://docs.astral.sh/uv/
 [uv_install]: https://docs.astral.sh/uv/getting-started/installation/
