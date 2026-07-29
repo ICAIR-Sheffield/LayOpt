@@ -2,17 +2,22 @@
 
 import contextlib
 import os
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import pytest
+import yaml
 
 from layopt import io, run_modules
 from layopt.entry_point import entry_point
 
 GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+
+BASE_DIR = Path.cwd()
+RESOURCES = BASE_DIR / "tests" / "resources"
 
 
 @pytest.mark.parametrize("option", ["-h", "--help"])
@@ -140,6 +145,48 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
     assert sum(1 for _ in tmp_path.iterdir() if _.is_file()) == 2
     # Load csv file and check against snapshot
     csv_out = list(tmp_path.glob("*.csv"))
+    csv_results = pd.read_csv(csv_out[0])
+    assert (
+        csv_results.drop(
+            ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
+        ).to_string()
+        == snapshot
+    )
+
+
+# fisher568 2026-07-28 add custom pytest marker for e2e tests and configure to skip automatically
+@pytest.mark.parametrize(
+    ("config_file_name"),
+    [
+        pytest.param(
+            "square_cantilever_config.yaml",
+            id="e2e_test",
+        ),
+    ],
+)
+def test_cli_layopt_optimise(
+    config_file_name: str, tmp_path: Path, monkeypatch, snapshot
+) -> None:
+    """Simulates the CLI and verifies the output CSV from layopt against a snapshot."""
+    test_config_path = RESOURCES / config_file_name
+
+    # Update config and rewrite it to temp file
+    with test_config_path.open() as file:
+        config = yaml.safe_load(file)
+    print(config)
+    config["base_dir"] = str(tmp_path)
+    tmp_output_path = tmp_path / "output"
+    config["output_dir"] = str(tmp_output_path)
+    tmp_config_path = tmp_path / config_file_name
+    with tmp_config_path.open("w") as file:
+        yaml.dump(config, file)
+
+    # Run CLI in-process
+    monkeypatch.setattr(sys, "argv", ["layopt", "-c", str(tmp_config_path), "optimise"])
+    entry_point()
+
+    # Load csv file and check against snapshot
+    csv_out = list(tmp_output_path.glob("*.csv"))
     csv_results = pd.read_csv(csv_out[0])
     assert (
         csv_results.drop(
