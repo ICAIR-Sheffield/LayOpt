@@ -325,7 +325,7 @@ def test_member_area_filtering(
 @pytest.mark.parametrize(
     (
         "all_patterns",
-        "active_load_cases",
+        "load_case_active",
         "areas",
         "stress_tensile",
         "stress_compressive",
@@ -412,7 +412,7 @@ def test_member_area_filtering(
                     ]
                 ),
             ],  # all_patterns
-            np.asarray([True, True, True, True]),  # active_load_cases
+            np.asarray([True, True, True, True]),  # load_case_active
             np.ones(10),  # areas
             1,  # stress_tensile
             1,  # stress_compressive
@@ -451,7 +451,7 @@ def test_member_area_filtering(
                     ]
                 ),
             ],  # all_patterns
-            np.asarray([True, False]),  # active_load_cases
+            np.asarray([True, False]),  # load_case_active
             np.ones(10),  # areas
             1,  # stress_tensile
             1,  # stress_compressive
@@ -468,7 +468,7 @@ def test_stop_primal_violation(
     nodes: npt.NDArray[np.float64],
     active_members: npt.NDArray[np.float64],
     all_patterns: npt.NDArray[np.float64],
-    active_load_cases: npt.NDArray[np.float64],
+    load_case_active: npt.NDArray[np.float64],
     areas: npt.NDArray[np.float64],
     stress_tensile: int,
     stress_compressive: int,
@@ -482,14 +482,14 @@ def test_stop_primal_violation(
         active_members,
         areas,
         all_patterns,
-        active_load_cases,
+        load_case_active,
         dof,
         stress_tensile,
         stress_compressive,
         solver,
     )
     assert actual_converge == expected_converge
-    assert np.all(active_load_cases) is np.bool_(
+    assert np.all(load_case_active) is np.bool_(
         True
     )  # checks that violating inactive load cases added
 
