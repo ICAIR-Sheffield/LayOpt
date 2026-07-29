@@ -93,14 +93,12 @@ class Parameters:
 )
 class CaseFamily:
     """
-    A loading situation in which there is the potential for variability. The typical example is a distributed load where
-    the maximum and minimum load at each point is known, but the decision about which points realise the max/min value
-    should be chosen automatically to produce the worst case outcome.
+    A loading situation in which there is the potential for variability, e.g. which are favourable/unfavourable.
 
     Attributes
     ----------
     loaded_points : tuple[tuple(float)]
-        A list of coordinates giving the points at which loads are to be applied..
+        A list of coordinates giving the points at which loads are to be applied.
     load_large : float
         The maximum load which may be applied at each point. For example, under eurocode design, this would correspond
         to the load factored using the unfavourable factors.
@@ -144,10 +142,15 @@ class Case:
     pattern: tuple[bool]
     case_family: CaseFamily
 
-    def __eq__(self, other: CaseFamily) -> bool:
-        return self.pattern == other.pattern
-
     def __hash__(self) -> int:
+        """
+        Define hash based on pattern.
+
+        Returns
+        -------
+        int
+            The hash of the pattern. (Note: this is deliberately not affected by the activated bool).
+        """
         return hash(self.pattern)
 
 
@@ -266,10 +269,10 @@ class GrillageBeam(Connection):
     end_moments : dict[Case, float], optional
         The moments carried by the element at the end_node for each of the active cases.
     capacity_coeffiient_pos : float
-        The area per unit moment required to carry positive (hogging) moments. Typically this can be calculated using
+        The area per unit moment required to carry positive (hogging) moments. Typically, this can be calculated using
         (allowable stress)*(vertical distance between flange centroids).
     capacity_coeffiient_neg : float
-        The area per unit moment required to carry negative (sagging) moments. Typically this can be calculated using
+        The area per unit moment required to carry negative (sagging) moments. Typically, this can be calculated using
         (allowable stress)*(vertical distance between flange centroids).
     """
 

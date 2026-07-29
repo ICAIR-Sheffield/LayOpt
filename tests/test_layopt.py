@@ -264,6 +264,8 @@ def test_trussopt(
     # ns-rse 2026-04-15 - results is currently a tuple, the third item of which is now a dictionary of dataframe
     df = results[2]
     results = (results[0], results[1])
+    # note: helen-fairclough 29/7/2026 results[3] (the structure object) is not tested, reconsider when
+    # refactoring is more complete
     assert results == snapshot(
         matcher=path_type(
             types=(float, np.ndarray),
