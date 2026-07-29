@@ -128,7 +128,7 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     if 1.0 not in filter_levels:
         # if 1.0 not in filter_levels:
         filter_levels = np.append(filter_levels, 1.0)
-    _, _, results_df = layopt.trussopt(parameters=_config)  # type: ignore[misc]
+    _, _, results_df, structure = layopt.trussopt(parameters=_config)  # type: ignore[misc]
     # Transpose and tidy data frame and write results and configuration to disk
     results_df = results_df.T.reset_index(drop=True)
     results_df = results_df.sort_values(["filter_level"])
