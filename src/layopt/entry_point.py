@@ -207,7 +207,6 @@ def layopt_parser() -> arg.ArgumentParser:
         dest="output_dir",
         type=Path,
         required=False,
-        default="./",
         help="Path to where the YAML file should be saved (default './' the current directory).",
     )
     create_config_parser.add_argument(
@@ -215,7 +214,6 @@ def layopt_parser() -> arg.ArgumentParser:
         "--config",
         dest="config",
         type=str,
-        default="default",
         help="Configuration to use, currently only 'default' is supported.",
     )
     create_config_parser.set_defaults(func=write_config)

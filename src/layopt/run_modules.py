@@ -49,7 +49,7 @@ def _log_setup(_config: dict[str, Any]) -> None:
     logger.info(f"Cores for parallel processing       : {_config['cores']}")
 
 
-def _set_logging(log_level: str) -> None:
+def _set_logging(log_level: str = "info") -> None:
     """
     Set up loguru logging.
 
@@ -114,10 +114,10 @@ def optimise(args: argparse.Namespace | None = None) -> None:
     args : argparse.Namespace | None
         Command line arguments for modifying configuration.
     """
-    _set_logging(log_level=args.log_level)  # type: ignore[union-attr]
+    if args.log_level:  # type: ignore[union-attr]
+        _set_logging(log_level=args.log_level)  # type: ignore[union-attr]
     logger.debug(f"\n{pformat(vars(args))}\n")
     _config = _parse_configuration(args)
-    _set_logging(log_level=_config.log_level)
     # Ensure filter_levels is a list and includes 1.0
     filter_levels = (
         np.asarray([1.0])
