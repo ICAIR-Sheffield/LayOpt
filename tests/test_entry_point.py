@@ -10,6 +10,7 @@ from typing import Any
 import pandas as pd
 import pytest
 import yaml
+from matplotlib.testing.compare import compare_images
 
 from layopt import io, run_modules
 from layopt.entry_point import entry_point
@@ -156,19 +157,30 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
 
 # fisher568 2026-07-28 add custom pytest marker for e2e tests and configure to skip automatically
 @pytest.mark.parametrize(
-    ("config_file_name"),
+    ("config_file_name", "baseline_plot_file_name"),
     [
         pytest.param(
             "square_cantilever_config.yaml",
-            id="e2e_test",
+            "square_cantilever_w8_h8_n2_filter100.png",
+            id="square_cantilever_e2e_test",
+        ),
+        pytest.param(
+            "spanning_18x4_config.yaml",
+            "spanning_18x4_w18_h4_n4_filter100.png",
+            id="spanning_18x4_e2e_test",
         ),
     ],
 )
 def test_cli_layopt_optimise(
-    config_file_name: str, tmp_path: Path, monkeypatch, snapshot
+    config_file_name: str,
+    baseline_plot_file_name: str,
+    tmp_path: Path,
+    monkeypatch,
+    snapshot,
 ) -> None:
     """Simulates the CLI and verifies the output CSV from layopt against a snapshot."""
     test_config_path = RESOURCES / config_file_name
+    baseline_png = RESOURCES / baseline_plot_file_name
 
     # Update config and rewrite it to temp file
     with test_config_path.open() as file:
@@ -185,12 +197,19 @@ def test_cli_layopt_optimise(
     monkeypatch.setattr(sys, "argv", ["layopt", "-c", str(tmp_config_path), "optimise"])
     entry_point()
 
-    # Load csv file and check against snapshot
-    csv_out = list(tmp_output_path.glob("*.csv"))
-    csv_results = pd.read_csv(csv_out[0])
+    # Load csv & png files and check against snapshot
+    # csv_out = list(tmp_output_path.glob("*.csv"))
+    csv_results = pd.read_csv(next(iter(tmp_output_path.glob("*.csv"))))
+    png_out = next(iter(tmp_output_path.glob("*.png")))
     assert (
         csv_results.drop(
             ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
         ).to_string()
         == snapshot
     )
+    # use matplotlib.testing.compare instead of pytest-mpl here
+    plot_difference = compare_images(
+        expected=str(baseline_png), actual=str(png_out), tol=10.0
+    )
+    # compare_images returns None if match within tolerance
+    assert plot_difference is None

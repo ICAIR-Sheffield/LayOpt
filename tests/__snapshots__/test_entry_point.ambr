@@ -1,5 +1,11 @@
 # serializer version: 1
-# name: test_cli_layopt_optimise[e2e_test]
+# name: test_cli_layopt_optimise[spanning_18x4_e2e_test]
+  '''
+      problem_name  filter_level  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                                   notes
+  0  spanning_18x4           1.0     18       4              4                16                  7        3.75       0.204          13    319.170903              612       95                2734   load_factor  spanning 18x4 example four load points
+  '''
+# ---
+# name: test_cli_layopt_optimise[square_cantilever_e2e_test]
   '''
           problem_name  filter_level  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                                notes
   0  square_cantilever           1.0      8       8              2                 4                  1        50.0         5.0           6   2070.370371              383       81                2040   load_factor  square cantilever three load points
