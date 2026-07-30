@@ -186,7 +186,7 @@ def calc_potential_members(
     joint_cost: float,
     convex: bool,
     polygon: Polygon,
-    active_member_threshold: float = 1.5,
+    max_length_initial_ground_structure: float = 1.5,
 ) -> npt.NDArray[np.float64]:
     """
     Create the ground structure.
@@ -203,8 +203,8 @@ def calc_potential_members(
         Whether the structure is convex.
     polygon : Polygon
         Bounding box for the structure.
-    active_member_threshold : float
-        Threshold for marking a potential member as active.
+    max_length_initial_ground_structure : float
+        Threshold for marking a potential member as active in the initial ground structure.
 
     Returns
     -------
@@ -223,7 +223,7 @@ def calc_potential_members(
             seg = [] if convex else LineString([nodes[i], nodes[j]])
             if convex or polygon.contains(seg) or polygon.boundary.contains(seg):
                 # Mark as active
-                if length <= active_member_threshold:
+                if length <= max_length_initial_ground_structure:
                     potential_members.append([i, j, length, True])
                 else:
                     potential_members.append([i, j, length, False])
@@ -247,10 +247,10 @@ def primal_adaptivity(
     Returns
     -------
     tuple[bool, npt.NDArray[np.bool]]
-        A tuple of a boolean for ``primal_method`` and the associated ``active_load_cases``.
+        A tuple of a boolean for ``primal_method`` and the associated ``load_case_active``.
     """
     if primal_method in {"residual", "load_factor"}:
-        active_load_cases = np.zeros(all_patterns_length, dtype=np.bool)
-        active_load_cases[0] = 1  # Base case = all large loads
-        return (True, active_load_cases)
+        load_case_active = np.zeros(all_patterns_length, dtype=np.bool)
+        load_case_active[0] = 1  # Base case = all large loads
+        return (True, load_case_active)
     return (False, np.ones(all_patterns_length, dtype=np.bool))
