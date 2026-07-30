@@ -69,6 +69,82 @@ def test_optimise(
     )
 
 
+@pytest.mark.skipif(
+    GITHUB_ACTIONS,
+    reason="mosek library requires license so test will always fail in continuous integration",
+)
+@pytest.mark.parametrize(
+    ("args", "log_string"),
+    [
+        pytest.param(
+            argparse.Namespace(
+                config_file=None,
+                width=1,
+                height=1,
+                log_level="info",
+                func="optimise",
+                module="layopt",
+            ),
+            "INFO",
+            id="no config; log-level info",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=None,
+                width=1,
+                height=1,
+                log_level="debug",
+                func="optimise",
+                module="layopt",
+            ),
+            "DEBUG",
+            id="no config; log-level debug",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=Path("tests/resources/config/info_config.yaml"),
+                width=1,
+                height=1,
+                log_level="error",
+                func="optimise",
+                module="layopt",
+            ),
+            "ERROR",
+            id="config info; log-level error",
+        ),
+        pytest.param(
+            argparse.Namespace(
+                config_file=Path("tests/resources/config/debug_config.yaml"),
+                width=1,
+                height=1,
+                log_level="info",
+                func="optimise",
+                module="layopt",
+            ),
+            "INFO",
+            id="config debug; log-level info",
+        ),
+    ],
+)
+def test_optimise_different_log_levels(
+    args: argparse.Namespace, log_string: str, tmp_path: Path, capsys
+) -> None:
+    """
+    Test parsing of arguments from both configuration file and from the command line.
+
+    This is a slightly indirect test because it is 'run_modules._parse_configuration()' and in turn
+    'config.reconcile_config_args()' that do the leg work here but this is still a useful test as it emulates what
+    happens when the entry point is called.
+
+    Note we do not use the Pytest 'caplog' because it defaults to the standard library's 'logging' module which doesn't
+    play well with 'loguru'. Instead we capture logging via 'capsys'.
+    """
+    args.output_dir = tmp_path
+    run_modules.optimise(args=args)
+    output = capsys.readouterr().err
+    assert log_string in output
+
+
 @pytest.mark.parametrize(
     ("_config", "check"),
     [
