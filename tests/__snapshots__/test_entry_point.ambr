@@ -1,4 +1,10 @@
 # serializer version: 1
+# name: test_cli_default_layopt_optimise
+  '''
+         problem_name  filter_level  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                  notes
+  0  short cantilever           1.0      3       6              1                 2                  1        50.0         5.0           2         300.0               81       28                 251   load_factor  short cantilever test
+  '''
+# ---
 # name: test_cli_layopt_optimise[spanning_18x4_e2e_test]
   '''
       problem_name  filter_level  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                                   notes

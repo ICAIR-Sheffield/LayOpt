@@ -156,6 +156,7 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
 
 
 # fisher568 2026-07-28 add custom pytest marker for e2e tests and configure to skip automatically
+@pytest.mark.e2e
 @pytest.mark.parametrize(
     ("config_file_name", "baseline_plot_file_name"),
     [
@@ -178,14 +179,13 @@ def test_cli_layopt_optimise(
     monkeypatch,
     snapshot,
 ) -> None:
-    """Simulates the CLI and verifies the output CSV from layopt against a snapshot."""
+    """Simulates the CLI and verifies the CSV & png plot output from layopt against a snapshot."""
     test_config_path = RESOURCES / config_file_name
     baseline_png = RESOURCES / baseline_plot_file_name
 
     # Update config and rewrite it to temp file
     with test_config_path.open() as file:
         config = yaml.safe_load(file)
-    print(config)
     config["base_dir"] = str(tmp_path)
     tmp_output_path = tmp_path / "output"
     config["output_dir"] = str(tmp_output_path)
@@ -213,3 +213,26 @@ def test_cli_layopt_optimise(
     )
     # compare_images returns None if match within tolerance
     assert plot_difference is None
+
+
+def test_cli_default_layopt_optimise(
+    tmp_path: Path,
+    monkeypatch,
+    snapshot,
+) -> None:
+    """Simulates the CLI and verifies the output CSV from layopt against a snapshot."""
+    tmp_output_path = tmp_path / "output"
+
+    # Run CLI in-process
+    monkeypatch.setattr(sys, "argv", ["layopt", "-o", str(tmp_output_path), "optimise"])
+    entry_point()
+
+    # Load csv & png files and check against snapshot
+    # csv_out = list(tmp_output_path.glob("*.csv"))
+    csv_results = pd.read_csv(next(iter(tmp_output_path.glob("*.csv"))))
+    assert (
+        csv_results.drop(
+            ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
+        ).to_string()
+        == snapshot
+    )
