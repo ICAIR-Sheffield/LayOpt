@@ -155,7 +155,7 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
     )
 
 
-# fisher568 2026-07-28 add custom pytest marker for e2e tests and configure to skip automatically
+# fisher568 2026-08-03 need to configure e2e tests to skip automatically
 @pytest.mark.e2e
 @pytest.mark.parametrize(
     ("config_file_name", "baseline_plot_file_name"),
@@ -223,12 +223,11 @@ def test_cli_default_layopt_optimise(
     """Simulates the CLI and verifies the output CSV from layopt against a snapshot."""
     tmp_output_path = tmp_path / "output"
 
-    # Run CLI in-process
+    # Run CLI in-process, default arguments except `output_dir`
     monkeypatch.setattr(sys, "argv", ["layopt", "-o", str(tmp_output_path), "optimise"])
     entry_point()
 
-    # Load csv & png files and check against snapshot
-    # csv_out = list(tmp_output_path.glob("*.csv"))
+    # Load csv and check against snapshot
     csv_results = pd.read_csv(next(iter(tmp_output_path.glob("*.csv"))))
     assert (
         csv_results.drop(
