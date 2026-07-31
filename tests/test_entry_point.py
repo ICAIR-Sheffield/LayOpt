@@ -180,7 +180,7 @@ def test_cli_layopt_optimise(
     snapshot,
 ) -> None:
     """Simulates the CLI and verifies the CSV & png plot output from layopt against a snapshot."""
-    test_config_path = RESOURCES / config_file_name
+    test_config_path = RESOURCES / "config" / config_file_name
     baseline_png = RESOURCES / baseline_plot_file_name
 
     # Update config and rewrite it to temp file
