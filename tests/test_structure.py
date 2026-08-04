@@ -180,7 +180,7 @@ def test_calc_default_loaded_points(
             ),
             np.asarray([[0, 0, True, False], [0, 2, False, True]]),
             np.asarray([0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
-            id="simple 2x3 rectangle, one pinned support, one x-roller, one y-roller",
+            id="simple 2x3 rectangle, one x-roller, one y-roller",
         ),
     ],
 )
