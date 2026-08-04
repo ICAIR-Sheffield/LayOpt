@@ -21,12 +21,16 @@ load_direction:
 load_large: 50.0
 load_small: 5.0
 max_length: 18.0
-active_member_threshold: 1.5
+max_length_initial_ground_structure: 1.5
 support_points:
   -   - 0
       - 0
+      - true
+      - true
   -   - 3
       - 3
+      - true
+      - true
 member_area_filtering: 0.001
 cvxpy:
   solver: clarabel

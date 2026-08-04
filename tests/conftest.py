@@ -438,7 +438,7 @@ def trussopt_param_eighteen_by_four_spanning() -> Parameters:
         load_large=3.75,
         load_small=0.204,
         max_length=36,
-        support_points=np.asarray([[0, 0], [18, 0]]),
+        support_points=np.asarray([[0, 0, True, True], [18, 0, True, True]]),
         primal_method="load_factor",
         problem_name="spanning example",
         notes="spanning example test",

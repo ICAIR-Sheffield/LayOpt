@@ -93,16 +93,31 @@ def support_conditions(
         Flattened array of degrees of freedom.
     """
     dof = np.ones((len(nodal_coords), 2))
-    for i, node in enumerate(nodal_coords):
-        if support_points.size == 0:
+
+    # Support nodes with x=0 if no support points given
+    if support_points.size == 0:
+        for i, node in enumerate(nodal_coords):
             if node[0] == 0:
-                dof[i, :] = [0, 0]  # Support nodes with x=0
-        else:
-            dof[i, :] = (
-                [0, 0]
-                if any((node == point).all() for point in support_points)
-                else [1, 1]
-            )
+                dof[i, :] = [0, 0]
+        return np.array(dof).flatten()
+
+    if support_points.shape[1] != 4:
+        msg = f"`support_points` must have four columns, received {support_points.shape[1]}"
+        raise ValueError(msg)
+
+    support_coords = support_points[:, :2].astype(np.float64)
+    support_restrain_directions = support_points[:, 2:4].astype(np.bool)
+
+    for i, node in enumerate(nodal_coords):
+        # fisher568 2026-08-03 check behaviour if support points repeated
+        # next index of support position matching a node position
+        node_match = next(
+            (j for j, point in enumerate(support_coords) if (node == point).all()), None
+        )
+        if node_match is not None:
+            dof[i, 0] = 0 if support_restrain_directions[node_match][0] else 1
+            dof[i, 1] = 0 if support_restrain_directions[node_match][1] else 1
+
     return np.array(dof).flatten()
 
 
