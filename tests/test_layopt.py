@@ -218,7 +218,13 @@ def test_calc_eq_matrix_b_errors(
             "trussopt_param_eighteen_by_four_spanning",
             "MOSEK",
             np.asarray([[0, 0, True, True], [18, 0, True, True]]),
-            id="spanning_example_mosek",
+            id="spanning_example_pinned_mosek",
+        ),
+        pytest.param(
+            "trussopt_param_eighteen_by_four_spanning",
+            "MOSEK",
+            np.asarray([[0, 0, True, True], [18, 0, False, True]]),
+            id="spanning_example_roller_mosek",
         ),
         pytest.param(
             "trussopt_param_one_by_one",
@@ -254,7 +260,13 @@ def test_calc_eq_matrix_b_errors(
             "trussopt_param_eighteen_by_four_spanning",
             "clarabel",
             np.asarray([[0, 0, True, True], [18, 0, True, True]]),
-            id="spanning_example_clarabel",
+            id="spanning_example_pinned_clarabel",
+        ),
+        pytest.param(
+            "trussopt_param_eighteen_by_four_spanning",
+            "clarabel",
+            np.asarray([[0, 0, True, True], [18, 0, False, True]]),
+            id="spanning_example_roller_clarabel",
         ),
     ],
 )
