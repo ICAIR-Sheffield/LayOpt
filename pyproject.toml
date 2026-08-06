@@ -102,7 +102,9 @@ log_level = "INFO"
 testpaths = [
   "tests",
 ]
-
+markers = [
+    "e2e: marks tests as end-to-end (deselect with '-m \"not e2e\"')",
+]
 
 [tool.coverage]
 run.source = ["layopt"]
