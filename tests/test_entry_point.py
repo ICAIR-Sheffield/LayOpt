@@ -124,11 +124,6 @@ def test_entry_points(
 # former  is a wrapper calling the later
 
 
-# pylint: disable=duplicate-code
-@pytest.mark.skipif(
-    GITHUB_ACTIONS,
-    reason="mosek library requires license so test will always fail in continuous integration",
-)
 @pytest.mark.parametrize(
     ("manual_args"),
     [
@@ -155,7 +150,11 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
     )
 
 
-# fisher568 2026-08-03 need to configure e2e tests to skip automatically
+# fisher568 2026-08-03 need to configure e2e tests to run once per week, now skipping in CI
+@pytest.mark.skipif(
+    GITHUB_ACTIONS,
+    reason="Skip large e2e test in CI",
+)
 @pytest.mark.e2e
 @pytest.mark.parametrize(
     ("config_file_name", "baseline_plot_file_name"),
@@ -166,9 +165,9 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
             id="square_cantilever_e2e_test",
         ),
         pytest.param(
-            "spanning_18x4_config.yaml",
-            "spanning_18x4_w18_h4_n4_filter100.png",
-            id="spanning_18x4_e2e_test",
+            "single_span_roller_config.yaml",
+            "single_span_roller_w18_h4_n10_filter100.png",
+            id="single_span_roller_e2e_test",
         ),
     ],
 )
