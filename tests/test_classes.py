@@ -212,7 +212,7 @@ def test_parameters_exceptions(config: ValidationError) -> None:
                 "potential_members": np.empty((0, 4)),
                 "active_members": np.empty((0, 4), dtype=np.float64),
                 "primal_adaptivity": True,
-                "active_load_cases": np.asarray([0]),
+                "load_case_active": np.asarray([False], dtype=np.bool),
                 "active_pattern_loads": np.asarray([]),
             },
             id="1x1",
@@ -235,7 +235,7 @@ def test_parameters_exceptions(config: ValidationError) -> None:
                 "potential_members": np.empty((0, 4)),
                 "active_members": np.empty((0, 4), dtype=np.float64),
                 "primal_adaptivity": True,
-                "active_load_cases": np.asarray([0]),
+                "load_case_active": np.asarray([False], dtype=np.bool),
                 "active_pattern_loads": np.asarray([]),
             },
             id="2x2",
@@ -258,7 +258,7 @@ def test_parameters_exceptions(config: ValidationError) -> None:
                 "potential_members": np.empty((0, 4)),
                 "active_members": np.empty((0, 4), dtype=np.float64),
                 "primal_adaptivity": True,
-                "active_load_cases": np.asarray([0]),
+                "load_case_active": np.asarray([False], dtype=np.bool),
                 "active_pattern_loads": np.asarray([]),
             },
             id="18x4 spanning",
@@ -329,7 +329,7 @@ def test_structure_post_init(
     )
     assert structure.primal_adaptivity == expected_attributes["primal_adaptivity"]
     np.testing.assert_array_equal(
-        structure.active_load_cases, expected_attributes["active_load_cases"]
+        structure.load_case_active, expected_attributes["load_case_active"]
     )
     np.testing.assert_array_equal(
         structure.active_pattern_loads, expected_attributes["active_pattern_loads"]

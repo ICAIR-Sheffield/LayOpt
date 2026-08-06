@@ -108,7 +108,7 @@ def solve(
     active_members : npt.NDArray[np.float64]
         Active members.
     active_pattern_loads : list[npt.NDArray[np.float64]]
-        Active pattern loads.
+        A subset of 'all_patterns' where load cases are active.
 
     Returns
     -------
@@ -231,7 +231,7 @@ def stop_primal_violation_residual(
     c_n: npt.NDArray[np.float64],
     forces: list[npt.NDArray[np.float64]],
     all_patterns: list[npt.NDArray[np.float64]],
-    active_load_cases: npt.NDArray[np.int64],
+    load_case_active: npt.NDArray[np.bool],
     dof: npt.NDArray[np.float64],
 ) -> bool:
     """
@@ -247,7 +247,7 @@ def stop_primal_violation_residual(
         Member forces.
     all_patterns : list[npt.NDArray[np.float64]]
         All load cases.
-    active_load_cases : npt.NDArray[np.int64]
+    load_case_active : npt.NDArray[np.bool]
         For each load case, bool set to ``True`` if active, ``False`` otherwise.
     dof : npt.NDArray[np.float64]
         Degrees of freedom.
@@ -264,7 +264,7 @@ def stop_primal_violation_residual(
 
     # loop through all (active and inactive) pattern load cases
     for k, _ in enumerate(all_patterns):
-        if active_load_cases[k] == 1:
+        if load_case_active[k]:
             continue  # skip active cases
 
         fk_dof = all_patterns[k] * dof
@@ -293,7 +293,7 @@ def stop_primal_violation_residual(
             return True
 
         # Active most violated load pattern
-        active_load_cases[by_violation[0]] = 1
+        load_case_active[by_violation[0]] = True
         violations_added_this_iter = [by_violation[0]]
         by_violation.pop(0)
 
@@ -316,7 +316,7 @@ def stop_primal_violation_residual(
                         distinct = False
                         break
                 if distinct:
-                    active_load_cases[k] = 1
+                    load_case_active[k] = True
                     violations_added_this_iter.append(k)
                     by_violation.remove(k)
                     added_case = True
@@ -342,7 +342,7 @@ def stop_primal_violation_pattern(
     c_n: npt.NDArray[np.float64],
     areas: npt.NDArray[np.float64],
     all_patterns: list[npt.NDArray[np.float64]],
-    active_load_cases: npt.NDArray[np.int64],
+    load_case_active: npt.NDArray[np.bool],
     dof: npt.NDArray[np.float64],
     stress_tensile: float,
     stress_compressive: float,
@@ -361,7 +361,7 @@ def stop_primal_violation_pattern(
         Member areas.
     all_patterns : list[npt.NDArray[np.float64]]
         All load cases.
-    active_load_cases : npt.NDArray[np.int64]
+    load_case_active : npt.NDArray[np.bool]
         For each load case, bool set to True if active, False otherwise.
     dof : npt.NDArray
         Degrees of freedom.
@@ -410,7 +410,7 @@ def stop_primal_violation_pattern(
 
     # loop through all (active and inactive) pattern load cases
     for k, pattern in enumerate(all_patterns):
-        if active_load_cases[k] == 1:
+        if load_case_active[k]:
             continue  # skip active cases
 
         fk_dof_param.value = pattern * dof
@@ -435,7 +435,7 @@ def stop_primal_violation_pattern(
 
         # Add most violated (lowest lambda)
         most_violated_id = by_violation[0]
-        active_load_cases[most_violated_id] = 1
+        load_case_active[most_violated_id] = True
         logger.info(
             f"  Adding most violated pattern {by_violation[0]}: lambda={load_factors[most_violated_id]:.3f}"
         )
@@ -480,7 +480,7 @@ def stop_primal_violation_pattern(
                             distinct = False
                             break
                 if distinct:
-                    active_load_cases[k] = 1
+                    load_case_active[k] = True
                     logger.info(
                         f"  Adding {len(violations_added_this_iter) + 1} distinct pattern {k}: lambda={load_factors[k]:.3f}"
                     )
@@ -542,7 +542,7 @@ def trussopt(
         active_pattern_loads = [
             structure.all_patterns[k]
             for k in range(len(structure.all_patterns))
-            if structure.active_load_cases[k] == 1
+            if structure.load_case_active[k]
         ]
         # Get active members/parts of matrices for current iteration
         active_members = structure.potential_members[
@@ -560,7 +560,7 @@ def trussopt(
         if isinf(vol):
             logger.error("Infeasible problem detected")
             return None
-        n_active = int(np.sum(structure.active_load_cases))
+        n_active = int(np.sum(structure.load_case_active))
         # ns-rse 2026-03-23 : Could this perhaps be debugging?
         logger.info(
             f"Iteration: {itr}, vol: {vol}, mems: {len(active_members)} active load cases:{n_active}/{len(structure.all_patterns)}"
@@ -582,7 +582,7 @@ def trussopt(
             continue  # small vol decrease = member adding close to convergence
 
         # outer loop - adding of pattern load cases based on primal violation
-        # if stopPrimalViolationPattern(nodal_coords, c_n, a, structure.all_patterns, structure.active_load_cases, dof, st, sc):
+        # if stopPrimalViolationPattern(nodal_coords, c_n, a, structure.all_patterns, structure.load_case_active, dof, st, sc):
         #     if numAdded > 0: # only fully terminate when no members violate
         #         continue
         #     else:
@@ -596,7 +596,7 @@ def trussopt(
                     active_members,
                     filter_forces,
                     structure.all_patterns,
-                    structure.active_load_cases,
+                    structure.load_case_active,
                     structure.dof,
                 )
             elif parameters.primal_method == "load_factor":
@@ -606,7 +606,7 @@ def trussopt(
                     active_members,
                     filter_areas,
                     structure.all_patterns,
-                    structure.active_load_cases,
+                    structure.load_case_active,
                     structure.dof,
                     parameters.stress_tensile,
                     parameters.stress_compressive,
@@ -630,7 +630,7 @@ def trussopt(
     solve_end = time.process_time()
     logger.info("Solve took " + str(solve_end - setup_end))
     logger.info(
-        f"Active patterns: {int(np.sum(structure.active_load_cases))}/{len(structure.all_patterns)}"
+        f"Active patterns: {int(np.sum(structure.load_case_active))}/{len(structure.all_patterns)}"
     )
     results = {}
     for filter_level in parameters.filter_levels:
@@ -655,7 +655,7 @@ def trussopt(
             "height": parameters.height,
             "n_load_points": len(parameters.loaded_points),
             "n_patterns_total": len(structure.all_patterns),
-            "n_patterns_active": int(np.sum(structure.active_load_cases)),
+            "n_patterns_active": int(np.sum(structure.load_case_active)),
             "load_large": parameters.load_large,
             "load_small": parameters.load_small,
             "iterations": itr,
