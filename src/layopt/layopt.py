@@ -97,6 +97,7 @@ def solve(
     npt.NDArray[np.float64],
     list[npt.NDArray[np.float64]],
     list[npt.NDArray[np.float64]],
+    list[int],
 ]:
     """
     Solve linear programming problem with given connections and pattern load cases.
@@ -112,14 +113,14 @@ def solve(
 
     Returns
     -------
-    tuple[float, npt.NDArray[np.float64], list[npt.NDArray[np.float64]], list[npt.NDArray[np.float64]]]
+    tuple[float, npt.NDArray[np.float64], list[npt.NDArray[np.float64]], list[npt.NDArray[np.float64]], list[float]]]
         A tuple consisting of ``volume`` (the volume of the solved problem),
-        ``area`` (member areas), ``forces`` (member forces) and ``deflections``
-        (virtual deflections at degrees of freedom).
+        ``area`` (member areas), ``forces`` (member forces)  ``deflections``
+        (virtual deflections at degrees of freedom) and ``weights`` (lagrange multipliers for compliance constraints =
+        size 0 array if plastic problem is solved).
     """
     member_cost = [col[2] + structure.parameters.joint_cost for col in active_members]
-    E = structure.parameters.youngs_modulus
-    E_over_l = [2 * E / col[2] for col in active_members]
+    e_over_l = [2 * structure.parameters.youngs_modulus / col[2] for col in active_members]
     eq_matrix_b = calc_eq_matrix_b(
         nodes=structure.nodes, active_members=active_members, dof=structure.dof
     )
@@ -145,9 +146,9 @@ def solve(
             pi = cvx.Variable(
                 n_members, nonneg=True, name="pi"
             )  # elastic potential energy variables (per-member)
-            xVals = cvx.vstack([2 * qi, cvx.multiply(E_over_l, a) - pi])
-            tVals = cvx.multiply(E_over_l, a) + pi
-            other_constraints += [cvx.SOC(tVals, xVals)]
+            x_vals = cvx.vstack([2 * qi, cvx.multiply(e_over_l, a) - pi])
+            t_vals = cvx.multiply(e_over_l, a) + pi
+            other_constraints += [cvx.SOC(t_vals, x_vals)]
             # helen-fairclough 2026-8-8: Slight simplification - really should use pythagoras at each point then sum.
             total_load = sum(abs(active_pattern))
             compliance_limit = (
@@ -171,6 +172,10 @@ def solve(
     vol = 0.0 if problem.value is None else problem.value
     areas = np.zeros(n_members) if a.value is None else a.value
     forces = [np.zeros(n_members) if qi.value is None else qi.value for qi in q_vars]
+    weights = [
+        0 if con.dual_value is None else con.dual_value
+        for con in compliance_constraints
+    ]
 
     # eq_constraints = constraints[::3]  # every third constraint is the equilibrium one
     deflections = []
@@ -183,7 +188,7 @@ def solve(
     if vol == 0:
         deflections = [ui * 10000 for ui in deflections]
 
-    return vol, areas, forces, deflections
+    return vol, areas, forces, deflections, weights
 
 
 def stop_violation(
@@ -192,8 +197,10 @@ def stop_violation(
     dof: npt.NDArray[np.float64],
     stress_tensile: float,
     stress_compressive: float,
+    structure: Structure,
     deflections: list[npt.NDArray[np.float64]],
     joint_cost: float,
+    weights: list[np.float64],
 ) -> int:
     """
     Check for dual violation and add new members.
@@ -210,10 +217,14 @@ def stop_violation(
         Tensile stress limit.
     stress_compressive : float
         Compressive stress limit.
+    structure : Structure
+        The structure and parameters.
     deflections : list[npt.NDArray[np.float64]]
         Virtual deflections at degrees of freedom.
     joint_cost : float
         Joint cost.
+    weights : list[npt.NDArray[np.float64]]
+        The weighting factors for each loadcase from the previous iteration (zero length list if plastic problem solved).
 
     Returns
     -------
@@ -225,12 +236,23 @@ def stop_violation(
     member_cost = c_n[:, 2] + joint_cost
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
     y = np.zeros(len(c_n))
-    for uk in deflections:
-        yk = np.multiply(
-            eq_matrix_b.transpose().dot(uk) / member_cost,
-            np.array([[stress_tensile], [-stress_compressive]]),
-        )
-        y += np.amax(yk, axis=0)
+    if len(weights) > 0:
+        for uk, weight in zip(deflections, weights, strict=True):
+            strains = eq_matrix_b.transpose().dot(uk)
+            y += [
+                0.5
+                * structure.parameters.youngs_modulus
+                * strains[i] ** 2
+                / (weight * member_cost[i] ** 2)
+                for i in range(len(c_n))
+            ]
+    else:  # plastic problem given
+        for uk in deflections:
+            yk = np.multiply(
+                eq_matrix_b.transpose().dot(uk) / member_cost,
+                np.array([[stress_tensile], [-stress_compressive]]),
+            )
+            y += np.amax(yk, axis=0)
     vio_c_n = np.where(y > 1.000)[0]
     vio_sort = np.flipud(np.argsort(y[vio_c_n]))
     num = ceil(0.1 * (len(potential_members) - len(c_n)))  # size of existing problem
@@ -572,7 +594,7 @@ def trussopt(
             f"Itr {itr} active members changed? {active_members.shape != previous_active_members.shape}"
         )
         # solve current reduced problem
-        vol, filter_areas, filter_forces, u = solve(
+        vol, filter_areas, filter_forces, u, weights = solve(
             structure=structure,
             active_members=active_members,
             active_pattern_loads=active_pattern_loads,
@@ -595,8 +617,10 @@ def trussopt(
             structure.dof,
             parameters.stress_tensile,
             parameters.stress_compressive,
+            structure,
             u,
             parameters.joint_cost,
+            weights,
         )
         if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
             continue  # small vol decrease = member adding close to convergence
@@ -659,7 +683,7 @@ def trussopt(
             logger.info(f"Solving for filter level : {filter_level}")
             keep = [area > (filter_level * max(filter_areas)) for area in filter_areas]
             active_members = active_members[keep]
-            final_vol, filter_areas, filter_forces, u = solve(
+            final_vol, filter_areas, filter_forces, u, _ = solve(
                 structure=structure,
                 active_members=active_members,
                 active_pattern_loads=active_pattern_loads,
