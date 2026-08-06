@@ -25,6 +25,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+Python/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -183,6 +184,7 @@ src/*/_version.py
 .Trashes
 ehthumbs.db
 Thumbs.db
+.idea/
 
 # Common editor files
 *~
@@ -196,3 +198,4 @@ Thumbs.db
 # Data
 *.csv
 output/
+scratch.py

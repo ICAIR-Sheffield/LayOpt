@@ -34,6 +34,7 @@ class Parameters:
     steps: float = Field(default=1.0, title="Steps to generate nodes", gt=0.0)
     stress_tensile: float = Field(default=1.0, title="Tensile stress.", ge=0.0)
     stress_compressive: float = Field(default=1.0, title="Compressive stress.", ge=0.0)
+    youngs_modulus: float = Field(default=1.0, title="Young modulus (E).", ge=0.0)
     joint_cost: float = Field(default=0.0, title="Joint cost.", ge=0.0)
     loaded_points: npt.NDArray[np.int64] = Field(
         default=np.asarray([[1, 0], [2, 0]]), title="Loaded Points."
@@ -50,7 +51,7 @@ class Parameters:
         gt=0.0,
     )
     support_points: npt.NDArray[np.float64] = Field(
-        default=np.asarray([[0, 0], [3, 3]]), title="Support Points."
+        default=np.asarray([[0, 0], [3, 0]]), title="Support Points."
     )
     member_area_filtering: float = Field(
         default=0.001, title="Member Area Filtering", ge=0.0
@@ -61,6 +62,10 @@ class Parameters:
     )
     filter_levels: list[float] = Field(
         default=[1.0], title="Filter levels to apply to solved problem."
+    )
+    avg_deflection_limit: float = Field(
+        default=-1.0,
+        title="Limit on average load deflection for compliance optimization (leave negative for plastic limit solution).",
     )
     primal_method: str = Field(default="load_factor", title="Primal method")
     problem_name: str = Field(

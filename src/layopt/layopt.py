@@ -118,6 +118,8 @@ def solve(
         (virtual deflections at degrees of freedom).
     """
     member_cost = [col[2] + structure.parameters.joint_cost for col in active_members]
+    E = structure.parameters.youngs_modulus
+    E_over_l = [2 * E / col[2] for col in active_members]
     eq_matrix_b = calc_eq_matrix_b(
         nodes=structure.nodes, active_members=active_members, dof=structure.dof
     )
@@ -129,23 +131,41 @@ def solve(
     # Assigned as used within for-loop
     n_members = len(active_members)
     # ns-rse 2026-07-17 - what does a represent here? number of non-negative active members?
-    a = cvx.Variable(n_members, nonneg=True, name="a")
+    a = cvx.Variable(n_members, nonneg=True, name="area")
 
     q_vars = []
     eq_constraints = []
     other_constraints = []
+    compliance_constraints = []
     for active_pattern in active_pattern_loads:
         qi = cvx.Variable(n_members, name="q")
         q_vars.append(qi)
         eq_constraints.append(eq_matrix_b @ qi == active_pattern * structure.dof)
-        other_constraints += [
-            # eq_matrix_b @ qi == active_pattern * dof,                          # equilibrium
-            qi <= structure.parameters.stress_compressive * a,  # compression limit
-            qi >= -structure.parameters.stress_tensile * a,  # tension limit
-        ]
+        if structure.parameters.avg_deflection_limit > 0:  # elastic analysis
+            pi = cvx.Variable(
+                n_members, nonneg=True, name="pi"
+            )  # elastic potential energy variables (per-member)
+            xVals = cvx.vstack([2 * qi, cvx.multiply(E_over_l, a) - pi])
+            tVals = cvx.multiply(E_over_l, a) + pi
+            other_constraints += [cvx.SOC(tVals, xVals)]
+            # helen-fairclough 2026-8-8: Slight simplification - really should use pythagoras at each point then sum.
+            total_load = sum(abs(active_pattern))
+            compliance_limit = (
+                0.5 * total_load * structure.parameters.avg_deflection_limit
+            )
+            compliance_constraints.append(cvx.sum(pi) <= compliance_limit)
+
+        else:  # plastic analysis
+            other_constraints += [
+                # eq_matrix_b @ qi == active_pattern * dof,                          # equilibrium
+                qi <= structure.parameters.stress_compressive * a,  # compression limit
+                qi >= -structure.parameters.stress_tensile * a,  # tension limit
+            ]
 
     objective = cvx.Minimize(member_cost @ a)
-    problem = cvx.Problem(objective, eq_constraints + other_constraints)
+    problem = cvx.Problem(
+        objective, eq_constraints + other_constraints + compliance_constraints
+    )
     problem.solve(structure.parameters.cvxpy["solver"])
 
     vol = 0.0 if problem.value is None else problem.value
