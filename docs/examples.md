@@ -52,7 +52,7 @@ plotting:
 
 The setup of this example is represented by the following image (produced using the
 [LayOpt truss layout optimization](https://www.layopt.com/truss/) web tool):
-![Single span of width 9 and height 2](img/single_span_roller_example_setup_resized.svg)
+![Single span of width 18 and height 4](img/single_span_roller_example_setup_resized.svg)
 
 A copy of the above configuration can be downloaded by right-clicking on
 [`single_span_roller_config.yaml`](assets/single_span_roller_config.yaml) and saving it to your working directory (alternatively,
@@ -71,7 +71,7 @@ The output in the terminal should include the following (with a different date &
 
 and the output directory will contain the following plot and a CSV file output of results:
 
-![Single span output width 9 and height 2](img/spanning_18x4_w18_h4_n10_filter100.png)
+![Single span output width 18 and height 4](img/spanning_18x4_w18_h4_n10_filter100.png)
 
 ## Square cantilever
 
