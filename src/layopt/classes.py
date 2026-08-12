@@ -404,3 +404,18 @@ class Structure:
             f"Potential members : {len(self.potential_members)}"
             f"Joint cost        : {self.parameters.joint_cost}"
         )
+
+    def make_compliance_limit(self, pattern: npt.NDArray[np.float64]) -> float:
+        """
+        Calculate the value of the compliance limit for a particular load.
+
+        Parameters
+        ----------
+        pattern: npt.NDArray[np.float64],
+            The force vector for the particular pattern load.
+        """
+        if self.parameters.avg_deflection_limit < 0:
+            return 1e6  # arbitrary large number to mean no limit should be applied
+        total_load = sum(abs(pattern))
+        # helen-fairclough 2026-8-8: Slight simplification - really should use pythagoras at each point then sum.
+        return float(0.5 * total_load * self.parameters.avg_deflection_limit)

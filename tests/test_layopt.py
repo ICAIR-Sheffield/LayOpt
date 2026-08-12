@@ -487,6 +487,7 @@ def test_stop_primal_violation(
         stress_tensile,
         stress_compressive,
         solver,
+        layopt.Structure()
     )
     assert actual_converge == expected_converge
     assert np.all(load_case_active) is np.bool_(
@@ -501,6 +502,7 @@ def test_stop_primal_violation(
         "stress_compressive",
         "deflections",
         "expected_num_added",
+        "weights",
     ),
     [
         pytest.param(
@@ -509,6 +511,7 @@ def test_stop_primal_violation(
             1,  # stress_compressive
             [np.zeros(8)],  # zero deflections
             0,  # expected_num_added
+            [],  # weights (none = plastic problem)
             id="none_added",
         ),
         pytest.param(
@@ -517,7 +520,26 @@ def test_stop_primal_violation(
             1,  # stress_compressive
             [np.ones(18) * 100],  # large deflections
             2,  # expected_num_added
+            [],  # weights (none = plastic problem)
             id="large_deflections_added",
+        ),
+        pytest.param(
+            "input_one_by_one",
+            1,  # stress_tensile
+            1,  # stress_compressive
+            [np.zeros(8)],  # zero deflections
+            0,  # expected_num_added
+            [1],  # weights (none = plastic problem)
+            id="elastic_none_added",
+        ),
+        pytest.param(
+            "input_one_by_one",
+            1,  # stress_tensile
+            1,  # stress_compressive
+            [np.ones(8) * 100],  # zero deflections
+            0,  # expected_num_added
+            [1],  # weights (none = plastic problem)
+            id="elastic_large_deflections",
         ),
     ],
 )
@@ -528,6 +550,7 @@ def test_stop_violation(
     stress_compressive: float,
     deflections: list[npt.NDArray[np.float64]],
     expected_num_added: int,
+    weights: list[np.float64],
 ):
     """Test that the function sets members active correctly and returns non-negative integer."""
     structure = request.getfixturevalue(structure_fixture)
@@ -540,7 +563,7 @@ def test_stop_violation(
         deflections=deflections,
         joint_cost=0.0,
         structure=structure,
-        weights=[],  # Currently not testing elastic cases
+        weights=weights,  # Currently not testing elastic cases
     )
     assert isinstance(actual_num_added, int)
     assert actual_num_added >= 0
