@@ -1,31 +1,21 @@
-name: Tests (pytest)
+name: E2E tests (weekly)
 
 on:
-  pull_request:
-    types:
-      - opened
-      - ready_for_review
-      - reopened
-      - synchronize
-    paths:
-      - "**.csv"
-      - "**.npy"
-      - "**.out"
-      - "**.pkl"
-      - "**.png"
-      - "**.py"
-      - "**.toml"
-      - "**.yaml"
+  schedule:
+    # run every Monday at 3am UTC
+    - cron: "0 3 * * 1"
+  workflow_dispatch: # allow manual run via Actions
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Ex1 (${{ matrix.python-version }}, ${{ matrix.os }})
+    name: E2E (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false # so one failed job doesn't cancel remaining
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.12", "3.13", "3.14"]
@@ -39,14 +29,9 @@ jobs:
       - name: Install the package
         run: |
           uv sync --locked --all-extras --dev
-      - name: Test with pytest
+      - name: Run e2e tests
         run: |
-          uv run pytest -m "not e2e" --cov=src --numprocesses=logical tests
-      - name: Determine coverage
-        run: |
-          coverage xml
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
+          uv run pytest -m e2e --numprocesses=logical tests
 
       - name: Setup tmate session
         if: ${{ failure() }}
