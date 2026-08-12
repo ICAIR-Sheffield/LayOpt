@@ -405,14 +405,21 @@ class Structure:
             f"Joint cost        : {self.parameters.joint_cost}"
         )
 
-    def make_compliance_limit(self, pattern: npt.NDArray[np.float64]) -> float:
+    def make_compliance_limit(
+        self: "Structure", pattern: npt.NDArray[np.float64]
+    ) -> float:
         """
         Calculate the value of the compliance limit for a particular load.
 
         Parameters
         ----------
-        pattern: npt.NDArray[np.float64],
+        pattern : npt.NDArray[np.float64]
             The force vector for the particular pattern load.
+
+        Returns
+        -------
+        limit
+            The value which should be used for the compliance limit in this pattern load case.
         """
         if self.parameters.avg_deflection_limit < 0:
             return 1e6  # arbitrary large number to mean no limit should be applied

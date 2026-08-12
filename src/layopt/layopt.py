@@ -414,7 +414,7 @@ def stop_primal_violation_pattern(
     solver : str
         CVXPY solver name.
     structure : Structure
-        Details of the structure.
+        Details of the structure. Currently only for make_compliance_limit and youngs_modulus values.
 
     Returns
     -------

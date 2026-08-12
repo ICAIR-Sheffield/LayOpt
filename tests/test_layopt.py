@@ -487,7 +487,7 @@ def test_stop_primal_violation(
         stress_tensile,
         stress_compressive,
         solver,
-        layopt.Structure()
+        layopt.Structure(layopt.Parameters()),
     )
     assert actual_converge == expected_converge
     assert np.all(load_case_active) is np.bool_(
