@@ -539,6 +539,8 @@ def test_stop_violation(
         stress_compressive=stress_compressive,
         deflections=deflections,
         joint_cost=0.0,
+        structure=structure,
+        weights=[],  # Currently not testing elastic cases
     )
     assert isinstance(actual_num_added, int)
     assert actual_num_added >= 0

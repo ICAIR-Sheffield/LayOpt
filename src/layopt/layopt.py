@@ -120,7 +120,9 @@ def solve(
         size 0 array if plastic problem is solved).
     """
     member_cost = [col[2] + structure.parameters.joint_cost for col in active_members]
-    e_over_l = [2 * structure.parameters.youngs_modulus / col[2] for col in active_members]
+    e_over_l = [
+        2 * structure.parameters.youngs_modulus / col[2] for col in active_members
+    ]
     eq_matrix_b = calc_eq_matrix_b(
         nodes=structure.nodes, active_members=active_members, dof=structure.dof
     )
@@ -197,9 +199,9 @@ def stop_violation(
     dof: npt.NDArray[np.float64],
     stress_tensile: float,
     stress_compressive: float,
-    structure: Structure,
     deflections: list[npt.NDArray[np.float64]],
     joint_cost: float,
+    structure: Structure,  # helen-fairclough 2026-8-12 - currently just for youngs modulus.
     weights: list[np.float64],
 ) -> int:
     """
@@ -217,12 +219,12 @@ def stop_violation(
         Tensile stress limit.
     stress_compressive : float
         Compressive stress limit.
-    structure : Structure
-        The structure and parameters.
     deflections : list[npt.NDArray[np.float64]]
         Virtual deflections at degrees of freedom.
     joint_cost : float
         Joint cost.
+    structure : Structure
+        The structure and parameters.
     weights : list[npt.NDArray[np.float64]]
         The weighting factors for each loadcase from the previous iteration (zero length list if plastic problem solved).
 
@@ -617,9 +619,9 @@ def trussopt(
             structure.dof,
             parameters.stress_tensile,
             parameters.stress_compressive,
-            structure,
             u,
             parameters.joint_cost,
+            structure,
             weights,
         )
         if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
