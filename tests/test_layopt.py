@@ -182,73 +182,98 @@ def test_calc_eq_matrix_b_errors(
 
 
 @pytest.mark.parametrize(
-    ("trussopt_param_fixture", "solver_name"),
+    ("trussopt_param_fixture", "solver_name", "support_points"),
     [
         pytest.param(
             "trussopt_param_one_by_one",
             "MOSEK",
+            np.asarray([]),
             id="1x1_mosek",
         ),
         pytest.param(
             "trussopt_param_two_by_two",
             "MOSEK",
+            np.asarray([]),
             id="2x2_mosek",
         ),
         pytest.param(
             "trussopt_param_three_by_six_short_cantilever",
             "MOSEK",
+            np.asarray([]),
             id="short_cantilever_mosek",
         ),
         pytest.param(
             "trussopt_param_eight_by_eight_square_cantilever",
             "MOSEK",
+            np.asarray([]),
             id="square_cantilever_mosek",
         ),
         pytest.param(
             "trussopt_param_three_by_one_parallel_forces",
             "MOSEK",
+            np.asarray([]),
             id="parallel_forces_mosek",
         ),
         pytest.param(
             "trussopt_param_eighteen_by_four_spanning",
             "MOSEK",
-            id="spanning_example_mosek",
+            np.asarray([[0, 0, True, True], [18, 0, True, True]]),
+            id="spanning_example_pinned_mosek",
+        ),
+        pytest.param(
+            "trussopt_param_eighteen_by_four_spanning",
+            "MOSEK",
+            np.asarray([[0, 0, True, True], [18, 0, False, True]]),
+            id="spanning_example_roller_mosek",
         ),
         pytest.param(
             "trussopt_param_one_by_one",
             "clarabel",
+            np.asarray([]),
             id="1x1_clarabel",
         ),
         pytest.param(
             "trussopt_param_two_by_two",
             "clarabel",
+            np.asarray([]),
             id="2x2_clarabel",
         ),
         pytest.param(
             "trussopt_param_three_by_six_short_cantilever",
             "clarabel",
+            np.asarray([]),
             id="short_cantilever_clarabel",
         ),
         pytest.param(
             "trussopt_param_eight_by_eight_square_cantilever",
             "clarabel",
+            np.asarray([]),
             id="square_cantilever_clarabel",
         ),
         pytest.param(
             "trussopt_param_three_by_one_parallel_forces",
             "clarabel",
+            np.asarray([]),
             id="parallel_forces_clarabel",
         ),
         pytest.param(
             "trussopt_param_eighteen_by_four_spanning",
             "clarabel",
-            id="spanning_example_clarabel",
+            np.asarray([[0, 0, True, True], [18, 0, True, True]]),
+            id="spanning_example_pinned_clarabel",
+        ),
+        pytest.param(
+            "trussopt_param_eighteen_by_four_spanning",
+            "clarabel",
+            np.asarray([[0, 0, True, True], [18, 0, False, True]]),
+            id="spanning_example_roller_clarabel",
         ),
     ],
 )
 def test_trussopt(
     trussopt_param_fixture: str,
     solver_name: str,
+    support_points: npt.NDArray[np.float64],
     request,
     snapshot,
 ) -> None:
@@ -260,6 +285,7 @@ def test_trussopt(
             "MOSEK requires license so test will always fail in continuous integration"
         )
 
+    params.support_points = support_points
     results = layopt.trussopt(parameters=params)
     # ns-rse 2026-04-15 - results is currently a tuple, the third item of which is now a dictionary of dataframe
     df = results[2]

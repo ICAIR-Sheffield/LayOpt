@@ -25,8 +25,12 @@ max_length_initial_ground_structure: 1.5
 support_points:
   -   - 0
       - 0
+      - true
+      - true
   -   - 3
       - 3
+      - true
+      - true
 member_area_filtering: 0.001
 cvxpy:
   solver: clarabel
