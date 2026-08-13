@@ -444,6 +444,7 @@ def trussopt_param_eighteen_by_four_spanning() -> Parameters:
         notes="spanning example test",
     )
 
+
 @pytest.fixture
 def trussopt_param_eighteen_by_four_spanning_elastic() -> Parameters:
     """Input parameters for 18x4 (spanning) structure for ``layopt.trussopt()`` based on elastic problem."""
