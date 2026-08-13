@@ -560,7 +560,7 @@ def stop_primal_violation_pattern(
                 if distinct:
                     load_case_active[k] = True
                     logger.info(
-                        f"  Adding {len(violations_added_this_iter) + 1} distinct pattern {k}: lambda={load_factors[k]:.3f}"
+                        f"  Adding {len(violations_added_this_iter) + 1} distinct pattern {k}: lambda={violation_key[k]:.3f}"
                     )
                     violations_added_this_iter.append(k)
                     by_violation.remove(k)

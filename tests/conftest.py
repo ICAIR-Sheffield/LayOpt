@@ -444,6 +444,35 @@ def trussopt_param_eighteen_by_four_spanning() -> Parameters:
         notes="spanning example test",
     )
 
+@pytest.fixture
+def trussopt_param_eighteen_by_four_spanning_elastic() -> Parameters:
+    """Input parameters for 18x4 (spanning) structure for ``layopt.trussopt()`` based on elastic problem."""
+    return Parameters(
+        filter_levels=[1.0],
+        width=18,
+        height=4,
+        avg_deflection_limit=10,
+        stress_tensile=1,
+        stress_compressive=1,
+        joint_cost=0,
+        loaded_points=np.asarray(
+            [
+                [6.0, 4],
+                [8.0, 4],
+                [10.0, 4],
+                [12.0, 4],
+            ]
+        ),
+        load_direction=(0, -1),
+        load_large=3.75,
+        load_small=0.204,
+        max_length=36,
+        support_points=np.asarray([[0, 0], [18, 0]]),
+        primal_method="load_factor",
+        problem_name="spanning example",
+        notes="spanning example test",
+    )
+
 
 @pytest.fixture
 def plotting_data_one_by_one() -> dict[str, npt.NDArray[np.float32]]:

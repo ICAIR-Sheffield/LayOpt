@@ -244,6 +244,11 @@ def test_calc_eq_matrix_b_errors(
             "clarabel",
             id="spanning_example_clarabel",
         ),
+        pytest.param(
+            "trussopt_param_eighteen_by_four_spanning_elastic",
+            "clarabel",
+            id="spanning_example_elastic_clarabel",
+        ),
     ],
 )
 def test_trussopt(
