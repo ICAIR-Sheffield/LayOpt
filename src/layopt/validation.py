@@ -89,6 +89,16 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             And(float, lambda n: n >= 0.0),
             error="Invalid value in config for 'joint_cost', valid values are >= 0.0",
         ),
+        "youngs_modulus": Or(
+            And(int, lambda n: n >= 0),
+            And(float, lambda n: n >= 0.0),
+            error="Invalid value in config for 'joint_cost', valid values are >= 0.0",
+        ),
+        "avg_deflection_limit": Or(
+            int,
+            float,
+            error="Invalid value in config for 'avg_deflection_limit', value should be type 'int' or 'float' (use a negative value to indicate plastic design).",
+        ),
         "loaded_points": And(
             np.ndarray,
             lambda n: len(n.shape) == 2,

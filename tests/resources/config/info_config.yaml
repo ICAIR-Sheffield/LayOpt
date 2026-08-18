@@ -9,6 +9,8 @@ height: 3
 steps: 1.0
 stress_tensile: 1.0
 stress_compressive: 1.0
+youngs_modulus: 1.0
+avg_deflection_limit: -1.0
 joint_cost: 0.0
 loaded_points:
   -   - 1
@@ -21,7 +23,7 @@ load_direction:
 load_large: 50.0
 load_small: 5.0
 max_length: 18.0
-active_member_threshold: 1.5
+max_length_initial_ground_structure: 1.5
 support_points:
   -   - 0
       - 0

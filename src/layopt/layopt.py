@@ -97,7 +97,7 @@ def solve(
     npt.NDArray[np.float64],
     list[npt.NDArray[np.float64]],
     list[npt.NDArray[np.float64]],
-    list[int],
+    list[float],
 ]:
     """
     Solve linear programming problem with given connections and pattern load cases.
@@ -484,14 +484,17 @@ def stop_primal_violation_pattern(
         stiffness_matrix = filtered_b @ element_stiffness @ filtered_b.transpose()
 
         for k, pattern in enumerate(all_patterns):
-            least_squares_sol = sparse.linalg.lsqr(stiffness_matrix, pattern)
+            filtered_pattern = pattern[filtered_nodes]
+            least_squares_sol = sparse.linalg.lsqr(stiffness_matrix, filtered_pattern)
             if (
                 least_squares_sol[1] == 2
             ):  # no true solution i.e. pattern activates a mechanism
                 violation_key[k] = 0
             else:
-                compliance = 0.5 * least_squares_sol[0].transpose().dot(pattern)
-                compliance_limit = structure.make_compliance_limit(pattern)
+                compliance = 0.5 * least_squares_sol[0].transpose().dot(
+                    filtered_pattern
+                )
+                compliance_limit = structure.make_compliance_limit(filtered_pattern)
                 violation_key[k] = (
                     compliance_limit / compliance
                 )  # i.e. < 1 means the compliance is too large = violated
