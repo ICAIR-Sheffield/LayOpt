@@ -200,7 +200,7 @@ def stop_violation(
     int
         Number of members added.
     """
-    lst = np.where(potential_members[:, 3] == False)[0]  # noqa: E712, pylint: disable=singleton-comparison
+    lst = np.where(potential_members[:, 3] == False)[0]
     c_n = potential_members[lst]
     member_cost = c_n[:, 2] + joint_cost
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
@@ -532,7 +532,7 @@ def trussopt(
     vol = 1e9  # arbitrary large number to initialise
     # Allows debugging to see if active_members has changed
     previous_active_members = structure.potential_members[
-        structure.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
+        structure.potential_members[:, 3] == True
     ]
     # Start the 'member adding' loop
     for itr in range(1, 100):
@@ -546,7 +546,7 @@ def trussopt(
         ]
         # Get active members/parts of matrices for current iteration
         active_members = structure.potential_members[
-            structure.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
+            structure.potential_members[:, 3] == True
         ]
         logger.debug(
             f"Itr {itr} active members changed? {active_members.shape != previous_active_members.shape}"
