@@ -2,17 +2,23 @@
 
 import contextlib
 import os
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import pytest
+import yaml
+from matplotlib.testing.compare import compare_images
 
 from layopt import io, run_modules
 from layopt.entry_point import entry_point
 
 GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+
+BASE_DIR = Path.cwd()
+RESOURCES = BASE_DIR / "tests" / "resources"
 
 
 @pytest.mark.parametrize("option", ["-h", "--help"])
@@ -118,11 +124,6 @@ def test_entry_points(
 # former  is a wrapper calling the later
 
 
-# pylint: disable=duplicate-code
-@pytest.mark.skipif(
-    GITHUB_ACTIONS,
-    reason="mosek library requires license so test will always fail in continuous integration",
-)
 @pytest.mark.parametrize(
     ("manual_args"),
     [
@@ -141,6 +142,92 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
     # Load csv file and check against snapshot
     csv_out = list(tmp_path.glob("*.csv"))
     csv_results = pd.read_csv(csv_out[0])
+    assert (
+        csv_results.drop(
+            ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
+        ).to_string()
+        == snapshot
+    )
+
+
+# fisher568 2026-08-03 need to configure e2e tests to run once per week, now skipping in CI
+@pytest.mark.skipif(
+    GITHUB_ACTIONS,
+    reason="Skip large e2e test in CI",
+)
+@pytest.mark.e2e
+@pytest.mark.parametrize(
+    ("config_file_name", "baseline_plot_file_name"),
+    [
+        pytest.param(
+            "square_cantilever_config.yaml",
+            "square_cantilever_w8_h8_n2_filter100.png",
+            id="square_cantilever_e2e_test",
+        ),
+        pytest.param(
+            "single_span_roller_config.yaml",
+            "single_span_roller_w18_h4_n10_filter100.png",
+            id="single_span_roller_e2e_test",
+        ),
+    ],
+)
+def test_cli_layopt_optimise(
+    config_file_name: str,
+    baseline_plot_file_name: str,
+    tmp_path: Path,
+    monkeypatch,
+    snapshot,
+) -> None:
+    """Simulates the CLI and verifies the CSV & png plot output from layopt against a snapshot."""
+    test_config_path = RESOURCES / "config" / config_file_name
+    baseline_png = RESOURCES / baseline_plot_file_name
+
+    # Update config and rewrite it to temp file
+    with test_config_path.open() as file:
+        config = yaml.safe_load(file)
+    config["base_dir"] = str(tmp_path)
+    tmp_output_path = tmp_path / "output"
+    config["output_dir"] = str(tmp_output_path)
+    tmp_config_path = tmp_path / config_file_name
+    with tmp_config_path.open("w") as file:
+        yaml.dump(config, file)
+
+    # Run CLI in-process
+    monkeypatch.setattr(sys, "argv", ["layopt", "-c", str(tmp_config_path), "optimise"])
+    entry_point()
+
+    # Load csv & png files and check against snapshot
+    # csv_out = list(tmp_output_path.glob("*.csv"))
+    csv_results = pd.read_csv(next(iter(tmp_output_path.glob("*.csv"))))
+    png_out = next(iter(tmp_output_path.glob("*.png")))
+    assert (
+        csv_results.drop(
+            ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
+        ).to_string()
+        == snapshot
+    )
+    # use matplotlib.testing.compare instead of pytest-mpl here
+    plot_difference = compare_images(
+        expected=str(baseline_png), actual=str(png_out), tol=10.0
+    )
+    # compare_images returns None if match within tolerance
+    assert plot_difference is None
+
+
+def test_cli_default_layopt_optimise(
+    tmp_path: Path,
+    monkeypatch,
+    snapshot,
+) -> None:
+    """Simulates the CLI and verifies the output CSV from layopt against a snapshot."""
+    tmp_output_path = tmp_path / "output"
+
+    # Run CLI in-process, default arguments except `output_dir`
+    monkeypatch.setattr(sys, "argv", ["layopt", "-o", str(tmp_output_path), "optimise"])
+    entry_point()
+
+    # Load csv and check against snapshot
+    csv_results = pd.read_csv(next(iter(tmp_output_path.glob("*.csv"))))
     assert (
         csv_results.drop(
             ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1

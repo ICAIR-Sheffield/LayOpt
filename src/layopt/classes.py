@@ -51,7 +51,8 @@ class Parameters:
         gt=0.0,
     )
     support_points: npt.NDArray[np.float64] = Field(
-        default=np.asarray([[0, 0], [3, 0]]), title="Support Points."
+        default=np.asarray([[0, 0, 1, 1], [3, 0, 1, 1]]),
+        title="Support Points as coordinates and bools indicating whether to restrain in x- or y-directions.",
     )
     member_area_filtering: float = Field(
         default=0.001, title="Member Area Filtering", ge=0.0
@@ -100,18 +101,20 @@ class Parameters:
 )
 class CaseFamily:
     """
-    Definition required.
+    A loading situation in which there is the potential for variability, e.g. which are favourable/unfavourable.
 
     Attributes
     ----------
     loaded_points : tuple[tuple(float)]
-        Definition required.
+        A list of coordinates giving the points at which loads are to be applied.
     load_large : float
-        Definition required.
+        The maximum load which may be applied at each point. For example, under eurocode design, this would correspond
+        to the load factored using the unfavourable factors.
     load_small : float
-        Definition required.
+        The minimum load which may be applied at each point. For example, under eurocode design, this would usually
+        correspond to the load factored using the favourable factors.
     load_direction: tuple[float]
-        Definition required.
+        A vector giving the direction of a positive force e.g. (0.0,1.0) for the y direction.
     """
 
     loaded_points: tuple[tuple[float]]
@@ -130,21 +133,33 @@ class CaseFamily:
 )
 class Case:
     """
-    Definition required.
+    A particular realisation of a loading situation, with a specific distribution of large and small loads.
 
     Attributes
     ----------
     activated : bool
-        Definition required.
+        Whether this particular case is currently being considered in the reduced problem
     pattern : tuple[bool]
-        Definition required.
+        For each loaded point (of the associated CaseFamily) is the force applied there the load_large (pattern[i]=True)
+        or the load_small (pattern[i]=False).
     case_family : CaseFamily
-        Definition required.
+        The parent CaseFamily that this case relates to.
     """
 
     activated: bool
     pattern: tuple[bool]
     case_family: CaseFamily
+
+    def __hash__(self) -> int:
+        """
+        Define hash based on pattern.
+
+        Returns
+        -------
+        int
+            The hash of the pattern. (Note: this is deliberately not affected by the activated bool).
+        """
+        return hash(self.pattern)
 
 
 @dataclass(
@@ -194,7 +209,9 @@ class Connection:
     end_node : Node | int
         The second of two ``Node`` the connection spans.
     activated : bool
-        Definition required.
+        Whether the connection is currently being considered in the reduced problem (if solve has not started yet, this
+        says whether the connection will be used in the first iteration, if solve has been completed, this says
+        whether the connection was used in the final iteration).
     length : float
         Length of the connection between ``start_node`` and ``end_node``.
     """
@@ -218,13 +235,14 @@ class TrussBar(Connection):
     Attributes
     ----------
     area : float, optional
-        Definition required.
+        The cross-section area of the truss bar. If None, the bar was not considered in any iterations of the reduced
+        problem.
     forces : dict[Case, float | None]
-        Definition required.
+        The axial forces carried by the element in each of the active cases.
     stress_tensile : float
-        Definition required.
+        The allowable stress of the element in tension.
     stress_compressive: float
-        Definition required.
+        The allowable stress of the element in compression.
     """
 
     area: float | None
@@ -246,19 +264,24 @@ class GrillageBeam(Connection):
     Attributes
     ----------
     start_web_area : float, optional
-        Definition required.
+        The total area of the webs (i.e. the portion of the cross-section which is used to carry bending stresses) at
+        the start_node.
     end_web_area : float, optional
-        Definition required.
+        The total area of the webs (i.e. the portion of the cross-section which is used to carry bending stresses) at
+        the end_node.
     flange_area : float, optional
-        Definition required.
+        The area of the flange (i.e. the portion of the cross-section which is used to carry shear stresses). Note this
+        is constant along the whole element.
     start_moments : dict[Case, float], optional
-        Definition required.
+        The moments carried by the element at the start_node for each of the active cases.
     end_moments : dict[Case, float], optional
-        Definition required.
+        The moments carried by the element at the end_node for each of the active cases.
     capacity_coeffiient_pos : float
-        Definition required.
+        The area per unit moment required to carry positive (hogging) moments. Typically, this can be calculated using
+        (allowable stress)*(vertical distance between flange centroids).
     capacity_coeffiient_neg : float
-        Definition required.
+        The area per unit moment required to carry negative (sagging) moments. Typically, this can be calculated using
+        (allowable stress)*(vertical distance between flange centroids).
     """
 
     start_web_area: float | None
@@ -375,7 +398,7 @@ class Structure:
             max_length_initial_ground_structure=self.parameters.max_length_initial_ground_structure,
         )
         self.active_members = self.potential_members[
-            self.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
+            self.potential_members[:, 3] == True
         ]
         self.primal_adaptivity, self.load_case_active = structure.primal_adaptivity(
             primal_method=self.parameters.primal_method,

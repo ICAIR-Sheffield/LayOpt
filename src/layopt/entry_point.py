@@ -237,7 +237,7 @@ def layopt_parser() -> arg.ArgumentParser:
 
 def entry_point(
     manually_provided_args: list[Any] | None = None, testing: bool = False
-) -> None | arg.Namespace:
+) -> arg.Namespace | None:
     """
     Entry point for all LayOpt programs.
 

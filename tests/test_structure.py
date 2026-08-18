@@ -133,9 +133,54 @@ def test_calc_default_loaded_points(
                     [1, 2],
                 ]
             ),
-            np.asarray([[0, 0], [0, 2]]),
+            np.asarray([[0, 0, True, True], [0, 2, True, True]]),
             np.asarray([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
-            id="simple 2x3 rectangle, two support points defined",
+            id="simple 2x3 rectangle, two pinned support points",
+        ),
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [1, 0],
+                    [1, 1],
+                    [1, 2],
+                ]
+            ),
+            np.asarray([[0, 0, True, True], [0, 2, False, True]]),
+            np.asarray([0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 2x3 rectangle, one pinned support, one y-roller",
+        ),
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [1, 0],
+                    [1, 1],
+                    [1, 2],
+                ]
+            ),
+            np.asarray([[0, 0, True, False], [0, 2, True, True]]),
+            np.asarray([0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 2x3 rectangle, one pinned support, one x-roller",
+        ),
+        pytest.param(
+            np.asarray(
+                [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [1, 0],
+                    [1, 1],
+                    [1, 2],
+                ]
+            ),
+            np.asarray([[0, 0, True, False], [0, 2, False, True]]),
+            np.asarray([0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            id="simple 2x3 rectangle, one x-roller, one y-roller",
         ),
     ],
 )

@@ -131,8 +131,13 @@ LAYOPT_CONFIG_SCHEMA = Schema(
         ),
         "support_points": And(
             np.ndarray,
-            lambda n: len(n.shape) == 2,
-            error="Invalid value in config for 'support_points', this should be a list of coordinates.",
+            lambda n: n.size == 0 or (n.ndim == 2 and n.shape[1] == 4),
+            lambda n: (
+                n.size == 0
+                or n.shape[1] != 4
+                or set(np.unique(n[:, 2:4])).issubset({0.0, 1.0})
+            ),
+            error="Invalid value in config for 'support_points', this should be a list with each item in form '[x, y, restrain_x, restrain_y]' with 'restrain_x', 'restrain_y' being bool-like.",
         ),
         "member_area_filtering": Or(
             And(int, lambda n: 1 >= n >= 0),
