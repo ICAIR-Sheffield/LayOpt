@@ -93,7 +93,7 @@ docs = [
 
 [tool.pytest]
 minversion = "9.0"
-addopts = ["-ra", "--showlocals", "--mpl", "--cov"]
+addopts = ["-ra", "--showlocals", "--mpl", "--cov", "-m", "not e2e"]
 strict = true
 filterwarnings = [
   "error",
@@ -103,7 +103,7 @@ testpaths = [
   "tests",
 ]
 markers = [
-    "e2e: marks tests as end-to-end (deselect with '-m \"not e2e\"')",
+    "e2e: marks tests as end-to-end: tests ran weekly via Actions",
 ]
 
 [tool.coverage]

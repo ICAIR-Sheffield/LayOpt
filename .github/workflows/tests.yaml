@@ -41,7 +41,7 @@ jobs:
           uv sync --locked --all-extras --dev
       - name: Test with pytest
         run: |
-          uv run pytest --cov=src --numprocesses=logical tests
+          uv run pytest -m "not e2e" --cov=src --numprocesses=logical tests
       - name: Determine coverage
         run: |
           coverage xml
