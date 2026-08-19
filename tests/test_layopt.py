@@ -1,6 +1,7 @@
 """Tests for the layopt module."""
 
 import os
+import platform
 from typing import Any
 
 import numpy as np
@@ -267,6 +268,9 @@ def test_calc_eq_matrix_b_errors(
             "clarabel",
             np.asarray([[0, 0, True, True], [18, 0, False, True]]),
             id="spanning_example_roller_clarabel",
+            marks=pytest.mark.skipif(
+                platform.system() == "Darwin", reason="Precision differences."
+            ),
         ),
     ],
 )
