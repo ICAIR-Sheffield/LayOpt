@@ -5,6 +5,7 @@ from pathlib import Path
 from pkgutil import get_data
 from typing import Any
 
+import numpy as np
 import pytest
 from ruamel.yaml import YAML
 from schema import Or, Schema, SchemaError
@@ -71,6 +72,18 @@ TEST_SCHEMA = Schema(
             pytest.raises(SchemaError),
             id="Invalid value for solver",
         ),
+        pytest.param(
+            {"support_points": np.array([[1.0, 2.0, 3.0, True]])},
+            LAYOPT_CONFIG_SCHEMA,
+            pytest.raises(SchemaError),
+            id="Invalid value for support_points (restrain_x not bool-like)",
+        ),
+        pytest.param(
+            {"support_points": np.array([[1.0, 2.0, False, 4.0]])},
+            LAYOPT_CONFIG_SCHEMA,
+            pytest.raises(SchemaError),
+            id="Invalid value for support_points (restrain_y not bool-like)",
+        ),
     ],
 )
 def test_validate_config_exceptions(
@@ -115,6 +128,11 @@ def test_validate_config_exceptions(
             {"cvxpy": {"solver": "clarabel"}},
             does_not_raise(),
             id="solver CLARABEL",
+        ),
+        pytest.param(
+            {"support_points": np.array([[1.0, 2.0, False, 1.0]])},
+            does_not_raise(),
+            id="support_points restrain_x/y bool-like",
         ),
     ],
 )

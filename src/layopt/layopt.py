@@ -97,7 +97,7 @@ def solve(
     npt.NDArray[np.float64],
     list[npt.NDArray[np.float64]],
     list[npt.NDArray[np.float64]],
-    list[int],
+    list[float],
 ]:
     """
     Solve linear programming problem with given connections and pattern load cases.
@@ -233,7 +233,7 @@ def stop_violation(
     int
         Number of members added.
     """
-    lst = np.where(potential_members[:, 3] == False)[0]  # noqa: E712, pylint: disable=singleton-comparison
+    lst = np.where(potential_members[:, 3] == False)[0]
     c_n = potential_members[lst]
     member_cost = c_n[:, 2] + joint_cost
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
@@ -490,14 +490,17 @@ def stop_primal_violation_pattern(
             if load_case_active[k]:
                 continue  # skip active cases
 
-            least_squares_sol = sparse.linalg.lsqr(stiffness_matrix, pattern)
+            filtered_pattern = pattern[filtered_nodes]
+            least_squares_sol = sparse.linalg.lsqr(stiffness_matrix, filtered_pattern)
             if (
                 least_squares_sol[1] == 2
             ):  # no true solution i.e. pattern activates a mechanism
                 violation_key[k] = 0
             else:
-                compliance = 0.5 * least_squares_sol[0].transpose().dot(pattern)
-                compliance_limit = structure.make_compliance_limit(pattern)
+                compliance = 0.5 * least_squares_sol[0].transpose().dot(
+                    filtered_pattern
+                )
+                compliance_limit = structure.make_compliance_limit(filtered_pattern)
                 violation_key[k] = (
                     compliance_limit / compliance
                 )  # i.e. < 1 means the compliance is too large = violated
@@ -582,7 +585,7 @@ def stop_primal_violation_pattern(
 # Main function - edited for pattern loading
 def trussopt(
     parameters: Parameters,
-) -> tuple[float, dict[int, float], pd.DataFrame] | None:
+) -> tuple[float, dict[int, float], pd.DataFrame, Structure] | None:
     """
     Main function, perform adaptive member adding procedure with multiple load cases.
 
@@ -594,10 +597,10 @@ def trussopt(
 
     Returns
     -------
-    tuple[float, dict[int, float], pd.DataFrame, float]
+    tuple[float, dict[int, float], pd.DataFrame, Structure]
         A tuple consisting of ``volume`` (the final volume of the solved problem) and ``member_areas_filtered``
         (dict with keys ground structure member indices and values corresponding to the final member areas of
-        the solved problem), and a data frame of results.
+        the solved problem), a data frame of results and the Structure object containing detailed results.
     """
     setup_start = time.process_time()
     # Instantiate the structure
@@ -616,7 +619,7 @@ def trussopt(
     vol = 1e9  # arbitrary large number to initialise
     # Allows debugging to see if active_members has changed
     previous_active_members = structure.potential_members[
-        structure.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
+        structure.potential_members[:, 3] == True
     ]
     # Start the 'member adding' loop
     for itr in range(1, 100):
@@ -630,7 +633,7 @@ def trussopt(
         ]
         # Get active members/parts of matrices for current iteration
         active_members = structure.potential_members[
-            structure.potential_members[:, 3] == True  # noqa: E712, pylint: disable=singleton-comparison
+            structure.potential_members[:, 3] == True
         ]
         logger.debug(
             f"Itr {itr} active members changed? {active_members.shape != previous_active_members.shape}"
@@ -787,7 +790,7 @@ def trussopt(
         f"Area filtering at {parameters.member_area_filtering} ({100 * parameters.member_area_filtering}% of max): "
         f"{len(member_areas_filtered)} members retained"
     )
-    return (vol, member_areas_filtered, dict_to_df(results))
+    return (vol, member_areas_filtered, dict_to_df(results), structure)
 
 
 def member_area_filtering(

@@ -111,6 +111,20 @@ def layopt_parser() -> arg.ArgumentParser:
         help="Joint cost.",
     )
     optimise_parser.add_argument(
+        "--youngs-modulus",
+        dest="youngs_modulus",
+        type=float,
+        required=False,
+        help="Youngs modulus (E), only used with compliance optimization.",
+    )
+    optimise_parser.add_argument(
+        "--avg-deflection-limit",
+        dest="avg_deflection_limit",
+        type=float,
+        required=False,
+        help="Limit on avg deflection of loaded points for compliance optimization.",
+    )
+    optimise_parser.add_argument(
         "--load-direction",
         dest="load_direction",
         nargs="+",
@@ -223,7 +237,7 @@ def layopt_parser() -> arg.ArgumentParser:
 
 def entry_point(
     manually_provided_args: list[Any] | None = None, testing: bool = False
-) -> None | arg.Namespace:
+) -> arg.Namespace | None:
     """
     Entry point for all LayOpt programs.
 

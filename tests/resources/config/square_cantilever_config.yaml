@@ -2,34 +2,41 @@ base_dir: ./ # Base directory where code is being run
 output_dir: ./output # Where to save output to
 log_level: info # Verbosity used in logging
 cores: 2 # Number of cores to use when processing
-width: 3 # Width of structure
-height: 6 # Height of structure
+width: 8 # Width of structure
+height: 8 # Height of structure
 steps: 1 # Steps to generate nodes
 stress_tensile: 1.0 # Tensile stress
 stress_compressive: 1.0 # Compressive stress
-youngs_modulus: 1.0
-avg_deflection_limit: -1.0
 joint_cost: 0.0 # Joint costs
 loaded_points: # Loaded points
-  - [3, 3]
+  - [8, 0]
+  - [8, 4]
 load_direction: # Load direction
   - 0.0
   - -1.0
-load_large: 50.0 # Large load
-load_small: 5.0 # Small load
-max_length: 18.0 # Max length
-max_length_initial_ground_structure: 1.5 # Threshold for marking a potential member as active in the initial ground structure.
-support_points: # Support points in form [x_coord, y_coord, restrain_x, restrain_y] (true=fixed, false=free for restrain_x/restrain_y)
-  - []
+load_large: 50 # Large load
+load_small: 5 # Small load
+max_length: 16 # Max length
+max_length_initial_ground_structure: 1.5 # Threshold for marking a potential member as active
+support_points: # Support points
+  - [0, 0, True, True]
+  - [0, 1, True, True]
+  - [0, 2, True, True]
+  - [0, 3, True, True]
+  - [0, 4, True, True]
+  - [0, 5, True, True]
+  - [0, 6, True, True]
+  - [0, 7, True, True] 
+  - [0, 8, True, True]    
 member_area_filtering: 0.001 # Fraction of maximum member area for output threshold
 cvxpy:
-  solver: clarabel # See https://www.cvxpy.org/tutorial/solvers/index.html?h=solve#choosing-a-solver for further details
+  solver: clarabel # See <https://www.cvxpy.org/tutorial/solvers/index.html?h=solve#choosing-a-solver> for further details
 filter_levels: [1.0] # List of values to filter by if empty no filtering is performed
 primal_method: load_factor # Primal method
-problem_name: short cantilever # Problem name
+problem_name: square_cantilever # Problem name
 csv_filename: results.csv # Filename to save results to, if left as `results.csv` will have YYYY-MM-DD-hhmmss added
-notes: short cantilever test # Notes to include
+notes: square cantilever three load points # Notes to include
 plotting:
-  run: false # Whether to plot the trusses
+  run: true # Whether to plot the trusses
   bar_thickness: 0.3 # Bar thickness when plotting
   dpi: 1200 # Dots per inch when plotting

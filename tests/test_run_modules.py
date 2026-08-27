@@ -69,10 +69,6 @@ def test_optimise(
     )
 
 
-@pytest.mark.skipif(
-    GITHUB_ACTIONS,
-    reason="mosek library requires license so test will always fail in continuous integration",
-)
 @pytest.mark.parametrize(
     ("args", "log_string"),
     [

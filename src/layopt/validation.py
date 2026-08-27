@@ -89,6 +89,16 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             And(float, lambda n: n >= 0.0),
             error="Invalid value in config for 'joint_cost', valid values are >= 0.0",
         ),
+        "youngs_modulus": Or(
+            And(int, lambda n: n >= 0),
+            And(float, lambda n: n >= 0.0),
+            error="Invalid value in config for 'youngs_modulus', valid values are > 0.0",
+        ),
+        "avg_deflection_limit": Or(
+            int,
+            float,
+            error="Invalid value in config for 'avg_deflection_limit', value should be type 'int' or 'float' (use a negative value to indicate plastic design).",
+        ),
         "loaded_points": And(
             np.ndarray,
             lambda n: len(n.shape) == 2,
@@ -121,8 +131,13 @@ LAYOPT_CONFIG_SCHEMA = Schema(
         ),
         "support_points": And(
             np.ndarray,
-            lambda n: len(n.shape) == 2,
-            error="Invalid value in config for 'support_points', this should be a list of coordinates.",
+            lambda n: n.size == 0 or (n.ndim == 2 and n.shape[1] == 4),
+            lambda n: (
+                n.size == 0
+                or n.shape[1] != 4
+                or set(np.unique(n[:, 2:4])).issubset({0.0, 1.0})
+            ),
+            error="Invalid value in config for 'support_points', this should be a list with each item in form '[x, y, restrain_x, restrain_y]' with 'restrain_x', 'restrain_y' being bool-like.",
         ),
         "member_area_filtering": Or(
             And(int, lambda n: 1 >= n >= 0),
