@@ -120,7 +120,7 @@ def solve(
         size 0 array if plastic problem is solved).
     """
     member_cost = [col[2] + structure.parameters.joint_cost for col in active_members]
-    e_over_l = [
+    two_e_over_l = [
         2 * structure.parameters.youngs_modulus / col[2] for col in active_members
     ]
     eq_matrix_b = calc_eq_matrix_b(
@@ -148,8 +148,11 @@ def solve(
             pi = cvx.Variable(
                 n_members, nonneg=True, name="pi"
             )  # elastic potential energy variables (per-member)
-            x_vals = cvx.vstack([2 * qi, cvx.multiply(e_over_l, a) - pi])
-            t_vals = cvx.multiply(e_over_l, a) + pi
+
+            # Note: the natural phrasing of this conic constraint using a rotated cone can't be added in a vectorised
+            # way, so this has been converted to a standard quadratic cone.
+            x_vals = cvx.vstack([2 * qi, cvx.multiply(two_e_over_l, a) - pi])
+            t_vals = cvx.multiply(two_e_over_l, a) + pi
             other_constraints += [cvx.SOC(t_vals, x_vals)]
 
             compliance_limit = structure.make_compliance_limit(active_pattern)
@@ -484,6 +487,9 @@ def stop_primal_violation_pattern(
         stiffness_matrix = filtered_b @ element_stiffness @ filtered_b.transpose()
 
         for k, pattern in enumerate(all_patterns):
+            if load_case_active[k]:
+                continue  # skip active cases
+
             least_squares_sol = sparse.linalg.lsqr(stiffness_matrix, pattern)
             if (
                 least_squares_sol[1] == 2
