@@ -1,5 +1,6 @@
 """Tests for the layopt module."""
 
+import multiprocessing.pool as mpp
 import os
 import platform
 from typing import Any
@@ -356,10 +357,10 @@ def test_member_area_filtering(
 )
 # multiple parametrize markers uses cartesian product
 @pytest.mark.parametrize(
-    "cores",
+    "use_pool",
     [
-        pytest.param(1, id="one_core"),
-        pytest.param(4, id="four_cores"),
+        pytest.param(False, id="singleprocess"),
+        pytest.param(True, id="multiprocess"),
     ],
 )
 @pytest.mark.parametrize(
@@ -514,8 +515,9 @@ def test_stop_primal_violation(
     stress_compressive: int,
     dof: npt.NDArray[np.float64],
     solver: str,
-    cores: int,
     expected_converge: bool,
+    use_pool: bool,
+    pool: mpp.Pool | None,
 ) -> None:
     """Test for convergence based on whether all load cases active."""
     # `stop_primal_violation_pattern` changes `load_case_active` in place
@@ -531,7 +533,7 @@ def test_stop_primal_violation(
         stress_tensile,
         stress_compressive,
         solver,
-        cores,
+        pool=pool if use_pool else None,
     )
     assert actual_converge == expected_converge
     assert np.all(load_case_active) is np.bool_(

@@ -1,5 +1,6 @@
 """Fixtures for layopt tests."""
 
+import multiprocessing as mp
 from typing import Any
 
 import numpy as np
@@ -603,3 +604,10 @@ def sample_csv_results() -> dict[str, Any]:
         "primal_method": True,
         "notes": "Test run",
     }
+
+
+@pytest.fixture
+def pool():
+    """Shared process pool for tests using parallelised code."""
+    with mp.Pool(processes=2) as p:
+        yield p
