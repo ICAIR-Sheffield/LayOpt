@@ -10,9 +10,12 @@
 ## optimization of trusses. Struct Multidisc Optim 60, 835â€“847 (2019).
 ## https://doi.org/10.1007/s00158-019-02226-6
 
+import multiprocessing as mp
+import multiprocessing.pool as mpp
 import time
+from contextlib import nullcontext
+from functools import partial
 from math import ceil, isinf
-from multiprocessing import Pool
 from pathlib import Path
 
 import cvxpy as cvx
@@ -201,7 +204,7 @@ def stop_violation(
     int
         Number of members added.
     """
-    lst = np.where(potential_members[:, 3] == False)[0]
+    lst = np.where(potential_members[:, 3] == False)[0]  # pylint: disable=singleton-comparison
     c_n = potential_members[lst]
     member_cost = c_n[:, 2] + joint_cost
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
@@ -329,25 +332,21 @@ def stop_primal_violation_residual(
     return True  # converged, terminate
 
 
-# module-level variables to use in `_init_worker`
-_worker_problem: cvx.Problem | None = None
-_worker_fk_dof_param: cvx.Parameter | None = None
-_worker_lambda_var: cvx.Variable | None = None
-_worker_solver: str | None = None
-
-
-def _init_worker(
+def _solve_load_factor(
+    load_case: tuple[int, npt.NDArray[np.float64]],
     eq_matrix_b: sparse.coo_matrix,
     areas_nonzero: npt.NDArray[np.float64],
     stress_tensile: float,
     stress_compressive: float,
     solver: str,
-) -> None:
+) -> tuple[int, float]:
     """
-    Pool initialiser, builds CVXPY `Problem` once per worker process.
+    Worker function to solve single pattern load factor LP problem.
 
     Parameters
     ----------
+    load_case : tuple[int, npt.NDArray[np.float64]]
+        Load case index and array of external loads.
     eq_matrix_b : sparse.coo_matrix
         Equilibrium matrix B.
     areas_nonzero : npt.NDArray[np.float64]
@@ -361,48 +360,24 @@ def _init_worker(
 
     Returns
     -------
-    None
-        None.
-
-    """
-    global _worker_problem, _worker_fk_dof_param, _worker_lambda_var, _worker_solver
-    n_dof, n_members = eq_matrix_b.shape
-    q_var = cvx.Variable(n_members, name="q")
-    _worker_lambda_var = cvx.Variable(nonneg=True, name="lambda")
-    _worker_fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
-
-    constraints = [
-        eq_matrix_b @ q_var == _worker_lambda_var * _worker_fk_dof_param,  # equilibrium
-        q_var <= stress_compressive * areas_nonzero,  # compression limit
-        q_var >= -stress_tensile * areas_nonzero,  # tension limit
-    ]
-    objective = cvx.Maximize(_worker_lambda_var)
-    _worker_problem = cvx.Problem(objective, constraints)
-    _worker_solver = solver
-
-
-def _solve_load_factor(
-    load_case: tuple[int, npt.NDArray[np.float64]],
-) -> tuple[int, float]:
-    """
-    Update worker Parameter and re-solve worker LP problem.
-
-    Parameters
-    ----------
-    load_case : tuple[int, npt.NDArray[np.float64]]
-        Load case index and array of external loads.
-
-    Returns
-    -------
     tuple[int, float]
         Load case index and load factor lambda.
     """
     k, fk_dof = load_case
-    _worker_fk_dof_param.value = fk_dof
-    _worker_problem.solve(solver=_worker_solver)
-    lambda_value = _worker_lambda_var.value
+    n_members = eq_matrix_b.shape[1]
+    q_var = cvx.Variable(n_members, name="q")
+    lambda_var = cvx.Variable(nonneg=True, name="lambda")
 
-    return (k, lambda_value) if lambda_value is not None else (k, 0.0)
+    constraints = [
+        eq_matrix_b @ q_var == lambda_var * fk_dof,  # equilibrium
+        q_var <= stress_compressive * areas_nonzero,  # compression limit
+        q_var >= -stress_tensile * areas_nonzero,  # tension limit
+    ]
+    objective = cvx.Maximize(lambda_var)
+    problem = cvx.Problem(objective, constraints)
+    problem.solve(solver)
+
+    return (k, lambda_var.value) if lambda_var.value is not None else (k, 0.0)
 
 
 # for each inactive load pattern f[k], solve an LP to find the maximum
@@ -424,7 +399,7 @@ def stop_primal_violation_pattern(
     stress_tensile: float,
     stress_compressive: float,
     solver: str,
-    cores: int = 1,
+    pool: mpp.Pool | None = None,
 ) -> bool:
     """
     Check for primal violation (load factor structural analysis) and add new load cases.
@@ -449,8 +424,8 @@ def stop_primal_violation_pattern(
         Compressive stress limit.
     solver : str
         CVXPY solver name.
-    cores : int
-        Number of cores to use.
+    pool : mpp.Pool | None
+        Pool of worker processes for solving independent LP problems.
 
     Returns
     -------
@@ -480,27 +455,30 @@ def stop_primal_violation_pattern(
 
     # solve LP problem for each inactive load case
     if inactive_load_cases:
-        init_args = (
-            eq_matrix_b,
-            areas_nonzero,
-            stress_tensile,
-            stress_compressive,
-            solver,
-        )
-        if cores > 1:
-            with Pool(
-                processes=cores,
-                initializer=_init_worker,
-                initargs=init_args,
-            ) as pool:
-                for k, lambda_value in pool.imap_unordered(
-                    _solve_load_factor, inactive_load_cases
-                ):
-                    load_factors[k] = lambda_value
+        if pool is not None:
+            processing_function = partial(
+                _solve_load_factor,
+                eq_matrix_b=eq_matrix_b,
+                areas_nonzero=areas_nonzero,
+                stress_tensile=stress_tensile,
+                stress_compressive=stress_compressive,
+                solver=solver,
+            )
+            for k, lambda_value in pool.imap_unordered(
+                processing_function, inactive_load_cases
+            ):
+                load_factors[k] = lambda_value
         else:
-            _init_worker(*init_args)
-            for load_case in inactive_load_cases:
-                k, lambda_value = _solve_load_factor(load_case)
+            # fallback if pool not available
+            for k, fk_dof in inactive_load_cases:
+                _, lambda_value = _solve_load_factor(
+                    (k, fk_dof),
+                    eq_matrix_b,
+                    areas_nonzero,
+                    stress_tensile,
+                    stress_compressive,
+                    solver,
+                )
                 load_factors[k] = lambda_value
 
     # Violation: load factor < 1 (with tolerance)
@@ -617,96 +595,105 @@ def trussopt(
     vol = 1e9  # arbitrary large number to initialise
     # Allows debugging to see if active_members has changed
     previous_active_members = structure.potential_members[
-        structure.potential_members[:, 3] == True
+        structure.potential_members[:, 3] == True  # pylint: disable=singleton-comparison
     ]
-    # Start the 'member adding' loop
-    for itr in range(1, 100):
-        last_volume = vol
 
-        # Get active pattern loads for current iteration
-        active_pattern_loads = [
-            structure.all_patterns[k]
-            for k in range(len(structure.all_patterns))
-            if structure.load_case_active[k]
-        ]
-        # Get active members/parts of matrices for current iteration
-        active_members = structure.potential_members[
-            structure.potential_members[:, 3] == True
-        ]
-        logger.debug(
-            f"Itr {itr} active members changed? {active_members.shape != previous_active_members.shape}"
-        )
-        # solve current reduced problem
-        vol, filter_areas, filter_forces, u = solve(
-            structure=structure,
-            active_members=active_members,
-            active_pattern_loads=active_pattern_loads,
-        )
-        if isinf(vol):
-            logger.error("Infeasible problem detected")
-            return None
-        n_active = int(np.sum(structure.load_case_active))
-        # ns-rse 2026-03-23 : Could this perhaps be debugging?
-        logger.info(
-            f"Iteration: {itr}, vol: {vol}, mems: {len(active_members)} active load cases:{n_active}/{len(structure.all_patterns)}"
-        )
+    use_pool = (
+        structure.primal_adaptivity
+        and parameters.primal_method == "load_factor"
+        and parameters.cores > 1
+    )
 
-        # inner loop - adding of members based on dual violation
-        # still need PMLcache? currently unused
-        # PMLcache = np.copy(PML[:,3])
-        n_added = stop_violation(
-            structure.nodes,
-            structure.potential_members,
-            structure.dof,
-            parameters.stress_tensile,
-            parameters.stress_compressive,
-            u,
-            parameters.joint_cost,
-        )
-        if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
-            continue  # small vol decrease = member adding close to convergence
+    # parallelise primal violation if applicable
+    with mp.Pool(processes=parameters.cores) if use_pool else nullcontext() as pool:
+        # Start the 'member adding' loop
+        for itr in range(1, 100):
+            last_volume = vol
 
-        # outer loop - adding of pattern load cases based on primal violation
-        # if stopPrimalViolationPattern(nodal_coords, c_n, a, structure.all_patterns, structure.load_case_active, dof, st, sc):
-        #     if numAdded > 0: # only fully terminate when no members violate
-        #         continue
-        #     else:
-        #         break
+            # Get active pattern loads for current iteration
+            active_pattern_loads = [
+                structure.all_patterns[k]
+                for k in range(len(structure.all_patterns))
+                if structure.load_case_active[k]
+            ]
+            # Get active members/parts of matrices for current iteration
+            active_members = structure.potential_members[
+                structure.potential_members[:, 3] == True  # pylint: disable=singleton-comparison
+            ]
+            logger.debug(
+                f"Itr {itr} active members changed? {active_members.shape != previous_active_members.shape}"
+            )
+            # solve current reduced problem
+            vol, filter_areas, filter_forces, u = solve(
+                structure=structure,
+                active_members=active_members,
+                active_pattern_loads=active_pattern_loads,
+            )
+            if isinf(vol):
+                logger.error("Infeasible problem detected")
+                return None
+            n_active = int(np.sum(structure.load_case_active))
+            # ns-rse 2026-03-23 : Could this perhaps be debugging?
+            logger.info(
+                f"Iteration: {itr}, vol: {vol}, mems: {len(active_members)} active load cases:{n_active}/{len(structure.all_patterns)}"
+            )
 
-        if structure.primal_adaptivity:
-            if parameters.primal_method == "residual":
-                # Use equilibrium residual check
-                converged = stop_primal_violation_residual(
-                    structure.nodes,
-                    active_members,
-                    filter_forces,
-                    structure.all_patterns,
-                    structure.load_case_active,
-                    structure.dof,
-                )
-            elif parameters.primal_method == "load_factor":
-                # Use load factor LP
-                converged = stop_primal_violation_pattern(
-                    structure.nodes,
-                    active_members,
-                    filter_areas,
-                    structure.all_patterns,
-                    structure.load_case_active,
-                    structure.dof,
-                    parameters.stress_tensile,
-                    parameters.stress_compressive,
-                    parameters.cvxpy["solver"],
-                    parameters.cores,
-                )
-            # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
-            if not converged:  # pylint: disable=possibly-used-before-assignment
-                continue  # Cases added, keep iterating
-            if n_added > 0:
-                continue  # No cases added but members added
-            break  # Both converged
-        # No primal adaptivity - just check member convergence
-        if n_added == 0:
-            break  # Converged
+            # inner loop - adding of members based on dual violation
+            # still need PMLcache? currently unused
+            # PMLcache = np.copy(PML[:,3])
+            n_added = stop_violation(
+                structure.nodes,
+                structure.potential_members,
+                structure.dof,
+                parameters.stress_tensile,
+                parameters.stress_compressive,
+                u,
+                parameters.joint_cost,
+            )
+            if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
+                continue  # small vol decrease = member adding close to convergence
+
+            # outer loop - adding of pattern load cases based on primal violation
+            # if stopPrimalViolationPattern(nodal_coords, c_n, a, structure.all_patterns, structure.load_case_active, dof, st, sc):
+            #     if numAdded > 0: # only fully terminate when no members violate
+            #         continue
+            #     else:
+            #         break
+
+            if structure.primal_adaptivity:
+                if parameters.primal_method == "residual":
+                    # Use equilibrium residual check
+                    converged = stop_primal_violation_residual(
+                        structure.nodes,
+                        active_members,
+                        filter_forces,
+                        structure.all_patterns,
+                        structure.load_case_active,
+                        structure.dof,
+                    )
+                elif parameters.primal_method == "load_factor":
+                    # Use load factor LP
+                    converged = stop_primal_violation_pattern(
+                        structure.nodes,
+                        active_members,
+                        filter_areas,
+                        structure.all_patterns,
+                        structure.load_case_active,
+                        structure.dof,
+                        parameters.stress_tensile,
+                        parameters.stress_compressive,
+                        parameters.cvxpy["solver"],
+                        pool=pool,
+                    )
+                # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
+                if not converged:  # pylint: disable=possibly-used-before-assignment
+                    continue  # Cases added, keep iterating
+                if n_added > 0:
+                    continue  # No cases added but members added
+                break  # Both converged
+            # No primal adaptivity - just check member convergence
+            if n_added == 0:
+                break  # Converged
 
     # Update the Structure active_members and active_pattern_loads
     structure.active_members = active_members
