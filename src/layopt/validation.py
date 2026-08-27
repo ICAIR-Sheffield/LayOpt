@@ -92,7 +92,7 @@ LAYOPT_CONFIG_SCHEMA = Schema(
         "youngs_modulus": Or(
             And(int, lambda n: n >= 0),
             And(float, lambda n: n >= 0.0),
-            error="Invalid value in config for 'joint_cost', valid values are >= 0.0",
+            error="Invalid value in config for 'youngs_modulus', valid values are > 0.0",
         ),
         "avg_deflection_limit": Or(
             int,
