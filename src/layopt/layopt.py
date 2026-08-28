@@ -12,6 +12,7 @@
 
 import time
 from math import ceil, isinf
+from multiprocessing import Pool
 from pathlib import Path
 
 import cvxpy as cvx
@@ -328,6 +329,82 @@ def stop_primal_violation_residual(
     return True  # converged, terminate
 
 
+# module-level variables to use in `_init_worker`
+_worker_problem: cvx.Problem | None = None
+_worker_fk_dof_param: cvx.Parameter | None = None
+_worker_lambda_var: cvx.Variable | None = None
+_worker_solver: str | None = None
+
+
+def _init_worker(
+    eq_matrix_b: sparse.coo_matrix,
+    areas_nonzero: npt.NDArray[np.float64],
+    stress_tensile: float,
+    stress_compressive: float,
+    solver: str,
+) -> None:
+    """
+    Pool initialiser, builds CVXPY `Problem` once per worker process.
+
+    Parameters
+    ----------
+    eq_matrix_b : sparse.coo_matrix
+        Equilibrium matrix B.
+    areas_nonzero : npt.NDArray[np.float64]
+        Non-zero member areas.
+    stress_tensile : float
+        Tensile stress limit.
+    stress_compressive : float
+        Compressive stress limit.
+    solver : str
+        CVXPY solver name.
+
+    Returns
+    -------
+    None
+        None.
+
+    """
+    global _worker_problem, _worker_fk_dof_param, _worker_lambda_var, _worker_solver
+    n_dof, n_members = eq_matrix_b.shape
+    q_var = cvx.Variable(n_members, name="q")
+    _worker_lambda_var = cvx.Variable(nonneg=True, name="lambda")
+    _worker_fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
+
+    constraints = [
+        eq_matrix_b @ q_var == _worker_lambda_var * _worker_fk_dof_param,  # equilibrium
+        q_var <= stress_compressive * areas_nonzero,  # compression limit
+        q_var >= -stress_tensile * areas_nonzero,  # tension limit
+    ]
+    objective = cvx.Maximize(_worker_lambda_var)
+    _worker_problem = cvx.Problem(objective, constraints)
+    _worker_solver = solver
+
+
+def _solve_load_factor(
+    load_case: tuple[int, npt.NDArray[np.float64]],
+) -> tuple[int, float]:
+    """
+    Update worker Parameter and re-solve worker LP problem.
+
+    Parameters
+    ----------
+    load_case : tuple[int, npt.NDArray[np.float64]]
+        Load case index and array of external loads.
+
+    Returns
+    -------
+    tuple[int, float]
+        Load case index and load factor lambda.
+    """
+    k, fk_dof = load_case
+    _worker_fk_dof_param.value = fk_dof
+    _worker_problem.solve(solver=_worker_solver)
+    lambda_value = _worker_lambda_var.value
+
+    return (k, lambda_value) if lambda_value is not None else (k, 0.0)
+
+
 # for each inactive load pattern f[k], solve an LP to find the maximum
 # load factor lambda that the current design (with fixed member areas a) can carry:
 #    maximize lambda
@@ -347,6 +424,7 @@ def stop_primal_violation_pattern(
     stress_tensile: float,
     stress_compressive: float,
     solver: str,
+    cores: int = 1,
 ) -> bool:
     """
     Check for primal violation (load factor structural analysis) and add new load cases.
@@ -371,6 +449,8 @@ def stop_primal_violation_pattern(
         Compressive stress limit.
     solver : str
         CVXPY solver name.
+    cores : int
+        Number of cores to use.
 
     Returns
     -------
@@ -391,32 +471,37 @@ def stop_primal_violation_pattern(
         shape=eq_matrix_b.shape,
     )
 
-    n_members = len(c_n_nonzero)
-    n_dof = eq_matrix_b.shape[0]
     load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
-
-    q_var = cvx.Variable(n_members, name="q")
-    lambda_var = cvx.Variable(nonneg=True, name="lambda")
-
-    fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
-
-    constraints = [
-        eq_matrix_b @ q_var == lambda_var * fk_dof_param,  # equilibrium
-        q_var <= stress_compressive * areas_nonzero,  # compression limit
-        q_var >= -stress_tensile * areas_nonzero,  # tension limit
+    inactive_load_cases = [
+        (k, all_patterns[k] * dof)
+        for k in range(len(all_patterns))
+        if not load_case_active[k]
     ]
-    objective = cvx.Maximize(lambda_var)
-    problem = cvx.Problem(objective, constraints)
 
-    # loop through all (active and inactive) pattern load cases
-    for k, pattern in enumerate(all_patterns):
-        if load_case_active[k]:
-            continue  # skip active cases
-
-        fk_dof_param.value = pattern * dof
-        problem.solve(solver)
-
-        load_factors[k] = lambda_var.value if lambda_var.value is not None else 0.0
+    # solve LP problem for each inactive load case
+    if inactive_load_cases:
+        init_args = (
+            eq_matrix_b,
+            areas_nonzero,
+            stress_tensile,
+            stress_compressive,
+            solver,
+        )
+        if cores > 1:
+            with Pool(
+                processes=cores,
+                initializer=_init_worker,
+                initargs=init_args,
+            ) as pool:
+                for k, lambda_value in pool.imap_unordered(
+                    _solve_load_factor, inactive_load_cases
+                ):
+                    load_factors[k] = lambda_value
+        else:
+            _init_worker(*init_args)
+            for load_case in inactive_load_cases:
+                k, lambda_value = _solve_load_factor(load_case)
+                load_factors[k] = lambda_value
 
     # Violation: load factor < 1 (with tolerance)
     violated = load_factors < tol
@@ -611,6 +696,7 @@ def trussopt(
                     parameters.stress_tensile,
                     parameters.stress_compressive,
                     parameters.cvxpy["solver"],
+                    parameters.cores,
                 )
             # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
             if not converged:  # pylint: disable=possibly-used-before-assignment

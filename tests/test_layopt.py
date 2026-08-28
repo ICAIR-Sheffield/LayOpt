@@ -354,6 +354,14 @@ def test_member_area_filtering(
     GITHUB_ACTIONS,
     reason="mosek library requires license so test will always fail in continuous integration",
 )
+# multiple parametrize markers uses cartesian product
+@pytest.mark.parametrize(
+    "cores",
+    [
+        pytest.param(1, id="one_core"),
+        pytest.param(4, id="four_cores"),
+    ],
+)
 @pytest.mark.parametrize(
     (
         "all_patterns",
@@ -506,9 +514,13 @@ def test_stop_primal_violation(
     stress_compressive: int,
     dof: npt.NDArray[np.float64],
     solver: str,
+    cores: int,
     expected_converge: bool,
 ) -> None:
     """Test for convergence based on whether all load cases active."""
+    # `stop_primal_violation_pattern` changes `load_case_active` in place
+    # so copy to ensure back to original fixture state between runs
+    load_case_active = load_case_active.copy()
     actual_converge = layopt.stop_primal_violation_pattern(
         nodes,
         active_members,
@@ -519,6 +531,7 @@ def test_stop_primal_violation(
         stress_tensile,
         stress_compressive,
         solver,
+        cores,
     )
     assert actual_converge == expected_converge
     assert np.all(load_case_active) is np.bool_(
