@@ -398,7 +398,7 @@ class Structure:
             max_length_initial_ground_structure=self.parameters.max_length_initial_ground_structure,
         )
         self.active_members = self.potential_members[
-            self.potential_members[:, 3] == True
+            self.potential_members[:, 3].astype(bool)
         ]
         self.primal_adaptivity, self.load_case_active = structure.primal_adaptivity(
             primal_method=self.parameters.primal_method,

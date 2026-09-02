@@ -619,7 +619,7 @@ def trussopt(
     vol = 1e9  # arbitrary large number to initialise
     # Allows debugging to see if active_members has changed
     previous_active_members = structure.potential_members[
-        structure.potential_members[:, 3] == True
+        structure.potential_members[:, 3].astype(bool)
     ]
     # Start the 'member adding' loop
     for itr in range(1, 100):
@@ -633,7 +633,7 @@ def trussopt(
         ]
         # Get active members/parts of matrices for current iteration
         active_members = structure.potential_members[
-            structure.potential_members[:, 3] == True
+            structure.potential_members[:, 3].astype(bool)
         ]
         logger.debug(
             f"Itr {itr} active members changed? {active_members.shape != previous_active_members.shape}"
