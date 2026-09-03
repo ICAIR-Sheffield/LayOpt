@@ -424,7 +424,7 @@ def stop_primal_violation_pattern(
     bool
         ``True`` if converged and no load cases added.
     """
-    tol = 0.99  # lambda must be >= 1 to be considered feasible
+    tol = 0.9999  # lambda must be >= 1 to be considered feasible
     area_tol = 1e-8  # members with area below this are treated as having zero area
 
     # Filter out zero area members
@@ -486,24 +486,20 @@ def stop_primal_violation_pattern(
         )
         stiffness_matrix = filtered_b @ element_stiffness @ filtered_b.transpose()
 
+        mp_inv = np.linalg.pinv(stiffness_matrix)
+
         for k, pattern in enumerate(all_patterns):
             if load_case_active[k]:
                 continue  # skip active cases
 
             filtered_pattern = pattern[filtered_nodes]
-            least_squares_sol = sparse.linalg.lsqr(stiffness_matrix, filtered_pattern)
-            if (
-                least_squares_sol[1] == 2
-            ):  # no true solution i.e. pattern activates a mechanism
-                violation_key[k] = 0
-            else:
-                compliance = 0.5 * least_squares_sol[0].transpose().dot(
-                    filtered_pattern
-                )
-                compliance_limit = structure.make_compliance_limit(filtered_pattern)
-                violation_key[k] = (
-                    compliance_limit / compliance
-                )  # i.e. < 1 means the compliance is too large = violated
+
+            compliance = 0.5 * (mp_inv @ filtered_pattern).dot(filtered_pattern)
+
+            compliance_limit = structure.make_compliance_limit(filtered_pattern)
+            violation_key[k] = (
+                compliance_limit / compliance
+            )  # i.e. < 1 means the compliance is too large = violated
 
         violated = violation_key < tol
 

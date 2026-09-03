@@ -11,6 +11,12 @@
   0  single_span_roller           1.0     18       4             10              1024                 35        3.75       0.204          22    797.566315              695       95                2734   load_factor  single span 18x4 example four load points
   '''
 # ---
+# name: test_cli_layopt_optimise[single_span_roller_elastic_e2e_test]
+  '''
+           problem_name  filter_level  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                                      notes
+  0  single_span_roller           1.0     18       4             10              1024                 31        3.75       0.204          22   1797.952418              495       95                2734   load_factor  single span 18x4 example four load points
+  '''
+# ---
 # name: test_cli_layopt_optimise[square_cantilever_e2e_test]
   '''
           problem_name  filter_level  width  height  n_load_points  n_patterns_total  n_patterns_active  load_large  load_small  iterations  final_volume  n_members_final  n_nodes  n_ground_structure primal_method                                notes
