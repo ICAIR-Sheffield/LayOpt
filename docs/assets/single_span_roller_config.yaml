@@ -7,6 +7,8 @@ height: 4 # Height of structure
 steps: 1 # Steps to generate nodes
 stress_tensile: 1.0 # Tensile stress
 stress_compressive: 1.0 # Compressive stress
+youngs_modulus: 1.0 # Material stiffness (used for elastic design only)
+avg_deflection_limit: -1.0 # Limit on weighted average of loaded points in elastic design.
 joint_cost: 0.0 # Joint costs
 loaded_points: # Loaded points
   - [0, 4]
