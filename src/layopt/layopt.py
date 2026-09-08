@@ -233,7 +233,7 @@ def stop_violation(
     int
         Number of members added.
     """
-    lst = np.where(potential_members[:, 3] == False)[0]
+    lst = np.where(potential_members[:, 3] == False)[0]  # pylint: disable=singleton-comparison
     c_n = potential_members[lst]
     member_cost = c_n[:, 2] + joint_cost
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
