@@ -97,6 +97,7 @@ def solve(
     npt.NDArray[np.float64],
     list[npt.NDArray[np.float64]],
     list[npt.NDArray[np.float64]],
+    list[float],
 ]:
     """
     Solve linear programming problem with given connections and pattern load cases.
@@ -112,12 +113,16 @@ def solve(
 
     Returns
     -------
-    tuple[float, npt.NDArray[np.float64], list[npt.NDArray[np.float64]], list[npt.NDArray[np.float64]]]
+    tuple[float, npt.NDArray[np.float64], list[npt.NDArray[np.float64]], list[npt.NDArray[np.float64]], list[float]]]
         A tuple consisting of ``volume`` (the volume of the solved problem),
-        ``area`` (member areas), ``forces`` (member forces) and ``deflections``
-        (virtual deflections at degrees of freedom).
+        ``area`` (member areas), ``forces`` (member forces)  ``deflections``
+        (virtual deflections at degrees of freedom) and ``weights`` (lagrange multipliers for compliance constraints =
+        size 0 array if plastic problem is solved).
     """
     member_cost = [col[2] + structure.parameters.joint_cost for col in active_members]
+    two_e_over_l = [
+        2 * structure.parameters.youngs_modulus / col[2] for col in active_members
+    ]
     eq_matrix_b = calc_eq_matrix_b(
         nodes=structure.nodes, active_members=active_members, dof=structure.dof
     )
@@ -129,28 +134,50 @@ def solve(
     # Assigned as used within for-loop
     n_members = len(active_members)
     # ns-rse 2026-07-17 - what does a represent here? number of non-negative active members?
-    a = cvx.Variable(n_members, nonneg=True, name="a")
+    a = cvx.Variable(n_members, nonneg=True, name="area")
 
     q_vars = []
     eq_constraints = []
     other_constraints = []
+    compliance_constraints = []
     for active_pattern in active_pattern_loads:
         qi = cvx.Variable(n_members, name="q")
         q_vars.append(qi)
         eq_constraints.append(eq_matrix_b @ qi == active_pattern * structure.dof)
-        other_constraints += [
-            # eq_matrix_b @ qi == active_pattern * dof,                          # equilibrium
-            qi <= structure.parameters.stress_compressive * a,  # compression limit
-            qi >= -structure.parameters.stress_tensile * a,  # tension limit
-        ]
+        if structure.parameters.avg_deflection_limit > 0:  # elastic analysis
+            pi = cvx.Variable(
+                n_members, nonneg=True, name="pi"
+            )  # elastic potential energy variables (per-member)
+
+            # Note: the natural phrasing of this conic constraint using a rotated cone can't be added in a vectorised
+            # way, so this has been converted to a standard quadratic cone.
+            x_vals = cvx.vstack([2 * qi, cvx.multiply(two_e_over_l, a) - pi])
+            t_vals = cvx.multiply(two_e_over_l, a) + pi
+            other_constraints += [cvx.SOC(t_vals, x_vals)]
+
+            compliance_limit = structure.make_compliance_limit(active_pattern)
+            compliance_constraints.append(cvx.sum(pi) <= compliance_limit)
+
+        else:  # plastic analysis
+            other_constraints += [
+                # eq_matrix_b @ qi == active_pattern * dof,                          # equilibrium
+                qi <= structure.parameters.stress_compressive * a,  # compression limit
+                qi >= -structure.parameters.stress_tensile * a,  # tension limit
+            ]
 
     objective = cvx.Minimize(member_cost @ a)
-    problem = cvx.Problem(objective, eq_constraints + other_constraints)
+    problem = cvx.Problem(
+        objective, eq_constraints + other_constraints + compliance_constraints
+    )
     problem.solve(structure.parameters.cvxpy["solver"])
 
     vol = 0.0 if problem.value is None else problem.value
     areas = np.zeros(n_members) if a.value is None else a.value
     forces = [np.zeros(n_members) if qi.value is None else qi.value for qi in q_vars]
+    weights = [
+        0 if con.dual_value is None else con.dual_value
+        for con in compliance_constraints
+    ]
 
     # eq_constraints = constraints[::3]  # every third constraint is the equilibrium one
     deflections = []
@@ -163,7 +190,7 @@ def solve(
     if vol == 0:
         deflections = [ui * 10000 for ui in deflections]
 
-    return vol, areas, forces, deflections
+    return vol, areas, forces, deflections, weights
 
 
 def stop_violation(
@@ -174,6 +201,8 @@ def stop_violation(
     stress_compressive: float,
     deflections: list[npt.NDArray[np.float64]],
     joint_cost: float,
+    structure: Structure,  # helen-fairclough 2026-8-12 - currently just for youngs modulus.
+    weights: list[np.float64],
 ) -> int:
     """
     Check for dual violation and add new members.
@@ -194,6 +223,10 @@ def stop_violation(
         Virtual deflections at degrees of freedom.
     joint_cost : float
         Joint cost.
+    structure : Structure
+        The structure and parameters.
+    weights : list[npt.NDArray[np.float64]]
+        The weighting factors for each loadcase from the previous iteration (zero length list if plastic problem solved).
 
     Returns
     -------
@@ -205,12 +238,23 @@ def stop_violation(
     member_cost = c_n[:, 2] + joint_cost
     eq_matrix_b = calc_eq_matrix_b(nodal_coords, c_n, dof).tocsc()
     y = np.zeros(len(c_n))
-    for uk in deflections:
-        yk = np.multiply(
-            eq_matrix_b.transpose().dot(uk) / member_cost,
-            np.array([[stress_tensile], [-stress_compressive]]),
-        )
-        y += np.amax(yk, axis=0)
+    if len(weights) > 0:
+        for uk, weight in zip(deflections, weights, strict=True):
+            strains = eq_matrix_b.transpose().dot(uk)
+            y += [
+                0.5
+                * structure.parameters.youngs_modulus
+                * strains[i] ** 2
+                / (weight * member_cost[i] ** 2)
+                for i in range(len(c_n))
+            ]
+    else:  # plastic problem given
+        for uk in deflections:
+            yk = np.multiply(
+                eq_matrix_b.transpose().dot(uk) / member_cost,
+                np.array([[stress_tensile], [-stress_compressive]]),
+            )
+            y += np.amax(yk, axis=0)
     vio_c_n = np.where(y > 1.000)[0]
     vio_sort = np.flipud(np.argsort(y[vio_c_n]))
     num = ceil(0.1 * (len(potential_members) - len(c_n)))  # size of existing problem
@@ -347,6 +391,7 @@ def stop_primal_violation_pattern(
     stress_tensile: float,
     stress_compressive: float,
     solver: str,
+    structure: Structure,
 ) -> bool:
     """
     Check for primal violation (load factor structural analysis) and add new load cases.
@@ -371,13 +416,15 @@ def stop_primal_violation_pattern(
         Compressive stress limit.
     solver : str
         CVXPY solver name.
+    structure : Structure
+        Details of the structure. Currently only for make_compliance_limit and youngs_modulus values.
 
     Returns
     -------
     bool
         ``True`` if converged and no load cases added.
     """
-    tol = 0.99  # lambda must be >= 1 to be considered feasible
+    tol = 0.9999  # lambda must be >= 1 to be considered feasible
     area_tol = 1e-8  # members with area below this are treated as having zero area
 
     # Filter out zero area members
@@ -393,41 +440,77 @@ def stop_primal_violation_pattern(
 
     n_members = len(c_n_nonzero)
     n_dof = eq_matrix_b.shape[0]
-    load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
 
-    q_var = cvx.Variable(n_members, name="q")
-    lambda_var = cvx.Variable(nonneg=True, name="lambda")
+    if structure.parameters.avg_deflection_limit < 0:  # plastic design
+        load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
 
-    fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
+        q_var = cvx.Variable(n_members, name="q")
+        lambda_var = cvx.Variable(nonneg=True, name="lambda")
 
-    constraints = [
-        eq_matrix_b @ q_var == lambda_var * fk_dof_param,  # equilibrium
-        q_var <= stress_compressive * areas_nonzero,  # compression limit
-        q_var >= -stress_tensile * areas_nonzero,  # tension limit
-    ]
-    objective = cvx.Maximize(lambda_var)
-    problem = cvx.Problem(objective, constraints)
+        fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
 
-    # loop through all (active and inactive) pattern load cases
-    for k, pattern in enumerate(all_patterns):
-        if load_case_active[k]:
-            continue  # skip active cases
+        constraints = [
+            eq_matrix_b @ q_var == lambda_var * fk_dof_param,  # equilibrium
+            q_var <= stress_compressive * areas_nonzero,  # compression limit
+            q_var >= -stress_tensile * areas_nonzero,  # tension limit
+        ]
+        objective = cvx.Maximize(lambda_var)
+        problem = cvx.Problem(objective, constraints)
 
-        fk_dof_param.value = pattern * dof
-        problem.solve(solver)
+        # loop through all (active and inactive) pattern load cases for plastic design
+        for k, pattern in enumerate(all_patterns):
+            if load_case_active[k]:
+                continue  # skip active cases
 
-        load_factors[k] = lambda_var.value if lambda_var.value is not None else 0.0
+            fk_dof_param.value = pattern * dof
+            problem.solve(solver)
 
-    # Violation: load factor < 1 (with tolerance)
-    violated = load_factors < tol
+            load_factors[k] = lambda_var.value if lambda_var.value is not None else 0.0
+
+        # Violation: load factor < 1 (with tolerance)
+        violated = load_factors < tol
+        violation_key = load_factors
+
+    else:  # Elastic design
+        violation_key = np.ones(len(all_patterns))
+
+        filtered_nodes = np.where(eq_matrix_b.getnnz(axis=1) > 0)[0]
+        filtered_b = eq_matrix_b.tocsr()[filtered_nodes, :]
+        element_stiffness = np.diag(
+            [
+                structure.parameters.youngs_modulus
+                * areas_nonzero[i]
+                / c_n_nonzero[i, 2]
+                for i in range(len(areas_nonzero))
+            ]
+        )
+        stiffness_matrix = filtered_b @ element_stiffness @ filtered_b.transpose()
+
+        mp_inv = np.linalg.pinv(stiffness_matrix)
+
+        for k, pattern in enumerate(all_patterns):
+            if load_case_active[k]:
+                continue  # skip active cases
+
+            filtered_pattern = pattern[filtered_nodes]
+
+            compliance = 0.5 * (mp_inv @ filtered_pattern).dot(filtered_pattern)
+
+            compliance_limit = structure.make_compliance_limit(filtered_pattern)
+            violation_key[k] = (
+                compliance_limit / compliance
+            )  # i.e. < 1 means the compliance is too large = violated
+
+        violated = violation_key < tol
+
     n_to_add = max(1, ceil(len(all_patterns) / 10))
 
     if any(violated):  # pylint: disable=too-many-nested-blocks
         # ns-rse 2026-03-17 : extract sorting violations to its own function
         # Sort by severity: lowest load factor = most violated
         by_violation = sorted(
-            [i for i in range(len(load_factors)) if violated[i]],
-            key=lambda k: load_factors[k],
+            [i for i in range(len(violation_key)) if violated[i]],
+            key=lambda k: violation_key[k],
         )
 
         if len(by_violation) == 0:
@@ -437,7 +520,7 @@ def stop_primal_violation_pattern(
         most_violated_id = by_violation[0]
         load_case_active[most_violated_id] = True
         logger.info(
-            f"  Adding most violated pattern {by_violation[0]}: lambda={load_factors[most_violated_id]:.3f}"
+            f"  Adding most violated pattern {by_violation[0]}: lambda={violation_key[most_violated_id]:.3f}"
         )
         violations_added_this_iter = [by_violation[0]]
         by_violation.pop(0)
@@ -457,15 +540,15 @@ def stop_primal_violation_pattern(
                 distinct = True
                 for j in violations_added_this_iter:
                     # check if both load factors are approx 0, only add one if so
-                    if load_factors[k] < 0.01 and load_factors[j] < 0.01:
+                    if violation_key[k] < 0.01 and violation_key[j] < 0.01:
                         distinct = False
                         break
                     # if added load factor is 0 but other violated ones aren't,
                     # other violated cases are distinct
-                    if load_factors[j] < 0.01:
+                    if violation_key[j] < 0.01:
                         continue
                     # check ratio of load factors if neither approx 0
-                    lambda_ratio = load_factors[k] / (load_factors[j] + 1e-12)
+                    lambda_ratio = violation_key[k] / (violation_key[j] + 1e-12)
                     if 0.9 < lambda_ratio < 1.1:  # Within 10% of each other
                         distinct = False
                         break
@@ -482,7 +565,7 @@ def stop_primal_violation_pattern(
                 if distinct:
                     load_case_active[k] = True
                     logger.info(
-                        f"  Adding {len(violations_added_this_iter) + 1} distinct pattern {k}: lambda={load_factors[k]:.3f}"
+                        f"  Adding {len(violations_added_this_iter) + 1} distinct pattern {k}: lambda={violation_key[k]:.3f}"
                     )
                     violations_added_this_iter.append(k)
                     by_violation.remove(k)
@@ -532,7 +615,7 @@ def trussopt(
     vol = 1e9  # arbitrary large number to initialise
     # Allows debugging to see if active_members has changed
     previous_active_members = structure.potential_members[
-        structure.potential_members[:, 3] == True
+        structure.potential_members[:, 3].astype(bool)
     ]
     # Start the 'member adding' loop
     for itr in range(1, 100):
@@ -546,13 +629,13 @@ def trussopt(
         ]
         # Get active members/parts of matrices for current iteration
         active_members = structure.potential_members[
-            structure.potential_members[:, 3] == True
+            structure.potential_members[:, 3].astype(bool)
         ]
         logger.debug(
             f"Itr {itr} active members changed? {active_members.shape != previous_active_members.shape}"
         )
         # solve current reduced problem
-        vol, filter_areas, filter_forces, u = solve(
+        vol, filter_areas, filter_forces, u, weights = solve(
             structure=structure,
             active_members=active_members,
             active_pattern_loads=active_pattern_loads,
@@ -577,6 +660,8 @@ def trussopt(
             parameters.stress_compressive,
             u,
             parameters.joint_cost,
+            structure,
+            weights,
         )
         if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
             continue  # small vol decrease = member adding close to convergence
@@ -611,6 +696,7 @@ def trussopt(
                     parameters.stress_tensile,
                     parameters.stress_compressive,
                     parameters.cvxpy["solver"],
+                    structure,
                 )
             # ns-rse 2026-03-17 : leaves scope for 'converged' to not be assigned if `primal_method` never matches
             if not converged:  # pylint: disable=possibly-used-before-assignment
@@ -639,7 +725,7 @@ def trussopt(
             logger.info(f"Solving for filter level : {filter_level}")
             keep = [area > (filter_level * max(filter_areas)) for area in filter_areas]
             active_members = active_members[keep]
-            final_vol, filter_areas, filter_forces, u = solve(
+            final_vol, filter_areas, filter_forces, u, _ = solve(
                 structure=structure,
                 active_members=active_members,
                 active_pattern_loads=active_pattern_loads,

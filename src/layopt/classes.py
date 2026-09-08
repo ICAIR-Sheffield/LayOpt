@@ -34,6 +34,7 @@ class Parameters:
     steps: float = Field(default=1.0, title="Steps to generate nodes", gt=0.0)
     stress_tensile: float = Field(default=1.0, title="Tensile stress.", ge=0.0)
     stress_compressive: float = Field(default=1.0, title="Compressive stress.", ge=0.0)
+    youngs_modulus: float = Field(default=1.0, title="Young modulus (E).", ge=0.0)
     joint_cost: float = Field(default=0.0, title="Joint cost.", ge=0.0)
     loaded_points: npt.NDArray[np.int64] = Field(
         default=np.asarray([[1, 0], [2, 0]]), title="Loaded Points."
@@ -50,7 +51,7 @@ class Parameters:
         gt=0.0,
     )
     support_points: npt.NDArray[np.float64] = Field(
-        default=np.asarray([[0, 0, 1, 1], [3, 3, 1, 1]]),
+        default=np.asarray([[0, 0, 1, 1], [3, 0, 1, 1]]),
         title="Support Points as coordinates and bools indicating whether to restrain in x- or y-directions.",
     )
     member_area_filtering: float = Field(
@@ -62,6 +63,10 @@ class Parameters:
     )
     filter_levels: list[float] = Field(
         default=[1.0], title="Filter levels to apply to solved problem."
+    )
+    avg_deflection_limit: float = Field(
+        default=-1.0,
+        title="Limit on average load deflection for compliance optimization (leave negative for plastic limit solution).",
     )
     primal_method: str = Field(default="load_factor", title="Primal method")
     problem_name: str = Field(
@@ -393,7 +398,7 @@ class Structure:
             max_length_initial_ground_structure=self.parameters.max_length_initial_ground_structure,
         )
         self.active_members = self.potential_members[
-            self.potential_members[:, 3] == True
+            self.potential_members[:, 3].astype(bool)
         ]
         self.primal_adaptivity, self.load_case_active = structure.primal_adaptivity(
             primal_method=self.parameters.primal_method,
@@ -422,3 +427,25 @@ class Structure:
             f"Potential members : {len(self.potential_members)}"
             f"Joint cost        : {self.parameters.joint_cost}"
         )
+
+    def make_compliance_limit(
+        self: "Structure", pattern: npt.NDArray[np.float64]
+    ) -> float:
+        """
+        Calculate the value of the compliance limit for a particular load.
+
+        Parameters
+        ----------
+        pattern : npt.NDArray[np.float64]
+            The force vector for the particular pattern load.
+
+        Returns
+        -------
+        limit
+            The value which should be used for the compliance limit in this pattern load case.
+        """
+        if self.parameters.avg_deflection_limit < 0:
+            return 1e6  # arbitrary large number to mean no limit should be applied
+        total_load = sum(abs(pattern))
+        # helen-fairclough 2026-8-8: Slight simplification - really should use pythagoras at each point then sum.
+        return float(0.5 * total_load * self.parameters.avg_deflection_limit)
