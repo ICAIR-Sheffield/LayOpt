@@ -300,8 +300,9 @@ def test_trussopt(
     # refactoring is more complete
 
     # fisher568 2026-09-09 override precision for tests where small platform differences
-    # NB done on a test basis not platform basis to main one snapshot per test
+    # NB done on a test basis not platform basis to maintain one snapshot per test
     precision_overrides = {
+        "spanning_example_roller_clarabel": 5,
         "spanning_example_elastic_clarabel": 5,
     }
     test_id = request.node.callspec.id
