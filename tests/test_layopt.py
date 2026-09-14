@@ -2,6 +2,8 @@
 
 import os
 import platform
+from contextlib import nullcontext
+from multiprocessing import Pool
 from typing import Any
 
 import numpy as np
@@ -296,6 +298,7 @@ def test_trussopt(
     results = (results[0], results[1])
     # note: helen-fairclough 29/7/2026 results[3] (the structure object) is not tested, reconsider when
     # refactoring is more complete
+
     assert results == snapshot(
         matcher=path_type(
             types=(float, np.ndarray),
@@ -521,18 +524,25 @@ def test_stop_primal_violation(
     # `stop_primal_violation_pattern` changes `load_case_active` in place
     # so copy to ensure back to original fixture state between runs
     load_case_active = load_case_active.copy()
-    actual_converge = layopt.stop_primal_violation_pattern(
-        nodes,
-        active_members,
-        areas,
-        all_patterns,
-        load_case_active,
-        dof,
-        stress_tensile,
-        stress_compressive,
-        solver,
-        cores,
-    )
+    use_pool = cores > 1
+
+    with (
+        Pool(processes=cores) if use_pool else nullcontext() as pool,
+    ):
+        actual_converge = layopt.stop_primal_violation_pattern(
+            nodes,
+            active_members,
+            areas,
+            all_patterns,
+            load_case_active,
+            dof,
+            stress_tensile,
+            stress_compressive,
+            solver,
+            iteration_id=0,
+            pool=pool,
+            cores=cores,
+        )
     assert actual_converge == expected_converge
     assert np.all(load_case_active) is np.bool_(
         True
