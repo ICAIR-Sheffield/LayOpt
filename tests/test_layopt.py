@@ -381,6 +381,13 @@ def test_member_area_filtering(
     ],
 )
 @pytest.mark.parametrize(
+    "solver",
+    [
+        pytest.param("mosek", id="mosek"),
+        pytest.param("clarabel", id="clarabel"),
+    ],
+)
+@pytest.mark.parametrize(
     (
         "all_patterns",
         "load_case_active",
@@ -388,7 +395,6 @@ def test_member_area_filtering(
         "stress_tensile",
         "stress_compressive",
         "dof",
-        "solver",
         "expected_converge",
     ),
     [
@@ -477,9 +483,8 @@ def test_member_area_filtering(
             np.array(
                 [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ),  # dof
-            "mosek",  # solver
             True,  # expected converge
-            id="All active load cases convergence",
+            id="all_active_lc_converge",
         ),
         pytest.param(
             [
@@ -516,9 +521,8 @@ def test_member_area_filtering(
             np.array(
                 [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ),  # dof
-            "mosek",  # solver
             False,  # expected converge
-            id="One inactive load case no convergence",
+            id="one_inactive_lc_no_converge",
         ),
     ],
 )
