@@ -2,6 +2,8 @@
 
 import os
 import platform
+from contextlib import nullcontext
+from multiprocessing import Pool
 from typing import Any
 
 import numpy as np
@@ -311,6 +313,7 @@ def test_trussopt(
     }
     test_id = request.node.callspec.id
     test_precision = precision_overrides.get(test_id, PRECISION)
+
     assert results == snapshot(
         matcher=path_type(
             types=(float, np.ndarray),
@@ -536,19 +539,24 @@ def test_stop_primal_violation(
     # `stop_primal_violation_pattern` changes `load_case_active` in place
     # so copy to ensure back to original fixture state between runs
     load_case_active = load_case_active.copy()
-    actual_converge = layopt.stop_primal_violation_pattern(
-        nodes,
-        active_members,
-        areas,
-        all_patterns,
-        load_case_active,
-        dof,
-        stress_tensile,
-        stress_compressive,
-        solver,
-        layopt.Structure(layopt.Parameters()),
-        cores,
-    )
+    use_pool = cores > 1
+
+    with (
+        Pool(processes=cores) if use_pool else nullcontext() as pool,
+    ):
+        actual_converge = layopt.stop_primal_violation_pattern(
+            nodes,
+            active_members,
+            areas,
+            all_patterns,
+            load_case_active,
+            dof,
+            stress_tensile,
+            stress_compressive,
+            solver,
+            layopt.Structure(layopt.Parameters()),
+            cores=cores,
+        )
     assert actual_converge == expected_converge
     assert np.all(load_case_active) is np.bool_(
         True
