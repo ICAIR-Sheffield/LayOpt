@@ -9,6 +9,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 import pytest
+from scipy import sparse
 from syrupy.matchers import path_type
 
 from layopt import layopt
@@ -551,6 +552,111 @@ def test_stop_primal_violation(
     assert np.all(load_case_active) is np.bool_(
         True
     )  # checks that violating inactive load cases added
+
+
+@pytest.mark.usefixtures("reset_worker_state")  # initialise and reset iteration to -1
+@pytest.mark.parametrize(
+    (
+        "setup_iteration",
+        "batch_iteration",
+        "batch_areas",
+        "load_case",
+        "expected_call_count",
+        "expected_lambda",
+    ),
+    [
+        pytest.param(
+            -1,
+            1,
+            np.array([1.0]),
+            [(0, np.array([0.5]))],
+            1,
+            2.0,
+            id="init_problem",
+        ),
+        pytest.param(
+            1,
+            1,
+            np.array([1.0]),
+            [(0, np.array([0.25]))],
+            0,
+            4.0,
+            id="reuse_problem",
+        ),
+        pytest.param(
+            1,
+            2,
+            np.array([2.0]),
+            [(0, np.array([0.5]))],
+            1,
+            4.0,
+            id="rebuild_problem",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "eq_matrix_b",
+        "areas_nonzero",
+        "stress_tensile",
+        "stress_compressive",
+        "solver",
+    ),
+    [
+        pytest.param(
+            sparse.coo_matrix(np.array([[1.0]])),
+            np.array([1.0]),
+            1,  # stress_tensile
+            1,  # stress_compressive
+            "clarabel",
+            id="1_lc_basic",
+        ),
+    ],
+)
+def test_solve_batch_load_cases(
+    mocker,
+    setup_iteration: int,
+    batch_iteration: int,
+    batch_areas: npt.NDArray[np.float64],
+    load_case: list[tuple[int, npt.NDArray[np.float64]]],
+    expected_call_count: int,
+    expected_lambda: float,
+    eq_matrix_b: sparse.coo_matrix,
+    areas_nonzero: npt.NDArray[np.float64],
+    stress_tensile: int,
+    stress_compressive: int,
+    solver: str,
+):
+    """Test that solving batch of load cases interacts properly with `worker`."""
+    setup_init_args = (
+        eq_matrix_b,
+        areas_nonzero,
+        stress_tensile,
+        stress_compressive,
+        solver,
+    )
+
+    if setup_iteration != -1:
+        layopt._init_worker(*setup_init_args)
+        layopt.worker.iteration = setup_iteration
+
+    batch_init_args = (
+        eq_matrix_b,
+        batch_areas,
+        stress_tensile,
+        stress_compressive,
+        solver,
+    )
+    batch_data = (batch_iteration, batch_init_args, load_case)
+    init_spy = mocker.spy(layopt, "_init_worker")
+
+    results = layopt._solve_batch_load_cases(batch_data)
+    expected_results = [(0, expected_lambda)]
+
+    assert init_spy.call_count == expected_call_count
+    assert layopt.worker.iteration == batch_iteration
+    # convert results to dict for pytest.approx
+    assert dict(results) == pytest.approx(dict(expected_results), rel=1e-6)
 
 
 @pytest.mark.parametrize(

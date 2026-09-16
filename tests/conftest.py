@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
+from layopt import layopt
 from layopt.classes import Parameters
 
 
@@ -603,3 +604,10 @@ def sample_csv_results() -> dict[str, Any]:
         "primal_method": True,
         "notes": "Test run",
     }
+
+
+@pytest.fixture
+def reset_worker_state():
+    layopt.worker.iteration = -1
+    yield
+    layopt.worker.iteration = -1

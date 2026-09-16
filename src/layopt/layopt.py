@@ -353,7 +353,7 @@ class _WorkerState:
         self.iteration: int = -1
 
 
-_worker = _WorkerState()
+worker = _WorkerState()
 
 
 def _init_worker(
@@ -387,17 +387,17 @@ def _init_worker(
     n_dof, n_members = eq_matrix_b.shape
     q_var = cvx.Variable(n_members, name="q")
 
-    _worker.lambda_var = cvx.Variable(nonneg=True, name="lambda")
-    _worker.fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
+    worker.lambda_var = cvx.Variable(nonneg=True, name="lambda")
+    worker.fk_dof_param = cvx.Parameter(n_dof, name="fk_dof")
 
     constraints = [
-        eq_matrix_b @ q_var == _worker.lambda_var * _worker.fk_dof_param,  # equilibrium
+        eq_matrix_b @ q_var == worker.lambda_var * worker.fk_dof_param,  # equilibrium
         q_var <= stress_compressive * areas_nonzero,  # compression limit
         q_var >= -stress_tensile * areas_nonzero,  # tension limit
     ]
-    objective = cvx.Maximize(_worker.lambda_var)
-    _worker.problem = cvx.Problem(objective, constraints)
-    _worker.solver = solver
+    objective = cvx.Maximize(worker.lambda_var)
+    worker.problem = cvx.Problem(objective, constraints)
+    worker.solver = solver
 
 
 def _solve_batch_load_cases(
@@ -422,16 +422,16 @@ def _solve_batch_load_cases(
     """
     iteration_id, init_args, load_case = batch_data
     # only rebuild worker if iteration has changed
-    if iteration_id != _worker.iteration:
+    if iteration_id != worker.iteration:
         _init_worker(*init_args)
-        _worker.iteration = iteration_id
+        worker.iteration = iteration_id
 
     results = []
     for k, fk_dof in load_case:
-        _worker.fk_dof_param.value = fk_dof
-        _worker.problem.solve(solver=_worker.solver)
+        worker.fk_dof_param.value = fk_dof
+        worker.problem.solve(solver=worker.solver)
         lambda_value = (
-            _worker.lambda_var.value if _worker.lambda_var.value is not None else 0.0
+            worker.lambda_var.value if worker.lambda_var.value is not None else 0.0
         )
         results.append((k, lambda_value))
 
@@ -549,16 +549,16 @@ def stop_primal_violation_pattern(
                     load_factors[k] = lambda_value
         else:
             _init_worker(*init_args)
-            _worker.iteration = iteration_id
+            worker.iteration = iteration_id
             for k, fk_dof in inactive_load_cases:
                 # k, lambda_value = _solve_load_factor(
                 #     (iteration_id, *load_case), shared_data
                 # )
-                _worker.fk_dof_param.value = fk_dof
-                _worker.problem.solve(solver=_worker.solver)
+                worker.fk_dof_param.value = fk_dof
+                worker.problem.solve(solver=worker.solver)
                 lambda_value = (
-                    _worker.lambda_var.value
-                    if _worker.lambda_var.value is not None
+                    worker.lambda_var.value
+                    if worker.lambda_var.value is not None
                     else 0.0
                 )
                 load_factors[k] = lambda_value

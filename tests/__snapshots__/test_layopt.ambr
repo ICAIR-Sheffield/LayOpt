@@ -281,16 +281,16 @@
 # ---
 # name: test_trussopt[spanning_example_pinned_mosek]
   tuple(
-    np.float64(172.092),
+    np.float64(172.092001),
     dict({
       3: 6.623233,
-      22: 2.121754,
+      22: 2.121753,
       946: 6.623233,
       955: 2.121754,
       1068: 6.623233,
       1668: 6.623233,
       1903: 6.623233,
-      1950: 2.121754,
+      1950: 2.121753,
       2185: 2.121754,
       2204: 6.623233,
       2466: 6.623233,
@@ -303,7 +303,7 @@
 # name: test_trussopt[spanning_example_pinned_mosek].1
   '''
          problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  spanning example          1.0    18      4             2                4                 3       3.75      0.204         12      172.092             492      95               2734   load_factor  spanning example test
+  0  spanning example          1.0    18      4             2                4                 3       3.75      0.204         10   172.092001             467      95               2734   load_factor  spanning example test
   '''
 # ---
 # name: test_trussopt[spanning_example_roller_clarabel]
@@ -446,15 +446,15 @@
       365: 0.363398,
       408: 0.143646,
       413: 7.820125,
-      420: 0.649745,
+      420: 0.649746,
       437: 0.324873,
       464: 7.820125,
-      472: 0.073418,
+      472: 0.073417,
       476: 0.073418,
       510: 0.033844,
       511: 0.033844,
       516: 7.093687,
-      529: 0.649745,
+      529: 0.649746,
       540: 0.324873,
       567: 6.66275,
       582: 0.363398,
@@ -541,7 +541,7 @@
 # name: test_trussopt[spanning_example_roller_mosek].1
   '''
          problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                  notes
-  0  spanning example          1.0    18      4             2                4                 3       3.75      0.204          9   266.990185             531      95               2734   load_factor  spanning example test
+  0  spanning example          1.0    18      4             2                4                 3       3.75      0.204         11   266.990185             533      95               2734   load_factor  spanning example test
   '''
 # ---
 # name: test_trussopt[square_cantilever_clarabel]
@@ -599,10 +599,10 @@
     np.float64(2070.37037),
     dict({
       0: 16.666667,
-      2: 14.997594,
-      11: 4.425264,
+      2: 15.050025,
+      11: 4.846193,
       12: 62.328296,
-      17: 13.033368,
+      17: 12.581692,
       45: 16.666667,
       94: 16.666667,
       140: 16.666667,
@@ -611,36 +611,36 @@
       284: 16.666667,
       330: 16.666667,
       397: 52.704628,
-      467: 14.997594,
-      881: 14.997594,
-      924: 4.425264,
+      467: 15.050025,
+      881: 15.050025,
+      924: 4.846193,
       989: 62.112999,
       993: 5.176083,
-      1221: 14.997594,
-      1286: 3.161056,
-      1288: 12.644224,
+      1221: 15.050025,
+      1286: 3.051508,
+      1288: 12.206034,
       1352: 66.782307,
       1354: 35.355339,
-      1512: 9.053612,
-      1514: 10.414494,
+      1512: 8.944065,
+      1514: 10.466925,
       1520: 3.10565,
-      1564: 41.657978,
+      1564: 41.867702,
       1566: 11.785113,
-      1569: 26.506942,
+      1569: 26.37725,
       1615: 35.355339,
-      1695: 9.053612,
-      1748: 42.940061,
+      1695: 8.944065,
+      1748: 43.156239,
       1780: 37.2678,
-      1845: 9.053612,
-      1867: 26.506942,
+      1845: 8.944065,
+      1867: 26.37725,
       1896: 37.396978,
-      1954: 9.053612,
+      1954: 8.944065,
     }),
   )
 # ---
 # name: test_trussopt[square_cantilever_mosek].1
   '''
           problem_name filter_level width height n_load_points n_patterns_total n_patterns_active load_large load_small iterations final_volume n_members_final n_nodes n_ground_structure primal_method                   notes
-  0  square cantilever          1.0     8      8             2                4                 1       50.0        5.0          6   2070.37037             377      81               2040   load_factor  square cantliever test
+  0  square cantilever          1.0     8      8             2                4                 1       50.0        5.0          7   2070.37037             379      81               2040   load_factor  square cantliever test
   '''
 # ---
