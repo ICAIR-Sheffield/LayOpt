@@ -1,7 +1,7 @@
 base_dir: ./ # Base directory where code is being run
 output_dir: ./output # Where to save output to
 log_level: info # Verbosity used in logging
-cores: 4 # Number of cores to use when processing
+cores: 2 # Number of cores to use when processing
 width: 3 # Width of structure
 height: 6 # Height of structure
 steps: 1 # Steps to generate nodes

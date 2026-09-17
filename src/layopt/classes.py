@@ -28,7 +28,7 @@ class Parameters:
         title="Path to save the output to, default is './output/'.",
     )
     log_level: str = Field(default="info", title="Log level")
-    cores: int = Field(default=4, title="Cores to run optimisation on in parallel.")
+    cores: int = Field(default=2, title="Cores to run optimisation on in parallel.")
     width: int = Field(default=3, title="Width of structure.", ge=1)
     height: int = Field(default=3, title="Height of structure.", ge=1)
     steps: float = Field(default=1.0, title="Steps to generate nodes", gt=0.0)
