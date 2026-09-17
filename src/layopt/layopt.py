@@ -466,7 +466,10 @@ def _solve_batch_load_cases(
     """
     iteration_id, init_args, load_case = batch_data
     # only rebuild worker if iteration has changed
-    if iteration_id != worker.iteration:
+    if iteration_id != worker.iteration or (
+        worker.problem is not None
+        and worker.fk_dof_param.shape != (init_args[0].shape[0],)
+    ):
         _init_worker(*init_args)
         worker.iteration = iteration_id
 
@@ -557,7 +560,6 @@ def stop_primal_violation_pattern(
         shape=eq_matrix_b.shape,
     )
 
-
     if structure.parameters.avg_deflection_limit < 0:  # plastic design
         load_factors = np.ones(len(all_patterns))  # lambda=1 for active cases
         inactive_load_cases = [
@@ -565,7 +567,7 @@ def stop_primal_violation_pattern(
             for k in range(len(all_patterns))
             if not load_case_active[k]
         ]
-        
+
         # solve LP problem for each inactive load case
         if inactive_load_cases:
             init_args = (
@@ -611,7 +613,7 @@ def stop_primal_violation_pattern(
                         else 0.0
                     )
                     load_factors[k] = lambda_value
-        
+
         # Violation: load factor < 1 (with tolerance)
         violated = load_factors < tol
         violation_key = load_factors
@@ -816,6 +818,8 @@ def trussopt(
                 parameters.stress_compressive,
                 u,
                 parameters.joint_cost,
+                structure,
+                weights,
             )
             if not (0.99 * last_volume) < vol < (1.0001 * last_volume):
                 continue  # small vol decrease = member adding close to convergence

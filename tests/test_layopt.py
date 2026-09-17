@@ -560,6 +560,8 @@ def test_stop_primal_violation(
             stress_compressive,
             solver,
             layopt.Structure(layopt.Parameters()),
+            iteration_id=0,
+            pool=pool,
             cores=cores,
         )
     assert actual_converge == expected_converge
