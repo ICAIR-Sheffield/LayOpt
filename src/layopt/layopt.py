@@ -422,7 +422,10 @@ def _solve_batch_load_cases(
     """
     iteration_id, init_args, load_case = batch_data
     # only rebuild worker if iteration has changed
-    if iteration_id != worker.iteration:
+    if iteration_id != worker.iteration or (
+        worker.problem is not None
+        and worker.fk_dof_param.shape != (init_args[0].shape[0],)
+    ):
         _init_worker(*init_args)
         worker.iteration = iteration_id
 
