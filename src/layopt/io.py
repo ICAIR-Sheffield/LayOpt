@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from pydantic import RootModel
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML, CommentedSeq
 
 from layopt import CONFIG_DOCUMENTATION_REFERENCE
 from layopt.classes import Parameters
@@ -62,6 +62,11 @@ def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
             f.write(f"{CONFIG_DOCUMENTATION_REFERENCE}")
             yaml_out = YAML()
             yaml_out.indent(sequence=4, offset=2)
+            # patch support_points so that `restrain_x` and `restrain_y` are bool
+            config["support_points"] = [
+                [x, y, bool(restrain_x), bool(restrain_y)]
+                for x, y, restrain_x, restrain_y in config["support_points"]
+            ]
             yaml_out.dump(dict_to_yaml(config), f)
             logger.info(f"{logger_msg} : {config_path!s}")
         except:  # noqa: E722, pylint: disable=W0702
@@ -91,7 +96,14 @@ def dict_to_yaml(obj: Any) -> Any:
         return new
     # Recurse on lists and tuples
     if isinstance(obj, (list, tuple)):
-        return [dict_to_yaml(x) for x in obj]
+        converted = [dict_to_yaml(x) for x in obj]
+        if converted and all(
+            isinstance(x, (str, int, float, bool)) or x is None for x in converted
+        ):
+            inline_iterable = CommentedSeq(converted)
+            inline_iterable.fa.set_flow_style()
+            return inline_iterable
+        return converted
     # Safe types return as is
     if isinstance(obj, (str, int, float, bool)) or obj is None:
         return obj
@@ -100,7 +112,7 @@ def dict_to_yaml(obj: Any) -> Any:
         return str(obj)
     # Convert numpy array -> nested lists
     if isinstance(obj, np.ndarray):
-        return obj.tolist()
+        return dict_to_yaml(obj.tolist())
     # Convert numpy scalar -> native Python scalar
     if isinstance(obj, np.generic):
         return obj.item()
