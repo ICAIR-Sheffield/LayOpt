@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, field_serializer
 from pydantic.dataclasses import dataclass
 from shapely.geometry import Polygon
 
@@ -76,6 +76,28 @@ class Parameters:
         default={"run": False, "bar_thickness": 0.3, "dpi": 1200},
         title="Plotting options.",
     )
+
+    @field_serializer("support_points")
+    def serialise_support_points(
+        self, support_points: npt.NDArray[np.float64]
+    ) -> list[list[float | bool]]:
+        """
+        Serialise support points for use in `io.dict_to_yaml`.
+
+        Parameters
+        ----------
+        support_points : npt.NDArray[np.float64]
+            Support points as coordinates and truthy values indicating whether to restrain in x- or y-directions.
+
+        Returns
+        -------
+        list[list[float | bool]]
+            Support points as list of lists and where `restrain_x` and `restrain_y` are bool values.
+        """
+        return [
+            [float(x), float(y), bool(restrain_x), bool(restrain_y)]
+            for x, y, restrain_x, restrain_y in support_points
+        ]
 
     def __post_init__(self) -> None:
         """Post initialisation."""
@@ -393,7 +415,7 @@ class Structure:
             max_length_initial_ground_structure=self.parameters.max_length_initial_ground_structure,
         )
         self.active_members = self.potential_members[
-            self.potential_members[:, 3] == True
+            self.potential_members[:, 3] == True  # pylint: disable=singleton-comparison
         ]
         self.primal_adaptivity, self.load_case_active = structure.primal_adaptivity(
             primal_method=self.parameters.primal_method,
