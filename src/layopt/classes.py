@@ -82,7 +82,7 @@ class Parameters:
         title="Plotting options",
     )
 
-    @field_serializer("support_points")
+    @field_serializer("support_points")  # type: ignore[untyped-decorator]
     def serialise_support_points(
         self, support_points: npt.NDArray[np.float64]
     ) -> list[list[float | bool]]:
@@ -99,6 +99,9 @@ class Parameters:
         list[list[float | bool]]
             Support points as list of lists and where `restrain_x` and `restrain_y` are bool values.
         """
+        if support_points.size == 0:
+            return []
+
         return [
             [float(x), float(y), bool(restrain_x), bool(restrain_y)]
             for x, y, restrain_x, restrain_y in support_points
