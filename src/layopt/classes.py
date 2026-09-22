@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, field_serializer
 from pydantic.dataclasses import dataclass
 from shapely.geometry import Polygon
 
@@ -27,55 +27,85 @@ class Parameters:
         default=Path("./output/"),
         title="Path to save the output to, default is './output/'.",
     )
-    log_level: str = Field(default="info", title="Log level")
-    cores: int = Field(default=2, title="Cores to run optimisation on in parallel.")
-    width: int = Field(default=3, title="Width of structure.", ge=1)
-    height: int = Field(default=3, title="Height of structure.", ge=1)
+    log_level: str = Field(default="info", title="Verbosity used in logging")
+    cores: int = Field(default=2, title="Cores to run optimisation on in parallel")
+    width: int = Field(default=3, title="Width of structure", ge=1)
+    height: int = Field(default=3, title="Height of structure", ge=1)
     steps: float = Field(default=1.0, title="Steps to generate nodes", gt=0.0)
-    stress_tensile: float = Field(default=1.0, title="Tensile stress.", ge=0.0)
-    stress_compressive: float = Field(default=1.0, title="Compressive stress.", ge=0.0)
-    joint_cost: float = Field(default=0.0, title="Joint cost.", ge=0.0)
+    stress_tensile: float = Field(default=1.0, title="Tensile yield stress", ge=0.0)
+    stress_compressive: float = Field(
+        default=1.0, title="Compressive yield stress", ge=0.0
+    )
+    joint_cost: float = Field(default=0.0, title="Joint cost", ge=0.0)
     loaded_points: npt.NDArray[np.int64] = Field(
-        default=np.asarray([[1, 0], [2, 0]]), title="Loaded Points."
+        default=np.asarray([[1, 0], [2, 0]]), title="Loaded Points"
     )
     load_direction: tuple[float, float] = Field(
-        default=(0.0, -1.0), title="Loaded direction."
+        default=(0.0, -1.0), title="Loaded direction"
     )
-    load_large: float = Field(default=50.0, title="Maximum length.", ge=0.0)
-    load_small: float = Field(default=5.0, title="Maximum length.", ge=0.0)
-    max_length: float = Field(default=18.0, title="Maximum length.", ge=0.0)
+    load_large: float = Field(default=50.0, title="Large load", ge=0.0)
+    load_small: float = Field(default=5.0, title="Small load", ge=0.0)
+    max_length: float = Field(default=18.0, title="Maximum member length", ge=0.0)
     max_length_initial_ground_structure: float = Field(
         default=1.5,
-        title="Threshold for marking a potential member as active in the initial ground structure.",
+        title="Threshold for marking a potential member as active in the initial ground structure",
         gt=0.0,
     )
     support_points: npt.NDArray[np.float64] = Field(
         default=np.asarray([[0, 0, 1, 1], [3, 3, 1, 1]]),
-        title="Support Points as coordinates and bools indicating whether to restrain in x- or y-directions.",
+        title="Support points in form [x_coord, y_coord, restrain_x, restrain_y] (true=fixed, false=free for restrain_x/restrain_y)",
     )
     member_area_filtering: float = Field(
-        default=0.001, title="Member Area Filtering", ge=0.0
+        default=0.001,
+        title="Fraction of maximum member area for output threshold",
+        ge=0.0,
     )
     cvxpy: dict[str, Any] = Field(
         default={"solver": "clarabel"},
-        title="CVXPY options.",
+        title="CVXPY options. See https://www.cvxpy.org/tutorial/solvers/index.html?h=solve#choosing-a-solver for further details on solver options",
     )
     filter_levels: list[float] = Field(
-        default=[1.0], title="Filter levels to apply to solved problem."
+        default=[1.0],
+        title="List of values to filter by if empty no filtering is performed",
     )
     primal_method: str = Field(default="load_factor", title="Primal method")
     problem_name: str = Field(
-        default="", title="Description of the problem being solved."
+        default="", title="Description of the problem being solved"
     )
     csv_filename: str = Field(
         default="results.csv",
-        title="File to save results to, default is 'results.csv' (within 'output_dir', i.e. './output/results.csv')",
+        title="Filename to save results to, if left as `results.csv` will have YYYY-MM-DD-hhmmss added",
     )
-    notes: str = Field(default="", title="Notes to add to the model.")
+    notes: str = Field(default="", title="Notes to add to the model")
     plotting: dict[str, Any] = Field(
         default={"run": False, "bar_thickness": 0.3, "dpi": 1200},
-        title="Plotting options.",
+        title="Plotting options",
     )
+
+    @field_serializer("support_points")  # type: ignore[untyped-decorator]
+    def serialise_support_points(
+        self, support_points: npt.NDArray[np.float64]
+    ) -> list[list[float | bool]]:
+        """
+        Serialise support points for use in `io.dict_to_yaml`.
+
+        Parameters
+        ----------
+        support_points : npt.NDArray[np.float64]
+            Support points as coordinates and truthy values indicating whether to restrain in x- or y-directions.
+
+        Returns
+        -------
+        list[list[float | bool]]
+            Support points as list of lists and where `restrain_x` and `restrain_y` are bool values.
+        """
+        if support_points.size == 0:
+            return []
+
+        return [
+            [float(x), float(y), bool(restrain_x), bool(restrain_y)]
+            for x, y, restrain_x, restrain_y in support_points
+        ]
 
     def __post_init__(self) -> None:
         """Post initialisation."""
@@ -393,7 +423,7 @@ class Structure:
             max_length_initial_ground_structure=self.parameters.max_length_initial_ground_structure,
         )
         self.active_members = self.potential_members[
-            self.potential_members[:, 3] == True
+            self.potential_members[:, 3] == True  # pylint: disable=singleton-comparison
         ]
         self.primal_adaptivity, self.load_case_active = structure.primal_adaptivity(
             primal_method=self.parameters.primal_method,

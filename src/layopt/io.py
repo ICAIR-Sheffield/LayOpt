@@ -10,8 +10,9 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from loguru import logger
-from pydantic import RootModel
-from ruamel.yaml import YAML
+from pydantic import RootModel, TypeAdapter
+from pydantic.dataclasses import is_pydantic_dataclass
+from ruamel.yaml import YAML, CommentedMap, CommentedSeq
 
 from layopt import CONFIG_DOCUMENTATION_REFERENCE
 from layopt.classes import Parameters
@@ -23,16 +24,17 @@ def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
 
     Parameters
     ----------
-    args : Namespace | dict[str, Any], optional
+    args : Namespace | dict[str, Any] | Parameters, optional
         A Namespace object parsed from argparse. If there are values for ``output_dir`` and ``filename`` these will be
         used to construct the path and filename to write the YAML file to.  If not then output files are contingent on
         how the function is being called. If it is from ``layopt create_config`` then ``default_config.yaml`` will be
         written. If it is at the end of processing then ``config_YY-MM-DD-hhmmss.yaml`` will be used.
     """
+    config: Parameters | dict[str, Any]
     # If args is `Namespace` then we are writing config with 'layopt create_config' subcommand
     if isinstance(args, Namespace):
         output_dir = Path("./") if args.output_dir is None else Path(args.output_dir)
-        config = vars(Parameters())
+        config = Parameters()
         filename = "default_config.yaml" if args.filename is None else args.filename
     # Otherwise we are writing after 'layopt optimise' and config is a dictionary, this won't have a 'filename'
     # key/value pair
@@ -62,6 +64,16 @@ def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
             f.write(f"{CONFIG_DOCUMENTATION_REFERENCE}")
             yaml_out = YAML()
             yaml_out.indent(sequence=4, offset=2)
+            # patch support_points so that `restrain_x` and `restrain_y` are bool
+            # config.support_points = np.array([
+            #             [x, y, bool(restrain_x), bool(restrain_y)]
+            #             for x, y, restrain_x, restrain_y in config.support_points
+            # ])
+            # )
+            # config["support_points"] = [
+            #     [x, y, bool(restrain_x), bool(restrain_y)]
+            #     for x, y, restrain_x, restrain_y in config["support_points"]
+            # ]
             yaml_out.dump(dict_to_yaml(config), f)
             logger.info(f"{logger_msg} : {config_path!s}")
         except:  # noqa: E722, pylint: disable=W0702
@@ -82,6 +94,19 @@ def dict_to_yaml(obj: Any) -> Any:
     Any
         ``obj`` as ``str``, ``int``, ``float``, ``bool``, ``list`` or ``dict``.
     """
+    if is_pydantic_dataclass(type(obj)):
+        # convert Pydantic dataclass instance to CommentedMap
+        raw_dict = TypeAdapter(type(obj)).dump_python(obj, mode="python")
+        new = CommentedMap()
+        for k, v in raw_dict.items():
+            new[k] = dict_to_yaml(v)
+
+        # add field titles as eol comments
+        for field_name, field_info in type(obj).__pydantic_fields__.items():
+            if field_name in new and field_info.title:
+                new.yaml_add_eol_comment(field_info.title, key=field_name)
+        return new
+
     # Recurse on dictionaries
     if isinstance(obj, dict):
         new = {}
@@ -91,7 +116,14 @@ def dict_to_yaml(obj: Any) -> Any:
         return new
     # Recurse on lists and tuples
     if isinstance(obj, (list, tuple)):
-        return [dict_to_yaml(x) for x in obj]
+        converted = [dict_to_yaml(x) for x in obj]
+        if converted and all(
+            isinstance(x, (str, int, float, bool)) or x is None for x in converted
+        ):
+            inline_iterable = CommentedSeq(converted)
+            inline_iterable.fa.set_flow_style()
+            return inline_iterable
+        return converted
     # Safe types return as is
     if isinstance(obj, (str, int, float, bool)) or obj is None:
         return obj
@@ -100,7 +132,7 @@ def dict_to_yaml(obj: Any) -> Any:
         return str(obj)
     # Convert numpy array -> nested lists
     if isinstance(obj, np.ndarray):
-        return obj.tolist()
+        return dict_to_yaml(obj.tolist())
     # Convert numpy scalar -> native Python scalar
     if isinstance(obj, np.generic):
         return obj.item()
