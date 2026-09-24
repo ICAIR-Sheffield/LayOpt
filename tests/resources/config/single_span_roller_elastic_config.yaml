@@ -36,7 +36,7 @@ cvxpy:
   solver: clarabel # See <https://www.cvxpy.org/tutorial/solvers/index.html?h=solve#choosing-a-solver> for further details
 filter_levels: [1.0] # List of values to filter by if empty no filtering is performed
 primal_method: load_factor # Primal method
-problem_name: single_span_roller # Problem name
+problem_name: single_span_roller_elastic # Problem name
 csv_filename: results.csv # Filename to save results to, if left as `results.csv` will have YYYY-MM-DD-hhmmss added
 notes: single span 18x4 example four load points # Notes to include
 plotting:

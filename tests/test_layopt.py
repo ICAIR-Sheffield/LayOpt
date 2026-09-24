@@ -298,10 +298,19 @@ def test_trussopt(
     results = (results[0], results[1])
     # note: helen-fairclough 29/7/2026 results[3] (the structure object) is not tested, reconsider when
     # refactoring is more complete
+
+    # fisher568 2026-09-09 override precision for tests where small platform differences
+    # NB done on a test basis not platform basis to maintain one snapshot per test
+    precision_overrides = {
+        "spanning_example_roller_clarabel": 5,
+        "spanning_example_elastic_clarabel": 5,
+    }
+    test_id = request.node.callspec.id
+    test_precision = precision_overrides.get(test_id, PRECISION)
     assert results == snapshot(
         matcher=path_type(
             types=(float, np.ndarray),
-            replacer=lambda data, _: round_values(data, PRECISION),
+            replacer=lambda data, _: round_values(data, test_precision),
         ),
     )
     assert (
