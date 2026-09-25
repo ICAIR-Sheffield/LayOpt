@@ -169,6 +169,11 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
             "single_span_roller_w18_h4_n10_filter100.png",
             id="single_span_roller_e2e_test",
         ),
+        pytest.param(
+            "single_span_roller_elastic_config.yaml",
+            "single_span_roller_elastic_w18_h4_n10_filter100.png",
+            id="single_span_roller_elastic_e2e_test",
+        ),
     ],
 )
 def test_cli_layopt_optimise(
