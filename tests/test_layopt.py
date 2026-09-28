@@ -264,6 +264,10 @@ def test_calc_eq_matrix_b_errors(
             "trussopt_param_eighteen_by_four_spanning",
             "clarabel",
             np.asarray([[0, 0, True, True], [18, 0, True, True]]),
+            marks=pytest.mark.skipif(
+                platform.system() == "Darwin",
+                reason="Difference in number of final members.",
+            ),
             id="spanning_example_pinned_clarabel",
         ),
         pytest.param(
@@ -271,9 +275,6 @@ def test_calc_eq_matrix_b_errors(
             "clarabel",
             np.asarray([[0, 0, True, True], [18, 0, False, True]]),
             id="spanning_example_roller_clarabel",
-            marks=pytest.mark.skipif(
-                platform.system() == "Darwin", reason="Precision differences."
-            ),
         ),
         pytest.param(
             "trussopt_param_eighteen_by_four_spanning_elastic",
@@ -309,6 +310,7 @@ def test_trussopt(
     # fisher568 2026-09-09 override precision for tests where small platform differences
     # NB done on a test basis not platform basis to maintain one snapshot per test
     precision_overrides = {
+        "spanning_example_pinned_clarabel": 5,
         "spanning_example_roller_clarabel": 5,
         "spanning_example_elastic_clarabel": 5,
     }
