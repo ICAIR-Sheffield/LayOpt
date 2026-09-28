@@ -150,11 +150,7 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
     )
 
 
-# fisher568 2026-08-03 need to configure e2e tests to run once per week, now skipping in CI
-@pytest.mark.skipif(
-    GITHUB_ACTIONS,
-    reason="Skip large e2e test in CI",
-)
+# fisher568 2026-09-28 e2e tests run once per week via github actions, skipping in CI
 @pytest.mark.e2e
 @pytest.mark.parametrize(
     ("config_file_name", "baseline_plot_file_name"),
