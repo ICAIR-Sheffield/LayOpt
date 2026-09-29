@@ -58,7 +58,11 @@ LAYOPT_CONFIG_SCHEMA = Schema(
             "error",
             error="Invalid value in config for 'log_level', valid values are 'info' (default), 'debug', 'error' or 'warning",
         ),
-        "cores": lambda n: 1 <= n <= os.cpu_count(),
+        "cores": And(
+            int,
+            lambda n: 1 <= n <= os.cpu_count(),
+            error=f"Invalid value for 'cores', valid values are int >= 1 and <= number of logical CPUs ({os.cpu_count()}).",
+        ),
         "width": And(
             int,
             lambda n: n >= 1,
