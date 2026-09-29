@@ -36,7 +36,11 @@ class Parameters:
     stress_compressive: float = Field(
         default=1.0, title="Compressive yield stress", ge=0.0
     )
-    youngs_modulus: float = Field(default=1.0, title="Young modulus (E).", ge=0.0)
+    youngs_modulus: float = Field(default=1.0, title="Young's modulus (E)", ge=0.0)
+    avg_deflection_limit: float = Field(
+        default=-1.0,
+        title="Limit on average load deflection for compliance optimization (leave negative for plastic limit solution)",
+    )
     joint_cost: float = Field(default=0.0, title="Joint cost", ge=0.0)
     loaded_points: npt.NDArray[np.int64] = Field(
         default=np.asarray([[1, 0], [2, 0]]), title="Loaded Points"
@@ -68,10 +72,6 @@ class Parameters:
     filter_levels: list[float] = Field(
         default=[1.0],
         title="List of values to filter by if empty no filtering is performed",
-    )
-    avg_deflection_limit: float = Field(
-        default=-1.0,
-        title="Limit on average load deflection for compliance optimization (leave negative for plastic limit solution).",
     )
     primal_method: str = Field(default="load_factor", title="Primal method")
     problem_name: str = Field(
