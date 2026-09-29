@@ -83,14 +83,22 @@ def test_read_yaml_exceptions(filename: Path, expected_error: Any) -> None:
         ),
     ],
 )
-def test_write_config(args: argparse.Namespace, tmp_path: Path) -> None:
+def test_write_config(args: argparse.Namespace, tmp_path: Path, snapshot) -> None:
     """Test writing of YAML configuration file using ``write_config()``."""
     args.output_dir = tmp_path
     io.write_config(args)
-    if args.filename is None:
-        assert Path(tmp_path / "default_config.yaml").exists()
-    else:
-        assert Path(tmp_path / args.filename).exists()
+    config_path = (
+        Path(tmp_path / "default_config.yaml")
+        if args.filename is None
+        else Path(tmp_path / args.filename)
+    )
+    assert config_path.exists()
+
+    config_output = config_path.read_text(encoding="utf-8")
+    lines = config_output.splitlines()
+    # ignore comments on first five lines
+    options = "\n".join(lines[5:])
+    assert options == snapshot
 
 
 @pytest.mark.parametrize(

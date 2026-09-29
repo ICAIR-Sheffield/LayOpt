@@ -64,16 +64,6 @@ def write_config(args: Namespace | dict[str, Any] | Parameters | None) -> None:
             f.write(f"{CONFIG_DOCUMENTATION_REFERENCE}")
             yaml_out = YAML()
             yaml_out.indent(sequence=4, offset=2)
-            # patch support_points so that `restrain_x` and `restrain_y` are bool
-            # config.support_points = np.array([
-            #             [x, y, bool(restrain_x), bool(restrain_y)]
-            #             for x, y, restrain_x, restrain_y in config.support_points
-            # ])
-            # )
-            # config["support_points"] = [
-            #     [x, y, bool(restrain_x), bool(restrain_y)]
-            #     for x, y, restrain_x, restrain_y in config["support_points"]
-            # ]
             yaml_out.dump(dict_to_yaml(config), f)
             logger.info(f"{logger_msg} : {config_path!s}")
         except:  # noqa: E722, pylint: disable=W0702
