@@ -621,7 +621,12 @@ def stop_primal_violation_pattern(
     else:  # Elastic design
         violation_key = np.ones(len(all_patterns))
 
-        filtered_nodes = np.where(eq_matrix_b.getnnz(axis=1) > 0)[0]
+        filtered_nodes = np.where(np.logical_and(eq_matrix_b.getnnz(axis=1) > 0, dof))[
+            0
+        ]  # technically dof numbers
+        removed_nodes = np.where(
+            np.logical_or(eq_matrix_b.getnnz(axis=1) == 0, np.logical_not(dof))
+        )[0]
         filtered_b = eq_matrix_b.tocsr()[filtered_nodes, :]
         element_stiffness = np.diag(
             [
@@ -633,7 +638,19 @@ def stop_primal_violation_pattern(
         )
         stiffness_matrix = filtered_b @ element_stiffness @ filtered_b.transpose()
 
-        mp_inv = np.linalg.pinv(stiffness_matrix)
+        # Add extra (small) stiffness to prevent infinite deflections (i.e. singular matrices)
+        # The *total* stiffness of all the springs is such that a force of load_large
+        # would produce a deflection of 1000 times avg_deflection_limit
+        extra_stiffness_total = structure.parameters.load_large / (
+            1000 * structure.parameters.avg_deflection_limit
+        )
+        extra_stiffness_value = extra_stiffness_total / len(filtered_nodes)
+        extra_stiffness_matrix = np.diag(
+            np.array([extra_stiffness_value] * stiffness_matrix.shape[0])
+        )
+        stiffness_matrix = stiffness_matrix + extra_stiffness_matrix
+
+        inv = np.linalg.inv(stiffness_matrix)
 
         for k, pattern in enumerate(all_patterns):
             if load_case_active[k]:
@@ -641,7 +658,12 @@ def stop_primal_violation_pattern(
 
             filtered_pattern = pattern[filtered_nodes]
 
-            compliance = 0.5 * (mp_inv @ filtered_pattern).dot(filtered_pattern)
+            removed_forces = pattern[removed_nodes]
+            if any(removed_forces != 0):
+                violation_key[k] = 0  # force on removed node/dof, cannot be carried
+                continue
+
+            compliance = 0.5 * (inv @ filtered_pattern).dot(filtered_pattern)
 
             compliance_limit = structure.make_compliance_limit(filtered_pattern)
             violation_key[k] = (
