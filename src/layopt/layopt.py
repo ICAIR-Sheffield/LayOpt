@@ -474,10 +474,12 @@ def stop_primal_violation_pattern(
     else:  # Elastic design
         violation_key = np.ones(len(all_patterns))
 
-        filtered_nodes = np.where(
-            np.logical_and(eq_matrix_b.getnnz(axis=1) > 0, dof)
-        )[0]  # technically dof numbers
-        removed_nodes = np.where(np.logical_or(eq_matrix_b.getnnz(axis=1) > 0, np.logical_not(dof)))
+        filtered_nodes = np.where(np.logical_and(eq_matrix_b.getnnz(axis=1) > 0, dof))[
+            0
+        ]  # technically dof numbers
+        removed_nodes = np.where(
+            np.logical_or(eq_matrix_b.getnnz(axis=1) > 0, np.logical_not(dof))
+        )
         filtered_b = eq_matrix_b.tocsr()[filtered_nodes, :]
         element_stiffness = np.diag(
             [
@@ -511,7 +513,7 @@ def stop_primal_violation_pattern(
 
             removed_forces = pattern[removed_nodes]
             if any(removed_forces != 0):
-                violation_key[k] = 0 # force on removed node/dof, cannot be carried
+                violation_key[k] = 0  # force on removed node/dof, cannot be carried
                 continue
 
             compliance = 0.5 * (inv @ filtered_pattern).dot(filtered_pattern)
