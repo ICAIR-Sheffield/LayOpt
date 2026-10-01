@@ -474,9 +474,9 @@ def stop_primal_violation_pattern(
     else:  # Elastic design
         violation_key = np.ones(len(all_patterns))
 
-        filtered_nodes = np.where(
-            np.logical_and(eq_matrix_b.getnnz(axis=1) > 0, dof)
-        )[0]  # technically dof numbers
+        filtered_nodes = np.where(np.logical_and(eq_matrix_b.getnnz(axis=1) > 0, dof))[
+            0
+        ]  # technically dof numbers
         filtered_b = eq_matrix_b.tocsr()[filtered_nodes, :]
         element_stiffness = np.diag(
             [
