@@ -475,7 +475,7 @@ def stop_primal_violation_pattern(
         violation_key = np.ones(len(all_patterns))
 
         filtered_nodes = np.where(
-            np.logical_and(eq_matrix_b.getnnz(axis=1) > 0, dof > 0.5)
+            np.logical_and(eq_matrix_b.getnnz(axis=1) > 0, dof)
         )[0]  # technically dof numbers
         filtered_b = eq_matrix_b.tocsr()[filtered_nodes, :]
         element_stiffness = np.diag(
@@ -490,7 +490,7 @@ def stop_primal_violation_pattern(
 
         # Add extra (small) stiffness to prevent infinite deflections (i.e. singular matrices)
         # The *total* stiffness of all the springs is such that a force of load_large
-        # would produce a deflection of 100 times avg_deflection_limit
+        # would produce a deflection of 1000 times avg_deflection_limit
         extra_stiffness_total = structure.parameters.load_large / (
             1000 * structure.parameters.avg_deflection_limit
         )
