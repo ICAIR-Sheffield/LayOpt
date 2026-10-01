@@ -478,8 +478,8 @@ def stop_primal_violation_pattern(
             0
         ]  # technically dof numbers
         removed_nodes = np.where(
-            np.logical_or(eq_matrix_b.getnnz(axis=1) > 0, np.logical_not(dof))
-        )
+            np.logical_or(eq_matrix_b.getnnz(axis=1) == 0, np.logical_not(dof))
+        )[0]
         filtered_b = eq_matrix_b.tocsr()[filtered_nodes, :]
         element_stiffness = np.diag(
             [
