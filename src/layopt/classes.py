@@ -57,7 +57,7 @@ class Parameters:
         gt=0.0,
     )
     support_points: npt.NDArray[np.float64] = Field(
-        default=np.asarray([[0, 0, 1, 1], [3, 3, 1, 1]]),
+        default=np.asarray([[0, 0, 1, 1], [3, 0, 1, 1]]),
         title="Support points in form [x_coord, y_coord, restrain_x, restrain_y] (true=fixed, false=free for restrain_x/restrain_y)",
     )
     member_area_filtering: float = Field(
