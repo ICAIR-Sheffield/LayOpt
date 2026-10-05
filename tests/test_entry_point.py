@@ -204,7 +204,7 @@ def test_cli_layopt_optimise(
     assert (
         csv_results.drop(
             ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
-        ).to_string()
+        ).to_string(float_format=lambda x: f"{x:.6g}")
         == snapshot
     )
     # use matplotlib.testing.compare instead of pytest-mpl here
