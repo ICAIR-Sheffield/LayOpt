@@ -153,20 +153,35 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
 # fisher568 2026-09-28 e2e tests run once per week via github actions, skipping in CI
 @pytest.mark.e2e
 @pytest.mark.parametrize(
-    ("config_file_name", "baseline_plot_file_name"),
+    (
+        "config_file_name",
+        "expected_patterns_range",
+        "expected_iterations_range",
+        "expected_members_range",
+        "baseline_plot_file_name",
+    ),
     [
         pytest.param(
             "square_cantilever_config.yaml",
+            (1, 1),
+            (6, 6),
+            (383, 383),
             "square_cantilever_w8_h8_n2_filter100.png",
             id="square_cantilever_e2e_test",
         ),
         pytest.param(
             "single_span_roller_config.yaml",
+            (30, 33),
+            (21, 23),
+            (682, 690),
             "single_span_roller_w18_h4_n10_filter100.png",
             id="single_span_roller_e2e_test",
         ),
         pytest.param(
             "single_span_roller_elastic_config.yaml",
+            (37, 37),
+            (22, 22),
+            (495, 495),
             "single_span_roller_elastic_w18_h4_n10_filter100.png",
             id="single_span_roller_elastic_e2e_test",
         ),
@@ -174,6 +189,9 @@ def test_optimise(manual_args: list[str], tmp_path: Path, snapshot) -> None:
 )
 def test_cli_layopt_optimise(
     config_file_name: str,
+    expected_patterns_range: tuple[int],
+    expected_iterations_range: tuple[int],
+    expected_members_range: tuple[int],
     baseline_plot_file_name: str,
     tmp_path: Path,
     monkeypatch,
@@ -198,15 +216,34 @@ def test_cli_layopt_optimise(
     entry_point()
 
     # Load csv & png files and check against snapshot
-    # csv_out = list(tmp_output_path.glob("*.csv"))
     csv_results = pd.read_csv(next(iter(tmp_output_path.glob("*.csv"))))
     png_out = next(iter(tmp_output_path.glob("*.png")))
+
     assert (
-        csv_results.drop(
-            ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
-        ).to_string(float_format=lambda x: f"{x:.6g}")
-        == snapshot
+        expected_patterns_range[0]
+        <= csv_results["n_patterns_active"].iloc[0]
+        <= expected_patterns_range[1]
     )
+    assert (
+        expected_iterations_range[0]
+        <= csv_results["iterations"].iloc[0]
+        <= expected_iterations_range[1]
+    )
+    assert (
+        expected_members_range[0]
+        <= csv_results["n_members_final"].iloc[0]
+        <= expected_members_range[1]
+    )
+
+    # mask volatile columns in results
+    cleaned_csv_results = csv_results.drop(
+        ["timestamp", "cpu_time_setup", "cpu_time_solve"], axis=1
+    )
+    for col in ["n_patterns_active", "iterations", "n_members_final"]:
+        if col in cleaned_csv_results.columns:
+            cleaned_csv_results[col] = f"[VOLATILE] {col}"
+
+    assert cleaned_csv_results.to_string(float_format=lambda x: f"{x:.6g}") == snapshot
     # use matplotlib.testing.compare instead of pytest-mpl here
     plot_difference = compare_images(
         expected=str(baseline_png), actual=str(png_out), tol=10.0
